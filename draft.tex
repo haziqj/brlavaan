@@ -1,0 +1,285 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\input{maths_shortcuts.tex}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Bias Reduction PML},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Bias Reduction PML}
+\author{}
+\date{\vspace{-2.5em}2023-11-16}
+
+\begin{document}
+\maketitle
+
+\newcommand{\pimod}[1]{\pi_{#1}(\btheta)}
+\newcommand{\Sigmaystar}{\bSigma_{\by^*}}
+\newcommand{\pl}{\operatorname{\ell_P}}
+\newcommand{\mlepl}{\hat\btheta_{\text{PL}}}
+\newcommand{\mle}{\hat\btheta_{\text{ML}}}
+\newcommand{\pimodpl}{\pi_{y_iy_j}^{(ij)}(\btheta)}
+\newcommand{\tr}{\operatorname{tr}}
+
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
+
+Let \(\bY = (Y_1, \dots, Y_p)^\top \in \{0,1\}^p\) be a vector of
+Bernoulli random variables. Consider a response pattern
+\(\by = (y_1,\dots,y_p)^\top\), where each \(y_i\in\{0,1\}\). The
+probability of observing such a response pattern is given by the joint
+distribution \begin{align}\label{eq:jointprob1}
+\pi
+&= \Pr(\bY = \by)  = \Pr(Y_1=y_1,\dots,Y_p=y_p).
+%(\#eq:jointprob1)
+\end{align} Note that there are a total of \(R=2^p\) possible joint
+probabilities \(\pi_r\) corresponding to all possible two-way response
+patterns \(\by_r\).
+
+When we consider a parametric model with parameter vector
+\(\btheta\in\bbR^m\), we write \(\pi_r(\btheta)\) to indicate each joint
+probability, and \begin{equation}\label{eq:jointprob2}
+\bpi(\btheta) = \begin{pmatrix}
+\pi_{1}(\btheta) \\
+\vdots \\
+\pi_{R}(\btheta)  \\
+\end{pmatrix} \in [0,1]^R
+%(\#eq:jointprob2)
+\end{equation} for the vector of joint probabilities, with
+\(\sum_{r=1}^R \pi_{r}(\btheta) =1\).
+
+\hypertarget{binary-factor-models}{%
+\section{Binary factor models}\label{binary-factor-models}}
+
+The model of interest is a factor model, commonly used in social
+statistics. Using an underlying variable (UV) approach, the observed
+binary responses \(y_i\) are manifestations of some latent, continuous
+variables \(Y_i^*\), \(i=1,\dots,p\). The connection is made as follows:
+\[
+Y_i = \begin{cases}
+1 & Y_i^* > \tau_i \\
+0 & Y_i^* \leq \tau_i,
+\end{cases}
+\] where \(\tau_i\) is the threshold associated with the variable
+\(Y_i^*\). For convenience, \(Y_i^*\) is taken to be standard normal
+random variables\footnote{For parameter identifiability, the location
+  and scale of the normal distribution have to be fixed if the
+  thresholds are to be estimated.}. The factor model takes the form \[
+\mathbf Y^* = \mathbf \Lambda\boldsymbol \eta + \boldsymbol \epsilon,
+\] where each component is explained below:
+
+\begin{itemize}
+\item
+  \(\mathbf Y^* = (Y_1^*,\dots,Y_p^*)^\top \in \mathbf R^p\) are the
+  underlying variables;
+\item
+  \(\boldsymbol\Lambda \in \mathbf R^{p \times q}\) is the matrix of
+  loadings;
+\item
+  \(\boldsymbol \eta = (\eta_1,\dots,\eta_q)^\top \in \mathbf R^q\) is
+  the vector of latent factors;
+\item
+  \(\boldsymbol \epsilon \in \mathbf R^p\) are the error terms
+  associated with the items (aka unique variables).
+\end{itemize}
+
+We also make some distributional assumptions, namely
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \(\boldsymbol\eta \sim \operatorname{N}_q(\mathbf 0, \boldsymbol\Psi)\),
+  where \(\bPsi\) is a correlation matrix, i.e.~for
+  \(k,l\in\{1,\dots,q\}\), \[
+  \bPsi_{kl} = \begin{cases}
+  1 & \text{if }  k = l \\
+  \rho(\eta_k, \eta_l) & \text{if } k \neq l.
+  \end{cases}
+  \]
+\item
+  \(\boldsymbol \epsilon \sim \operatorname{N}_p(\mathbf 0, \boldsymbol\Theta_\epsilon)\),
+  with
+  \(\boldsymbol\Theta_\epsilon = \mathbf I - \operatorname{diag}(\boldsymbol\Lambda \boldsymbol\Psi \boldsymbol\Lambda^\top)\).
+\end{enumerate}
+
+These two assumptions, together with
+\(\operatorname{Cov}(\boldsymbol\eta, \boldsymbol\epsilon) = 0\),
+implies that
+\(\mathbf Y^*\sim\operatorname{N}_p(\mathbf 0,\bSigma_{\by^*})\), where
+\begin{align}
+\bSigma_{\by^*}
+= \operatorname{Var}(\mathbf Y^*) 
+&= \boldsymbol\Lambda\boldsymbol\Phi\boldsymbol\Lambda^\top + \boldsymbol\Theta_\epsilon.
+%&= \mathbf I + (\boldsymbol\Lambda\boldsymbol\Phi\boldsymbol\Lambda^\top - \operatorname{diag}\big(\boldsymbol\Lambda \boldsymbol\Phi \boldsymbol\Lambda^\top)\big).
+\end{align} The parameter vector for this factor model is denoted
+\(\boldsymbol\theta^\top = (\boldsymbol\lambda, \boldsymbol\psi, \boldsymbol\tau) \in\bbR^m\),
+where it contains the vectors of the free non-redundant parameters in
+\(\boldsymbol\Lambda\) and \(\boldsymbol \Psi\) respectively, as well as
+the vector of all free thresholds.
+
+Under this factor model, the probability of response pattern
+\(\mathbf y_r\) is \begin{align}
+\pi_{r}(\btheta)
+&= \Pr(\mathbf Y = \mathbf y_r \mid \boldsymbol\theta) \\
+&= \idotsint_A \phi_p(\mathbf y^* \mid \mathbf 0, \boldsymbol\Sigma_{\mathbf y^*} ) \, \text{d}\mathbf y^*
+\end{align} where
+\(\phi_p(\cdot \mid \boldsymbol\mu,\boldsymbol\Sigma)\) is the density
+function of the \(p\)-dimensional normal distribution with mean
+\(\boldsymbol\mu\) and variance \(\boldsymbol\Sigma\). This integral is
+evaluated on the set \[
+A = \{ \mathbf Y^* \in \mathbb R^p \mid Y_1=y_1,\dots,Y_p=y_p \}.
+\]
+
+\hypertarget{pairwise-likelihood-estimation}{%
+\section{Pairwise likelihood
+estimation}\label{pairwise-likelihood-estimation}}
+
+In order to define the pairwise likelihood, let
+\(\pi_{y_iy_j}^{(ij)}(\btheta)\) be the probability under the model that
+\(Y_i=y_i \in \{0,1\}\) and \(Y_j=y_j\in\{0,1\}\) for a pair of
+variables \(Y_i\) and \(Y_j\), \(i,j=1,\dots,p\) and \(i<j\). The
+pairwise log-likelihood takes the form \begin{equation}
+\operatorname{\ell_P}(\btheta) = \sum_{i<j} \sum_{y_i}\sum_{y_j} \hat n_{y_iy_j}^{(ij)} \log \pi_{y_iy_j}^{(ij)}(\btheta),
+\end{equation} where \(\hat n_{y_iy_j}^{(ij)}\) is the observed
+(weighted) frequency of sample units with \(Y_i=y_i\) and \(Y_j=y_j\),
+\[
+\hat n_{y_iy_j}^{(ij)} = \sum_h w_h [\by^{(h)}_i = y_i, \by^{(h)}_j = y_j].
+\] Here the \(w_h\) refers to the design weight for any individual \(h\)
+in the sample. For simplicity, we may assume that these weights are
+normalised such that \(\sum w_h = N\). In such a case, a simple random
+sampling design would imply all weights are equal to one, and the
+weighted pairwise likelihood reduces to the usual pairwise likelihood
+function.
+
+Let us also define the corresponding observed pairwise proportions
+\(p_{y_iy_j}^{(ij)} = \hat n_{y_iy_j}^{(ij)}/n\). There are a total of
+\(\tilde R = 4 \times {p \choose 2}\) summands, where the `4' is
+representative of the total number of pairwise combinations of binary
+choices `00', `10', `01', and `11'.
+
+The \emph{pairwise maximum likelihood estimator}
+\(\hat\btheta_{\text{PL}}\) satisfies
+\(\hat\btheta_{\text{PL}}= \argmax_{\btheta} \operatorname{\ell_P}(\btheta)\).
+Under certain regularity conditions, \begin{equation}
+\sqrt N (\hat\btheta_{\text{PL}}- \btheta) \xrightarrow{D} {\N}_m\big(\bzero, \cH(\btheta)\cJ(\btheta)^{-1}\cH(\btheta)\big),
+\end{equation} where
+
+\begin{itemize}
+\tightlist
+\item
+  \(\cH(\btheta)=-\E\nabla^2\operatorname{\ell_P}(\btheta;\by^{(h)})\)
+  is the \emph{sensitivity matrix}; and
+\item
+  \(\cJ(\btheta)=\Var\big( \nabla\operatorname{\ell_P}(\btheta;\by^{(h)})\big)\)
+  is the \emph{variability matrix}.
+\end{itemize}
+
+In practice, we may estimate these matrices using the following
+estimators:
+
+\[
+\hat\bH := \bH(\hat\btheta)  = -\frac{1}{\sum_h w_h}\sum_{h=1}^N w_h\nabla^2\operatorname{\ell_P}(\btheta;\by^{(h)}) \bigg|_{\btheta = \hat\btheta}
+\]
+
+\[
+\hat\bJ := \bJ(\hat\btheta) = \frac{1}{\sum_h w_h}\sum_{h=1}^N w_h^2\nabla\operatorname{\ell_P}(\btheta;\by^{(h)})\nabla\operatorname{\ell_P}(\btheta;\by^{(h)})^\top \bigg|_{\btheta = \hat\btheta}
+\]
+
+That is, \(\hat\bH\) is the Hessian resulting from the optimisation of
+the pairwise likelihood function, while \(\hat\bJ\) is the cross product
+of the gradient of the pairwise likelihood function--each evaluated at
+the maximum PLE. Note that both are considered ``unit'' information
+matrices, as they are normalised by the sum of the weights (sample
+size).
+
+\hypertarget{bias-reduction}{%
+\section{Bias reduction}\label{bias-reduction}}
+
+Define \[
+A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\bJ(\btheta)^{-1} \right) \bigg|_{\btheta = \hat\btheta} .
+\] Then, an improved estimator \(\tilde\btheta\) is given by \[
+\tilde\btheta = \hat\btheta + \bH(\hat\btheta)^{-1}A(\hat\btheta).
+\]
+
+Some computational notes:
+
+\begin{itemize}
+\tightlist
+\item
+  The Hessian \(\bH(\btheta)\) matrix is obtained as a byproduct of the
+  optimisation routine in \texttt{\{lavaan\}} (or using my manually
+  coded pml function and optim). There is no explicit code for it.
+\item
+  The variability matrix \(\bJ(\btheta)\) is obtained from
+  \texttt{\{lavaan\}}, by tricking it into accepting starting values
+  \(\btheta\) as converged parameter values and extracting the
+  \(\bJ(\btheta)\) accordingly.
+\item
+  Then form the \(\bA(\btheta)\) matrix and obtain the gradient using
+  the \texttt{numDeriv} package.
+\end{itemize}
+
+\hypertarget{first-try}{%
+\section{First try}\label{first-try}}
+
+\end{document}

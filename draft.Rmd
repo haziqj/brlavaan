@@ -1,0 +1,220 @@
+---
+title: "Bias Reduction PML"
+output: 
+  pdf_document:
+    keep_tex: true
+header-includes: \input{maths_shortcuts.tex}
+date: "`r Sys.Date()`"
+---
+
+<!-- Extra LaTeX commands -->
+\newcommand{\pimod}[1]{\pi_{#1}(\btheta)}
+\newcommand{\Sigmaystar}{\bSigma_{\by^*}}
+\newcommand{\pl}{\operatorname{\ell_P}}
+\newcommand{\mlepl}{\hat\btheta_{\text{PL}}}
+\newcommand{\mle}{\hat\btheta_{\text{ML}}}
+\newcommand{\pimodpl}{\pi_{y_iy_j}^{(ij)}(\btheta)}
+\newcommand{\tr}{\operatorname{tr}}
+<!-- Extra LaTeX commands -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Introduction
+
+Let $\bY = (Y_1, \dots, Y_p)^\top \in \{0,1\}^p$ be a vector of Bernoulli random variables. 
+Consider a response pattern $\by = (y_1,\dots,y_p)^\top$, where each $y_i\in\{0,1\}$.
+The probability of observing such a response pattern is given by the joint distribution
+\begin{align}\label{eq:jointprob1}
+\pi
+&= \Pr(\bY = \by)  = \Pr(Y_1=y_1,\dots,Y_p=y_p).
+%(\#eq:jointprob1)
+\end{align}
+Note that there are a total of $R=2^p$ possible joint probabilities $\pi_r$ corresponding to all possible two-way response patterns $\by_r$.
+
+When we consider a parametric model with parameter vector $\btheta\in\bbR^m$, we write $\pi_r(\btheta)$ to indicate each joint probability, and 
+\begin{equation}\label{eq:jointprob2}
+\bpi(\btheta) = \begin{pmatrix}
+\pimod{1} \\
+\vdots \\
+\pimod{R}  \\
+\end{pmatrix} \in [0,1]^R
+%(\#eq:jointprob2)
+\end{equation}
+for the vector of joint probabilities, with $\sum_{r=1}^R \pimod{r} =1$.
+
+# Binary factor models
+
+The model of interest is a factor model, commonly used in social statistics.
+Using an underlying variable (UV) approach, the observed binary responses $y_i$ are manifestations of some latent, continuous variables $Y_i^*$, $i=1,\dots,p$.
+The connection is made as follows:
+$$
+Y_i = \begin{cases}
+1 & Y_i^* > \tau_i \\
+0 & Y_i^* \leq \tau_i,
+\end{cases}
+$$
+where $\tau_i$ is the threshold associated with the variable $Y_i^*$.
+For convenience, $Y_i^*$ is taken to be standard normal random variables^[For parameter identifiability, the location and scale of the normal distribution have to be fixed if the thresholds are to be estimated.].
+The factor model takes the form
+$$
+\mathbf Y^* = \mathbf \Lambda\boldsymbol \eta + \boldsymbol \epsilon,
+$$
+where each component is explained below:
+
+- $\mathbf Y^* = (Y_1^*,\dots,Y_p^*)^\top \in \mathbf R^p$ are the underlying variables;
+
+- $\boldsymbol\Lambda \in \mathbf R^{p \times q}$ is the matrix of loadings;
+
+- $\boldsymbol \eta = (\eta_1,\dots,\eta_q)^\top \in \mathbf R^q$ is the vector of latent factors;
+
+- $\boldsymbol \epsilon \in \mathbf R^p$ are the error terms associated with the items (aka unique variables).
+
+We also make some distributional assumptions, namely
+
+1. $\boldsymbol\eta \sim \operatorname{N}_q(\mathbf 0, \boldsymbol\Psi)$, where $\bPsi$ is a correlation matrix, i.e. for $k,l\in\{1,\dots,q\}$,
+$$
+\bPsi_{kl} = \begin{cases}
+1 & \text{if }  k = l \\
+\rho(\eta_k, \eta_l) & \text{if } k \neq l.
+\end{cases}
+$$
+
+2. $\boldsymbol \epsilon \sim \operatorname{N}_p(\mathbf 0, \boldsymbol\Theta_\epsilon)$, with $\boldsymbol\Theta_\epsilon = \mathbf I - \operatorname{diag}(\boldsymbol\Lambda \boldsymbol\Psi \boldsymbol\Lambda^\top)$.
+
+These two assumptions, together with $\operatorname{Cov}(\boldsymbol\eta, \boldsymbol\epsilon) = 0$, implies that $\mathbf Y^*\sim\operatorname{N}_p(\mathbf 0,\Sigmaystar)$, where
+\begin{align}
+\Sigmaystar
+= \operatorname{Var}(\mathbf Y^*) 
+&= \boldsymbol\Lambda\boldsymbol\Phi\boldsymbol\Lambda^\top + \boldsymbol\Theta_\epsilon.
+%&= \mathbf I + (\boldsymbol\Lambda\boldsymbol\Phi\boldsymbol\Lambda^\top - \operatorname{diag}\big(\boldsymbol\Lambda \boldsymbol\Phi \boldsymbol\Lambda^\top)\big).
+\end{align}
+<!-- Evidently, -->
+<!-- $$ -->
+<!-- \operatorname{Cor}(y_i^*, y_{i'}^*) = \sum_{k,l=1}^q \lambda_{ik}\lambda_{i'l} (1 + \rho(z_k,z_l)). -->
+<!-- $$ -->
+The parameter vector for this factor model is denoted $\boldsymbol\theta^\top = (\boldsymbol\lambda, \boldsymbol\psi, \boldsymbol\tau) \in\bbR^m$, where it contains the vectors of the free non-redundant parameters in $\boldsymbol\Lambda$ and $\boldsymbol \Psi$ respectively, as well as the vector of all free thresholds.
+
+Under this factor model, the probability of response pattern $\mathbf y_r$ is
+\begin{align}
+\pimod{r}
+&= \Pr(\mathbf Y = \mathbf y_r \mid \boldsymbol\theta) \\
+&= \idotsint_A \phi_p(\mathbf y^* \mid \mathbf 0, \boldsymbol\Sigma_{\mathbf y^*} ) \, \text{d}\mathbf y^*
+\end{align}
+where $\phi_p(\cdot \mid \boldsymbol\mu,\boldsymbol\Sigma)$ is the density function of the $p$-dimensional normal distribution with mean $\boldsymbol\mu$ and variance $\boldsymbol\Sigma$.
+This integral is evaluated on the set
+$$
+A = \{ \mathbf Y^* \in \mathbb R^p \mid Y_1=y_1,\dots,Y_p=y_p \}.
+$$
+
+
+<!-- ## Parameter estimation -->
+
+<!-- Suppose that $h=1,\dots,n$ observations of $\bY=\by^{(h)}$ are obtained. -->
+<!-- For the purpose of generalising from independent samples to complex samples, suppose that each unit $h$ in the sample is assigned a (normalised) survey weight $w_h$ with $\sum_h w_h = n$. -->
+<!-- Of course, if an independent simple random sampling scheme is implemented, then each $w_h=1$. -->
+
+<!-- The sample proportions for each category $r$ is written $p_r = \hat n_r/n$, where -->
+<!-- <!-- Let $p_r = \hat n_r/n$ be the $r$th entry of the $R$-vector of proportions $\bp$, where -->
+<!-- \begin{equation} -->
+<!-- \hat n_r = \sum_h w_h [\by^{(h)} = \by_r], -->
+<!-- \end{equation} -->
+<!-- and $[\cdot]$ denotes the Iverson bracket. -->
+<!-- In other words, $\hat n_r$ represents the (weighted) frequency counts of the observed response patterns such that $\sum_{r=1}^R \hat n_r = n$. -->
+<!-- The vector $\hat\bn = (\hat n_1, \dots, \hat n_R)^\top$ then defines a *multivariate binomial distribution*, or more commonly called a multinomial distribution with parameters $n$, $R$, and $\bpi(\btheta)$. -->
+<!-- The probability mass function of $\hat\bn$ is given by -->
+<!-- \begin{equation} -->
+<!-- f_{\hat\bn}(x_1,\dots,x_R) = n! \prod_{r=1}^R \frac{1}{x_r!} \big[\pimod{r}\big]^{x_r}, -->
+<!-- \end{equation} -->
+<!-- and the log-likelihood for $\btheta$ given the observed frequencies $\hat\bn$ (ignoring constants) is then -->
+<!-- \begin{equation} -->
+<!-- \ell(\btheta) = \log f_{\hat\bn}(\hat n_1,\dots,\hat n_R) = \sum_{r=1}^{R} \hat n_r \log \pimod{r}. -->
+<!-- \end{equation} -->
+
+<!-- The maximum likelihood estimator $\mle$ satisfies $\mle = \argmax_{\btheta} \ell(\btheta)$. -->
+<!-- Maximum likelihood theory tells us that, under certain regularity conditions, as $n\to\infty$, -->
+<!-- \begin{equation}\label{eq:limitdisttheta} -->
+<!-- \sqrt n (\hat\btheta - \btheta) \xrightarrow{\text D} {\N}_m\big(\bzero, \cI(\btheta)^{-1}\big), -->
+<!-- \end{equation} -->
+<!-- where $\bbR^{m\times m} \ni \cI = -n^{-1}\E \nabla^2 \ell(\btheta)$ is the *(unit) expected Fisher information matrix*. -->
+<!-- It can be further shown that $\cI = \bDelta^\top \bD^{-1} \bDelta$, where -->
+
+<!-- - $\bDelta_{r,k} = \frac{\partial\pi_r(\btheta)}{\partial\theta_k}$, $r=1,\dots,R$, $k=1,\dots,m$; and -->
+<!-- - $\bD = \diag(\bpi(\btheta))$. -->
+
+<!-- The maximum likelihood estimators are a class of *best asymptotically normal* (BAN) estimators $\hat\btheta$ of $\btheta$ that satisfy -->
+<!-- \begin{equation} -->
+<!-- \sqrt n (\hat\btheta - \btheta) = \sqrt n \, \bB \big(\bp - \bpi(\btheta)\big) + o(1) -->
+<!-- (\#eq:ban) -->
+<!-- \end{equation} -->
+<!-- for some $m\times R$ matrix $\bB$. -->
+<!-- In the specific case of maximum likelihood estimation, we can derive $\bB$ to be $\bB = \cI^{-1} \bDelta^\top \bD^{-1}$. -->
+<!-- This is proven in the corresponding article (see XXX for more details). -->
+
+# Pairwise likelihood estimation
+
+In order to define the pairwise likelihood, let $\pi_{y_iy_j}^{(ij)}(\btheta)$ be the probability under the model that $Y_i=y_i \in \{0,1\}$ and $Y_j=y_j\in\{0,1\}$ for a pair of variables $Y_i$ and $Y_j$, $i,j=1,\dots,p$ and $i<j$.
+<!-- That is, -->
+<!-- $$ -->
+<!-- \pi_{y_iy_j}^{(ij)}(\btheta) = \Pr(Y_i = y_i, Y_j = y_j). -->
+<!-- $$ -->
+The pairwise log-likelihood takes the form
+\begin{equation}
+\pl(\btheta) = \sum_{i<j} \sum_{y_i}\sum_{y_j} \hat n_{y_iy_j}^{(ij)} \log \pi_{y_iy_j}^{(ij)}(\btheta),
+\end{equation}
+where $\hat n_{y_iy_j}^{(ij)}$ is the observed (weighted) frequency of sample units with $Y_i=y_i$ and $Y_j=y_j$,
+$$
+\hat n_{y_iy_j}^{(ij)} = \sum_h w_h [\by^{(h)}_i = y_i, \by^{(h)}_j = y_j].
+$$
+Here the $w_h$ refers to the design weight for any individual $h$ in the sample. 
+For simplicity, we may assume that these weights are normalised such that $\sum w_h = N$.
+In such a case, a simple random sampling design would imply all weights are equal to one, and the weighted pairwise likelihood reduces to the usual pairwise likelihood function.
+
+Let us also define the corresponding observed pairwise proportions $p_{y_iy_j}^{(ij)} = \hat n_{y_iy_j}^{(ij)}/n$.
+There are a total of $\tilde R = 4 \times {p \choose 2}$ summands, where the '4' is representative of the total number of pairwise combinations of binary choices '00', '10', '01', and '11'.
+
+The *pairwise maximum likelihood estimator* $\mlepl$ satisfies $\mlepl = \argmax_{\btheta} \pl(\btheta)$.
+Under certain regularity conditions,
+\begin{equation}
+\sqrt N (\mlepl - \btheta) \xrightarrow{D} {\N}_m\big(\bzero, \cH(\btheta)\cJ(\btheta)^{-1}\cH(\btheta)\big),
+\end{equation}
+where
+  
+  - $\cH(\btheta)=-\E\nabla^2\pl(\btheta;\by^{(h)})$ is the *sensitivity matrix*; and
+  - $\cJ(\btheta)=\Var\big( \nabla\pl(\btheta;\by^{(h)})\big)$ is the *variability matrix*.
+  
+In practice, we may estimate these matrices using the following estimators:
+
+$$
+\hat\bH := \bH(\hat\btheta)  = -\frac{1}{\sum_h w_h}\sum_{h=1}^N w_h\nabla^2\pl(\btheta;\by^{(h)}) \bigg|_{\btheta = \hat\btheta}
+$$
+
+
+$$
+\hat\bJ := \bJ(\hat\btheta) = \frac{1}{\sum_h w_h}\sum_{h=1}^N w_h^2\nabla\pl(\btheta;\by^{(h)})\nabla\pl(\btheta;\by^{(h)})^\top \bigg|_{\btheta = \hat\btheta}
+$$
+
+That is, $\hat\bH$ is the Hessian resulting from the optimisation of the pairwise likelihood function, while $\hat\bJ$ is the cross product of the gradient of the pairwise likelihood function--each evaluated at the maximum PLE.
+Note that both are considered "unit" information matrices, as they are normalised by the sum of the weights (sample size).
+
+# Bias reduction
+
+Define
+$$
+A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\bJ(\btheta)^{-1} \right) \bigg|_{\btheta = \hat\btheta} .
+$$
+Then, an improved estimator $\tilde\btheta$ is given by
+$$
+\tilde\btheta = \hat\btheta + \bH(\hat\btheta)^{-1}A(\hat\btheta).
+$$
+
+Some computational notes:
+
+- The Hessian $\bH(\btheta)$ matrix is obtained as a byproduct of the optimisation routine in `{lavaan}` (or using my manually coded pml function and optim). There is no explicit code for it.
+- The variability matrix $\bJ(\btheta)$ is obtained from `{lavaan}`, by tricking it into accepting starting values $\btheta$ as converged parameter values and extracting the $\bJ(\btheta)$ accordingly.
+- Then form the $\bA(\btheta)$ matrix and obtain the gradient using the `numDeriv` package.
+
+# First try
+
