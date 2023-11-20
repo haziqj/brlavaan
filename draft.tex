@@ -37,6 +37,46 @@
 \makeatother
 \usepackage{xcolor}
 \usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -54,7 +94,44 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newlength{\cslentryspacingunit} % times entry-spacing
+\setlength{\cslentryspacingunit}{\parskip}
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
+ {% don't indent paragraphs
+  \setlength{\parindent}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+  \let\oldpar\par
+  \def\par{\hangindent=\cslhangindent\oldpar}
+  \fi
+  % set entry spacing
+  \setlength{\parskip}{#2\cslentryspacingunit}
+ }%
+ {}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \input{maths_shortcuts.tex}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -68,7 +145,7 @@
 
 \title{Bias Reduction PML}
 \author{}
-\date{\vspace{-2.5em}2023-11-16}
+\date{\vspace{-2.5em}2023-11-20}
 
 \begin{document}
 \maketitle
@@ -279,7 +356,221 @@ Some computational notes:
   the \texttt{numDeriv} package.
 \end{itemize}
 
-\hypertarget{first-try}{%
-\section{First try}\label{first-try}}
+\hypertarget{example}{%
+\section{Example}\label{example}}
+
+Consider \(p=5\) binary items generated using the UV approach as above
+with the following true parameter values:
+
+\begin{itemize}
+\tightlist
+\item
+  \(\blambda\) = 0.8, 0.7, 0.47, 0.38, 0.34
+\item
+  \(\btau\) = -1.43, -0.55, -0.13, -0.72, -1.13
+\end{itemize}
+
+NB: This is called Model no 1 from a previous work (Jamil, Moustaki, and
+Skinner 2023).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
+\NormalTok{model\_no }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{mod }\OtherTok{\textless{}{-}} \FunctionTok{txt\_mod}\NormalTok{(model\_no)}
+\NormalTok{(dat }\OtherTok{\textless{}{-}} \FunctionTok{gen\_data\_bin}\NormalTok{(model\_no))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1,000 x 5
+##    y1    y2    y3    y4    y5   
+##    <ord> <ord> <ord> <ord> <ord>
+##  1 1     1     0     1     1    
+##  2 1     1     1     1     1    
+##  3 1     0     1     0     1    
+##  4 1     0     1     1     1    
+##  5 1     0     1     0     1    
+##  6 1     0     0     1     0    
+##  7 1     1     1     0     1    
+##  8 1     0     0     1     1    
+##  9 1     0     1     1     1    
+## 10 1     1     1     0     1    
+## # i 990 more rows
+\end{verbatim}
+
+The fit from the PL routine is obtained from \texttt{\{lavaan\}}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit\_lav }\OtherTok{\textless{}{-}} \FunctionTok{sem}\NormalTok{(mod, dat, }\AttributeTok{std.lv =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{estimator =} \StringTok{"PML"}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(fit\_lav)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## lavaan 0.6.17.1946 ended normally after 17 iterations
+## 
+##   Estimator                                        PML
+##   Optimization method                           NLMINB
+##   Number of model parameters                        10
+## 
+##   Number of observations                          1000
+## 
+## Model Test User Model:
+##                                               Standard      Scaled
+##   Test Statistic                                 2.478       3.571
+##   Degrees of freedom                                 5       5.320
+##   P-value (Unknown)                                 NA       0.655
+##   Scaling correction factor                                  0.694
+##     mean+var adjusted correction (PML)                            
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                             Sandwich
+##   Information bread                           Observed
+##   Observed information based on                Hessian
+## 
+## Latent Variables:
+##                    Estimate  Std.Err  z-value  P(>|z|)
+##   eta1 =~                                             
+##     y1                0.696    0.077    9.092    0.000
+##     y2                0.700    0.062   11.302    0.000
+##     y3                0.447    0.060    7.496    0.000
+##     y4                0.493    0.061    8.138    0.000
+##     y5                0.417    0.072    5.798    0.000
+## 
+## Intercepts:
+##                    Estimate  Std.Err  z-value  P(>|z|)
+##    .y1                0.000                           
+##    .y2                0.000                           
+##    .y3                0.000                           
+##    .y4                0.000                           
+##    .y5                0.000                           
+##     eta1              0.000                           
+## 
+## Thresholds:
+##                    Estimate  Std.Err  z-value  P(>|z|)
+##     y1|t1            -1.522    0.062  -24.640    0.000
+##     y2|t1            -0.550    0.042  -13.135    0.000
+##     y3|t1            -0.171    0.040   -4.297    0.000
+##     y4|t1            -0.678    0.043  -15.714    0.000
+##     y5|t1            -1.190    0.052  -23.011    0.000
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(>|z|)
+##    .y1                0.516                           
+##    .y2                0.510                           
+##    .y3                0.800                           
+##    .y4                0.757                           
+##    .y5                0.826                           
+##     eta1              1.000                           
+## 
+## Scales y*:
+##                    Estimate  Std.Err  z-value  P(>|z|)
+##     y1                1.000                           
+##     y2                1.000                           
+##     y3                1.000                           
+##     y4                1.000                           
+##     y5                1.000
+\end{verbatim}
+
+We compare the fit of the coefficients and the true value:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{theta\_hat }\OtherTok{\textless{}{-}} \FunctionTok{coef}\NormalTok{(fit\_lav)}
+\NormalTok{theta\_true }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(lavaan.bingof}\SpecialCharTok{:::}\FunctionTok{get\_Lambda}\NormalTok{(model\_no),}
+\NormalTok{                lavaan.bingof}\SpecialCharTok{:::}\FunctionTok{get\_tau}\NormalTok{(model\_no))}
+\FunctionTok{tibble}\NormalTok{(}
+  \AttributeTok{coef =} \FunctionTok{names}\NormalTok{(theta\_hat),}
+  \AttributeTok{theta\_hat =} \FunctionTok{round}\NormalTok{(theta\_hat, }\DecValTok{2}\NormalTok{),}
+  \AttributeTok{theta\_true =}\NormalTok{ theta\_true}
+\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{kbl}\NormalTok{(}\AttributeTok{booktabs =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{tabular}[t]{lrr}
+\toprule
+coef & theta\_hat & theta\_true\\
+\midrule
+eta1=\textasciitilde{}y1 & 0.70 & 0.80\\
+eta1=\textasciitilde{}y2 & 0.70 & 0.70\\
+eta1=\textasciitilde{}y3 & 0.45 & 0.47\\
+eta1=\textasciitilde{}y4 & 0.49 & 0.38\\
+eta1=\textasciitilde{}y5 & 0.42 & 0.34\\
+\addlinespace
+y1|t1 & -1.52 & -1.43\\
+y2|t1 & -0.55 & -0.55\\
+y3|t1 & -0.17 & -0.13\\
+y4|t1 & -0.68 & -0.72\\
+y5|t1 & -1.19 & -1.13\\
+\bottomrule
+\end{tabular}
+
+Now apply the bias reduction method
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Assume HHH() and JJJ() are the functions to obtain the H and J matrices at a}
+\CommentTok{\# given theta}
+\NormalTok{AAA }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(.theta) \{}
+\NormalTok{  tmp }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x) \{}
+\NormalTok{    Hinv }\OtherTok{\textless{}{-}} \FunctionTok{HHH}\NormalTok{(x) }\SpecialCharTok{|\textgreater{}}\NormalTok{ MASS}\SpecialCharTok{::}\FunctionTok{ginv}\NormalTok{()}
+\NormalTok{    J    }\OtherTok{\textless{}{-}} \FunctionTok{JJJ}\NormalTok{(x)}
+    \SpecialCharTok{{-}}\FloatTok{0.5} \SpecialCharTok{*} \FunctionTok{sum}\NormalTok{(}\FunctionTok{diag}\NormalTok{(Hinv }\SpecialCharTok{\%*\%}\NormalTok{ J))}
+\NormalTok{  \}}
+\NormalTok{  numDeriv}\SpecialCharTok{::}\FunctionTok{grad}\NormalTok{(tmp, .theta)}
+\NormalTok{\}}
+
+\CommentTok{\# Bias reduction}
+\NormalTok{(A }\OtherTok{\textless{}{-}} \FunctionTok{AAA}\NormalTok{(theta\_hat))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] -0.1296364813  0.1811323957 -0.5299060523  0.0124908790  0.2713109474
+##  [6]  3.0055899345  0.7016799736 -0.0006567022  1.0727559368  2.2152931318
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hinv }\OtherTok{\textless{}{-}} \FunctionTok{solve}\NormalTok{(}\FunctionTok{HHH}\NormalTok{(theta\_hat))}
+\NormalTok{theta\_tilde }\OtherTok{\textless{}{-}}\NormalTok{ theta\_hat }\SpecialCharTok{+}\NormalTok{ Hinv }\SpecialCharTok{\%*\%}\NormalTok{ A}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{tabular}[t]{lrrr}
+\toprule
+coef & theta\_hat & theta\_true & theta\_tilde\\
+\midrule
+eta1=\textasciitilde{}y1 & 0.70 & 0.80 & 0.10\\
+eta1=\textasciitilde{}y2 & 0.70 & 0.70 & 2.15\\
+eta1=\textasciitilde{}y3 & 0.45 & 0.47 & -1.20\\
+eta1=\textasciitilde{}y4 & 0.49 & 0.38 & 0.57\\
+eta1=\textasciitilde{}y5 & 0.42 & 0.34 & 1.44\\
+\addlinespace
+y1|t1 & -1.52 & -1.43 & 1.38\\
+y2|t1 & -0.55 & -0.55 & -0.06\\
+y3|t1 & -0.17 & -0.13 & -0.04\\
+y4|t1 & -0.68 & -0.72 & -0.05\\
+y5|t1 & -1.19 & -1.13 & 0.41\\
+\bottomrule
+\end{tabular}
+
+\hypertarget{references}{%
+\section*{References}\label{references}}
+\addcontentsline{toc}{section}{References}
+
+\hypertarget{refs}{}
+\begin{CSLReferences}{1}{0}
+\leavevmode\vadjust pre{\hypertarget{ref-jamil2023pairwise}{}}%
+Jamil, Haziq, Irini Moustaki, and Chris Skinner. 2023. {``Pairwise
+Likelihood Estimation and Limited Information Goodness-of-Fit Test
+Statistics for Binary Factor Analysis Models Under Complex Survey
+Sampling.''} \emph{arXiv Preprint arXiv:2311.02543}.
+
+\end{CSLReferences}
 
 \end{document}
