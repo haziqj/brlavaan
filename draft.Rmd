@@ -301,7 +301,7 @@ NB: This is called Model no 1 from a previous work [@jamil2023pairwise].
 set.seed(123)
 model_no <- 1
 mod <- txt_mod(model_no)
-(dat <- gen_data_bin(model_no, n = 100))
+(dat <- gen_data_bin(model_no, n = 200))
 ```
 
 The fit from the PL routine is obtained from `{lavaan}`:
