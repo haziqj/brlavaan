@@ -141,7 +141,7 @@
 
 \title{Bias Reduction PML}
 \author{}
-\date{\vspace{-2.5em}2023-11-20}
+\date{\vspace{-2.5em}2023-11-22}
 
 \begin{document}
 \maketitle
@@ -327,7 +327,7 @@ size).
 Define \[
 A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\bJ(\btheta) \right) \bigg|_{\btheta = \hat\btheta} .
 \] Then, an improved estimator \(\tilde\btheta\) is given by \[
-\tilde\btheta = \hat\btheta + \bH(\hat\btheta)^{-1}A(\hat\btheta).
+\tilde\btheta = \hat\btheta + \frac{1}{\sum_h w_h} \bH(\hat\btheta)^{-1}A(\hat\btheta).
 \]
 
 Some computational notes:
@@ -369,25 +369,25 @@ Skinner 2023).
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{model\_no }\OtherTok{\textless{}{-}} \DecValTok{1}
 \NormalTok{mod }\OtherTok{\textless{}{-}} \FunctionTok{txt\_mod}\NormalTok{(model\_no)}
-\NormalTok{(dat }\OtherTok{\textless{}{-}} \FunctionTok{gen\_data\_bin}\NormalTok{(model\_no, }\AttributeTok{n =} \DecValTok{100}\NormalTok{))}
+\NormalTok{(dat }\OtherTok{\textless{}{-}} \FunctionTok{gen\_data\_bin}\NormalTok{(model\_no, }\AttributeTok{n =} \DecValTok{500}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## # A tibble: 100 x 5
+## # A tibble: 500 x 5
 ##    y1    y2    y3    y4    y5   
 ##    <ord> <ord> <ord> <ord> <ord>
 ##  1 1     1     1     1     1    
-##  2 1     0     0     1     0    
+##  2 1     1     1     1     1    
 ##  3 1     0     0     1     1    
 ##  4 1     1     0     1     1    
-##  5 1     1     1     0     1    
-##  6 1     1     0     1     0    
-##  7 1     1     1     1     1    
-##  8 1     0     0     1     0    
+##  5 1     1     1     0     0    
+##  6 1     1     0     0     1    
+##  7 0     0     0     0     1    
+##  8 1     1     1     1     1    
 ##  9 1     1     1     1     1    
-## 10 1     0     0     1     1    
-## # i 90 more rows
+## 10 1     1     1     1     1    
+## # i 490 more rows
 \end{verbatim}
 
 The fit from the PL routine is obtained from \texttt{\{lavaan\}}:
@@ -573,7 +573,7 @@ y5|t1 & -1.18 & -1.13 & -1.16\\
 \NormalTok{theta\_true }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(lavaan.bingof}\SpecialCharTok{:::}\FunctionTok{get\_Lambda}\NormalTok{(model\_no),}
 \NormalTok{                lavaan.bingof}\SpecialCharTok{:::}\FunctionTok{get\_tau}\NormalTok{(model\_no))}
 \NormalTok{mod }\OtherTok{\textless{}{-}} \FunctionTok{txt\_mod}\NormalTok{(model\_no)}
-\NormalTok{datasets }\OtherTok{\textless{}{-}} \FunctionTok{replicate}\NormalTok{(n\_simu, }\FunctionTok{gen\_data\_bin}\NormalTok{(model\_no, }\AttributeTok{n =} \DecValTok{100}\NormalTok{), }\AttributeTok{simplify =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{datasets }\OtherTok{\textless{}{-}} \FunctionTok{replicate}\NormalTok{(n\_simu, }\FunctionTok{gen\_data\_bin}\NormalTok{(model\_no, }\AttributeTok{n =} \DecValTok{500}\NormalTok{), }\AttributeTok{simplify =} \ConstantTok{FALSE}\NormalTok{)}
 
 \NormalTok{failed }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(j, n\_simu) }\FunctionTok{cat}\NormalTok{(}\StringTok{"Sample:"}\NormalTok{, j, }\StringTok{"/"}\NormalTok{, n\_simu, }\StringTok{": Failed}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
 \NormalTok{done }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(j, n\_simu) }\FunctionTok{cat}\NormalTok{(}\StringTok{"Sample:"}\NormalTok{, j, }\StringTok{"/"}\NormalTok{, n\_simu, }\StringTok{": Done}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
@@ -654,7 +654,7 @@ y5|t1 & eRBM & 3.40 & 35.68 & 6.00 & 35.65 & -54.58 & 332.00 & 94\\
 \bottomrule
 \end{tabular}
 
-and thresholding the estimates to be less than 5 (arbitrarily set here)
+and thresholding the estimates to be less than 3 (arbitrarily set here)
 
 \begin{Shaded}
 \begin{Highlighting}[]

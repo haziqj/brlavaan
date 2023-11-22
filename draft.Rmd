@@ -274,7 +274,7 @@ A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\
 $$
 Then, an improved estimator $\tilde\btheta$ is given by
 $$
-\tilde\btheta = \hat\btheta + \bH(\hat\btheta)^{-1}A(\hat\btheta).
+\tilde\btheta = \hat\btheta + \frac{1}{\sum_h w_h} \bH(\hat\btheta)^{-1}A(\hat\btheta).
 $$
 
 Some computational notes:
@@ -301,7 +301,7 @@ NB: This is called Model no 1 from a previous work [@jamil2023pairwise].
 set.seed(123)
 model_no <- 1
 mod <- txt_mod(model_no)
-(dat <- gen_data_bin(model_no, n = 200))
+(dat <- gen_data_bin(model_no, n = 500))
 ```
 
 The fit from the PL routine is obtained from `{lavaan}`:
@@ -369,7 +369,7 @@ model_no <- 1
 theta_true <- c(lavaan.bingof:::get_Lambda(model_no),
                 lavaan.bingof:::get_tau(model_no))
 mod <- txt_mod(model_no)
-datasets <- replicate(n_simu, gen_data_bin(model_no, n = 100), simplify = FALSE)
+datasets <- replicate(n_simu, gen_data_bin(model_no, n = 500), simplify = FALSE)
 
 failed <- function(j, n_simu) cat("Sample:", j, "/", n_simu, ": Failed\n")
 done <- function(j, n_simu) cat("Sample:", j, "/", n_simu, ": Done\n")
@@ -413,7 +413,7 @@ res |> group_by(parameter, method) |>
               n_used = n()) |>
   kbl(booktabs = TRUE, digits = 2, linesep = "")
 ```
-and thresholding the estimates to be less than 5 (arbitrarily set here)
+and thresholding the estimates to be less than 3 (arbitrarily set here)
 ```{r distr-summaries1}
 res |> group_by(parameter, method) |>
     filter(!is.na(estimate), abs(estimate) < 3) |>
