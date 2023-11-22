@@ -46,7 +46,7 @@ JJJ <- function(theta) {
   )
 }
 
-HHH <- function(theta) {
+HHH <- function(theta, unit = TRUE) {
   # Fix param values
   # fit_lav_fxd <- sem(mod, dat, std.lv = TRUE, estimator = "PML",
   #                    start = parTable(fit_lav)$est[1:10], baseline = FALSE,
@@ -85,7 +85,7 @@ HHH <- function(theta) {
     lavcache       = lavcache,
     ceq.simple     = FALSE
   )
-  H / lavsamplestats@ntotal  # UNIT INFORMATION
+  H / ifelse(isTRUE(unit), lavsamplestats@ntotal, 1)  # UNIT INFORMATION
 }
 ```
 
@@ -270,11 +270,11 @@ Note that both are considered "unit" information matrices, as they are normalise
 
 Define
 $$
-A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\bJ(\btheta)^{-1} \right) \bigg|_{\btheta = \hat\btheta} .
+A(\hat\btheta) = - \frac{1}{2} \nabla \operatorname{tr}\left( \bH(\btheta)^{-1}\bJ(\btheta) \right) \bigg|_{\btheta = \hat\btheta} .
 $$
 Then, an improved estimator $\tilde\btheta$ is given by
 $$
-\tilde\btheta = \hat\btheta + \bH(\hat\btheta)^{-1}A(\hat\btheta).
+\tilde\btheta = \hat\btheta + \frac{1}{\sum_h w_h} \bH(\hat\btheta)^{-1}A(\hat\btheta).
 $$
 
 Some computational notes:
@@ -301,7 +301,7 @@ NB: This is called Model no 1 from a previous work [@jamil2023pairwise].
 set.seed(123)
 model_no <- 1
 mod <- txt_mod(model_no)
-(dat <- gen_data_bin(model_no))
+(dat <- gen_data_bin(model_no, n = 500))
 ```
 
 The fit from the PL routine is obtained from `{lavaan}`:
@@ -332,7 +332,7 @@ Now apply the bias reduction method
 # given theta
 AAA <- function(.theta) {
   tmp <- function(x) {
-    Hinv <- HHH(x) |> MASS::ginv()
+    Hinv <- HHH(x, unit = TRUE) |> solve()
     J    <- JJJ(x)
     -0.5 * sum(diag(Hinv %*% J))
   }
@@ -341,8 +341,8 @@ AAA <- function(.theta) {
 
 # Bias reduction
 (A <- AAA(theta_hat))
-Hinv <- solve(HHH(theta_hat))
-theta_tilde <- theta_hat + Hinv %*% A
+Hinv <- solve(HHH(theta_hat, unit = FALSE))
+theta_tilde <- drop(theta_hat + Hinv %*% A)
 ```
 
 ```{r echo = FALSE}
@@ -355,5 +355,100 @@ tibble(
   kbl(booktabs = TRUE)
 ```
 
+# A small simulation study
+```{r simu, cache = TRUE}
+
+## A dummy fit to get par names
+par_names <- names(theta_hat)
+
+## Simulation studies
+set.seed(123)
+n_simu <- 100
+n_cores <- parallel::detectCores()
+model_no <- 1
+theta_true <- c(lavaan.bingof:::get_Lambda(model_no),
+                lavaan.bingof:::get_tau(model_no))
+mod <- txt_mod(model_no)
+datasets <- replicate(n_simu, gen_data_bin(model_no, n = 500), simplify = FALSE)
+
+failed <- function(j, n_simu) cat("Sample:", j, "/", n_simu, ": Failed\n")
+done <- function(j, n_simu) cat("Sample:", j, "/", n_simu, ": Done\n")
+
+results <- parallel::mclapply(seq.int(n_simu), function(j) {
+                         fit_lav <- try(sem(mod, datasets[[j]], std.lv = TRUE, estimator = "PML"), silent = TRUE)
+                         if (is(fit_lav, "try-error")) {
+                             mpl <- eRBM <- rep(NA, length(theta_true))
+                             failed(j, n_simu)
+                         } else {
+                             mpl <- coef(fit_lav)
+                             A <- try(AAA(mpl), silent = TRUE)
+                             Hinv <- try(solve(HHH(mpl, unit = FALSE)), silent = TRUE)
+                             if (is(A, "try-error") | is(Hinv, "try-error")) {
+                                 eRBM <- rep(NA, length(theta_true))
+                                 failed(j, n_simu)
+                             } else {
+                                 eRBM <- drop(mpl + Hinv %*% A)
+                                 done(j, n_simu)
+                             }
+                         }
+                         data.frame(estimate = c(mpl, eRBM),
+                                    method = rep(c("MCL", "eRBM"), each = length(par_names)),
+                                    truth = c(theta_true, theta_true),
+                                    sample = j,
+                                    parameter = rep(par_names, 2))
+                     }, mc.cores = n_cores)
+```
+
+Let's get some sampling distribution summaries, ignoring failed cases
+```{r distr-summaries}
+res <- do.call("rbind", results)
+res |> group_by(parameter, method) |>
+    filter(!is.na(estimate)) |>
+    summarize(bias = mean(estimate - truth),
+              sd = sd(estimate),
+              abs_bias = mean(abs(estimate - truth)),
+              rmse = sqrt(mean((estimate - truth)^2)),
+              min = min(estimate),
+              max = max(estimate),
+              n_used = n()) |>
+  kbl(booktabs = TRUE, digits = 2, linesep = "")
+```
+and thresholding the estimates to be less than 3 (arbitrarily set here)
+```{r distr-summaries1}
+res |> group_by(parameter, method) |>
+    filter(!is.na(estimate), abs(estimate) < 3) |>
+    summarize(bias = mean(estimate - truth),
+              sd = sd(estimate),
+              abs_bias = mean(abs(estimate - truth)),
+              rmse = sqrt(mean((estimate - truth)^2)),
+              min = min(estimate),
+              max = max(estimate),
+              n_used = n()) |>
+  kbl(booktabs = TRUE, digits = 2, linesep = "")
+```
+
+There seem to be some instabilities when computing the numerical
+derivatives. I am not sure if these are due to the indirect way of
+getting $H$ and $J$, or explicit RBM (eRBM) inheriting instabilities
+from the MCL estimator. 
+
+For example, from the below figure I would only trust the estimates
+around the slope-one line through the origin.
+
+```{r plot}
+plot(res$estimate[res$method == "MCL"],
+     res$estimate[res$method == "eRBM"],
+     xlab = "MCL",
+     ylab = "eRBM",     
+     xlim = c(-10, 10), ylim = c(-10, 10))
+abline(0, 1, col = "blue")
+```
+
+Is there a quick way to write a function for the composite likelihood,
+$J$ and $H$? This would certainly allow us to explore explivit and
+implicit RBM more. 
+
+Needless to say that it is crucial that $J$ and $H$ in their unit
+information versions are scaled by the same quantity.
 
 # References
