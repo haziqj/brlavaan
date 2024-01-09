@@ -1,0 +1,117 @@
+using DataFrames, Random, Distributions, LinearAlgebra, Cubature
+
+
+function gen_data_bin(n = 1000; seed = nothing)
+    if seed !== nothing
+        Random.seed!(seed)
+    end
+
+    # Set up the loadings and covariance matrices
+    Lambda = [0.80, 0.70, 0.47, 0.38, 0.34]
+    neta = length(Lambda)  # q
+    nitems = length(Lambda)  # p
+    Psi = 1.0
+    Theta = Diagonal(1 .- (Lambda .* Lambda') .* Psi)
+
+    tau = [-1.43, -0.55, -0.13, -0.72, -1.13]
+
+    # Generate the data
+    eta = rand(MvNormal(zeros(neta), Psi), n)
+    epsilon = rand(MvNormal(zeros(nitems), Theta), n)
+    ystar = eta' * Lambda .+ epsilon'
+
+    # Define y as binary data (0 and 1)
+    y = DataFrame(Int.((ystar .> tau')), :auto)
+
+    return y
+end
+
+function create_pairwise_table(data; wt = nothing)
+    if wt === nothing
+        data[!, :wt] = ones(nrow(data))
+    else
+        data[!, :wt] = wt
+    end
+
+    p = size(data, 2) - 1  # excluding the weight column
+    result_list = []
+
+    for i in 1:(p - 1)
+        for j in (i + 1):p
+            var1 = Symbol("x", i)
+            var2 = Symbol("x", j)
+
+            agg_data = combine(groupby(data, [var1, var2]), :wt => sum)
+            rename!(agg_data, :wt_sum => :wtfreq)
+
+            agg_data[!, :prop] = agg_data[!, :wtfreq] ./ sum(agg_data[!, :wtfreq])
+
+            push!(result_list, (i = i, j = j, table = agg_data))
+        end
+    end
+
+    return vcat(result_list...)
+end
+
+using Distributions
+
+# Function to calculate model pairwise probabilities
+function calc_model_pairwise_prob(i, j, pattern, Vy, tau)
+    Vy_small = Vy[[i, j], [i, j]]
+    
+    function f(x)
+        pdf(MvNormal(zeros(2), Vy_small), x)  # x is an array with two elements [x1, x2]
+    end
+
+    # Determine bounds for integration based on pattern
+    lower_x = pattern[1] == '1' ? tau[i] : -1e2
+    upper_x = pattern[1] == '1' ? 1e2 : tau[i]
+    lower_y = pattern[2] == '1' ? tau[j] : -1e2
+    upper_y = pattern[2] == '1' ? 1e2 : tau[j]
+
+    # Numerically integrate the PDF over the specified region
+    prob, err = hcubature(f, [lower_x, lower_y], [upper_x, upper_y])
+
+    return prob
+end
+
+# Pairwise likelihood function -------------------------------------------------
+function pl_fn(theta, data; wt = nothing)
+    lambdas = theta[1:5]  # the first 5 elements are loadings
+    tau = theta[6:10]  # the next 5 elements are thresholds
+
+    # Compute Var(ystar) ---------------------------------------------------------
+    nitems = length(lambdas)
+    Lambda = reshape(lambdas, nitems, 1)
+    Psi = 1.0
+    Theta = zeros(nitems, nitems)
+    LPLt = Lambda * Psi * Lambda'
+    for i in 1:nitems
+        Theta[i, i] = 1 - LPLt[i, i]
+    end
+    Vy = LPLt + Theta
+    
+
+    # Process each pairwise table -----------------------------------------------
+    pairwise_tables = create_pairwise_table(data, wt = wt)
+    pl_value = 0.0
+
+    for pt in pairwise_tables
+        table = pt.table
+        for row in eachrow(table)
+            xi = row[1]
+            xj = row[2]
+            prob = calc_model_pairwise_prob(pt.i, pt.j, string(xi, xj), Vy, tau)
+            pl_value += row[:wtfreq] * log(prob)
+        end
+    end
+
+    return pl_value
+end
+
+
+# Example usage
+data = gen_data_bin(1000)
+theta = [0.80, 0.70, 0.47, 0.38, 0.34, -1.43, -0.55, -0.13, -0.72, -1.13]
+pl_value = pl_fn(theta, data)
+println("Pairwise likelihood value: ", pl_value)
