@@ -1,4 +1,8 @@
-using DataFrames, Random, Distributions, LinearAlgebra, Cubature
+using DataFrames, Random, LinearAlgebra, Cubature
+using MEstimation
+using Random
+using Distributions
+using Optim
 
 function gen_data_bin(n = 1000; seed = nothing)
     if seed !== nothing
@@ -51,8 +55,6 @@ function create_pairwise_table(data; wt = nothing)
 
     return vcat(result_list...)
 end
-
-using Distributions
 
 # Function to calculate model pairwise probabilities
 function calc_model_pairwise_prob(i, j, pattern, Vy, tau)
@@ -108,9 +110,21 @@ function pl_fn(theta, data; wt = nothing)
     return pl_value
 end
 
-# Example usage
-data = gen_data_bin(1000)
-theta = [0.80, 0.70, 0.47, 0.38, 0.34, -1.43, -0.55, -0.13, -0.72, -1.13]
-pl_value = pl_fn(theta, data)
-println("Pairwise likelihood value: ", pl_value)
+# -------------------------------------------------------------------------------
 
+struct cfa_data
+    y::DataFrames.DataFrame
+end
+
+function pl_one(theta::Vector, data::cfa_data, i::Int64)
+    pl_fn(theta, data.y[i:i, :])
+end
+
+function cfa_nobs(data::cfa_data)
+    size(data.y)[1]
+end
+
+theta = [0.80, 0.70, 0.47, 0.38, 0.34, -1.43, -0.55, -0.13, -0.72, -1.13]
+my_data = cfa_data(gen_data_bin(1000))
+cfa_template = objective_function_template(cfa_nobs, pl_one)
+o1_ml = fit(cfa_template, my_data, theta)
