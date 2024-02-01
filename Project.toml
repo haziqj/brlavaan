@@ -1,5 +1,6 @@
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
