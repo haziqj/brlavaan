@@ -52,7 +52,11 @@ function calc_model_pairwise_prob(i, j, pattern, Vy, tau)
     Vy_small = Vy[[i, j], [i, j]]
     
     function f(x)
-        pdf(MvNormal(zeros(2), Vy_small), x)  # x is an array with two elements [x1, x2]
+        if (det(Vy_small) > 0)
+            pdf(MvNormal(zeros(2), Vy_small), x)  # x is an array with two elements [x1, x2]
+        else
+            0
+        end
     end
 
     # Determine bounds for integration based on pattern
@@ -63,17 +67,25 @@ function calc_model_pairwise_prob(i, j, pattern, Vy, tau)
 
     # Numerically integrate the PDF over the specified region
     prob, err = hcubature(f, [lower_x, lower_y], [upper_x, upper_y])
+    # if (det(Vy_small) > 0) 
+    #     cdf(MvNormal(zeros(2), Vy_small), [upper_x, upper_y]) -
+    #         cdf(MvNormal(zeros(2), Vy_small), [lower_x, upper_y]) -
+    #         cdf(MvNormal(zeros(2), Vy_small), [upper_x, lower_y]) +
+    #         cdf(MvNormal(zeros(2), Vy_small), [lower_x, lower_y])
+    # else
+    #     0
+    # end
 
     return prob
 end
 
 # Function to compute the pairwise log-likelihood
-function pl_fn(theta, data)
+function pl_fn(theta::Vector, data)
     nitems = ncol(data)
     lambdas = theta[1:nitems]
     tau = theta[(nitems + 1):end]
     
-    print(lambdas, "\n", tau, "\n")
+    # print(lambdas, "\n", tau, "\n")
 
     # Build the variance-covariance matrix Vy
     Lambda = reshape(lambdas, nitems, 1)
@@ -97,13 +109,13 @@ function pl_fn(theta, data)
 end
 
 # Example usage:
-dat = gen_data_bin(1000)
+dat = gen_data_bin(1000, seed = 1)
 theta0 = [0.80, 0.70, 0.47, 0.38, 0.34, -1.43, -0.55, -0.13, -0.72, -1.13]
 pl_value = pl_fn(theta0, dat)
 println("Pairwise likelihood value: ", pl_value)
 
 # Function to compute the pairwise log-likelihood for each row of the summary table
-function pl_one(theta, summary_table, i)
+function pl_one(theta::Vector, summary_table, i)
     nitems = maximum(summary_table.j)
     lambdas = theta[1:nitems]
     tau = theta[(nitems + 1):end]
@@ -118,14 +130,20 @@ function pl_one(theta, summary_table, i)
     end
     Vy = LPLt + Theta
 
-    pl = 0.0
-    for row in eachrow(summary_table[i:i, :])
-        prob = calc_model_pairwise_prob(row.i, row.j, row.pattern, Vy, tau)
-        pl += row.count * log(prob)
-    end
-
+    # pl = 0.0
+    # for row in eachrow(summary_table[i:i, :])
+    row = summary_table[i:i, :]
+    prob = calc_model_pairwise_prob(row[1, "i"], row[1, "j"], row[1, "pattern"], Vy, tau)
+    # pl += row[1, "count"] * log(prob)
+    pl = row[1, "count"] * log(prob)
+    # end
     return pl
 end
+
+function pl_fn_s(theta::Vector, summary_table)
+    sum(map(i -> pl_one(theta, summary_table, i), 1:size(summary_table)[1]))
+end
+
 
 function cfa_nobs(data)
     size(data)[1]
@@ -133,9 +151,20 @@ end
 
 # Test function
 theta = [0.80, 0.70, 0.47, 0.38, 0.34, -1.43, -0.55, -0.13, -0.72, -1.13]
-my_data = create_summary_table(gen_data_bin(1000))
-pl_one(theta, my_data, 1)
+my_data = create_summary_table(dat)
+sum(map(i -> pl_one(theta, my_data, i), 1:size(my_data)[1])) - pl_value
 
-# M-estimation
-cfa_template = objective_function_template(cfa_nobs, pl_one)
-o1_ml = fit(cfa_template, my_data, theta)
+
+
+
+## M-estimation: ISSUE with MEstimation wanting to do automatic
+## differentiation (for computing standard errors) of a function that
+## depends on hcubature
+## cfa_template = objective_function_template(cfa_nobs, pl_one)
+## o1_ml = fit(cfa_template, my_data, theta,
+##             optim_options = Optim.Options(show_trace = true, iterations = 1))
+
+
+res = optimize(theta -> pl_fn_s(theta, my_data), theta,
+               GradientDescent(),
+               Optim.Options(show_trace = true, iterations = 1000))
