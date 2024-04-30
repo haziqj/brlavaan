@@ -46,11 +46,18 @@ growth_sim_fn <- function(i = 1, n = 100) {
     boot  = rb_boot(fit, dat)
   )
 }
+growth_sim_fn <- possibly(growth_sim_fn, NA)
 
-res <-
-  furrr::future_map(
-    .x = 1:B,
-    .f = possibly(growth_sim_fn, NA),
-    .progress = TRUE,
-    .options = furrr_options(seed = TRUE)
-  )
+res_growth <- list()
+i <- 1
+for (samp_size in c(15, 20, 50, 1000)) {
+  res_growth[[i]] <-
+    furrr::future_map(
+      .x = 1:B,
+      .f = \(x) growth_sim_fn(i = x, n = samp_size),
+      .progress = TRUE,
+      .options = furrr_options(seed = TRUE)
+    )
+  i <- i + 1
+}
+save(res_growth, file = "R/factor_models/sim_growth_curve.RData")
