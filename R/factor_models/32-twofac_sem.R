@@ -35,6 +35,7 @@ twofac_sim_fn <- function(i = 1, n = 200) {
 
   tibble(
     i     = i,
+    n     = n,
     par   = names(coef(fit)),
     truth = c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.09, 0.1225), 2), 1, 1),
     ml    = coef(fit),
@@ -47,8 +48,8 @@ twofac_sim_fn <- possibly(twofac_sim_fn, NA)
 
 res_twofac <- list()
 i <- 1
-for (samp_size in c(15, 20, 50, 1000)) {
-  res_growth[[i]] <-
+for (samp_size in c(15, 20, 50, 100, 1000)) {
+  res_twofac[[i]] <-
     furrr::future_map(
       .x = 1:B,
       .f = \(x) twofac_sim_fn(i = x, n = samp_size),
@@ -58,3 +59,15 @@ for (samp_size in c(15, 20, 50, 1000)) {
   i <- i + 1
 }
 save(res_twofac, file = "R/factor_models/sim_twofac_sem.RData")
+
+d1 <- do.call(rbind, res_twofac[[1]]) |> mutate(n = 15)
+d2 <- do.call(rbind, res_twofac[[2]]) |> mutate(n = 20)
+d3 <- do.call(rbind, res_twofac[[3]]) |> mutate(n = 50)
+d4 <- do.call(rbind, res_twofac[[4]]) |> mutate(n = 1000)
+rbind(
+  d1, d2, d3, d4
+) |>
+  summarise(
+    across(c(ml, ebrm, jack, boot), \(x) mean(x - truth, na.rm = TRUE)),
+    .by = c(par, n)
+  ) |> print(n = 100)
