@@ -2,7 +2,7 @@ library(lavaan)
 library(tidyverse)
 library(furrr)
 plan(multisession, workers = parallel::detectCores() - 2)
-source("R/factor_models/10-extract_H_and_J_matrices.R")
+source("R/factor_models/10-ebrm_explicit.R")
 source("R/factor_models/20-jackknife_bootstrap.R")
 B <- 1000  # no of sims
 
