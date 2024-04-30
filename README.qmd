@@ -27,7 +27,7 @@ fit <- cfa(model = "fx =~ x1 + x2 + x3", data = dat)
 semPaths(fit, "est", rotation = 3)
 ```
 
-Average bias across `B=1000` simulations:
+Average bias across `B=1000` simulations (sample size n = 200):
 
 ```{r}
 #| echo: false

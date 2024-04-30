@@ -19,7 +19,7 @@ semPaths(fit, "est", rotation = 3)
 <img src="README_files/figure-commonmark/fig-toyexample-1.png"
 id="fig-toyexample" />
 
-Average bias across `B=1000` simulations:
+Average bias across `B=1000` simulations (sample size n = 200):
 
     # A tibble: 6 × 5
       par         ml     ebrm      jack     boot
