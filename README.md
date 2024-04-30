@@ -16,7 +16,8 @@ fit <- cfa(model = "fx =~ x1 + x2 + x3", data = dat)
 semPaths(fit, "est", rotation = 3)
 ```
 
-![](README_files/figure-commonmark/unnamed-chunk-2-1.png)
+<img src="README_files/figure-commonmark/fig-toyexample-1.png"
+id="fig-toyexample" />
 
 Average bias across `B=1000` simulations:
 
@@ -29,3 +30,11 @@ Average bias across `B=1000` simulations:
     4 x2~~x2 -0.0382 -0.0218  -0.0163   -0.0189 
     5 x3~~x3 -0.0134 -0.00554 -0.000257 -0.00865
     6 fx~~fx  0.0181 -0.0185  -0.0150   -0.0255 
+
+### Growth curve models
+
+TBC
+
+### Two factor SEM
+
+TBC

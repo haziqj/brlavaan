@@ -18,6 +18,7 @@ Last modified: `r Sys.Date()`
 ### Normal CFA toy example
 
 ```{r}
+#| label: fig-toyexample
 # Simulate data
 mod <- "fx =~ 1*x1 + 0.8*x2 + 0.6*x3"
 n   <- 200
@@ -44,3 +45,12 @@ do.call(rbind, res) |>
     .by = par
   )
 ```
+
+### Growth curve models
+
+TBC
+
+### Two factor SEM
+
+TBC
+
