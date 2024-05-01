@@ -5,7 +5,7 @@ plan(multisession, workers = parallel::detectCores() - 2)
 source("R/factor_models/10-ebrm_explicit.R")
 source("R/factor_models/20-jackknife_bootstrap.R")
 source("R/factor_models/33-pop_param.R")
-B  <- 1000  # no of sims
+B  <- 2000  # no of sims
 NB <- 500   # bootstrap samples
 
 twofac_sim_fn <- function(i = 1, n = 15, ver = 1, nboot = 5) {
