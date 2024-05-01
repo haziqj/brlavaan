@@ -21,11 +21,17 @@ twofac_sim_fn <- function(i = 1, n = 15, ver = 1, nboot = 5) {
   )
 
   # Bias reducing methods
-  .ebrm <- rb_empr(fit)
   .jack <- rb_jack(fit, dat)
+  if(inherits(.jack, "try-error")) jack_time <- difftime(NA, Sys.time())
+  else jack_time <- attr(.jack, "timing")
+
   .boot <- try(rb_boot(fit, dat, nboot), silent = TRUE)
   if(inherits(.boot, "try-error")) boot_time <- difftime(NA, Sys.time())
   else boot_time <- attr(.boot, "timing")
+
+  .ebrm <- try(rb_empr(fit))
+  if(inherits(.ebrm, "try-error")) ebrm_time <- difftime(NA, Sys.time())
+  else ebrm_time <- attr(.ebrm, "timing")
 
   tibble(
     i     = i,
@@ -34,17 +40,18 @@ twofac_sim_fn <- function(i = 1, n = 15, ver = 1, nboot = 5) {
     par   = names(coef(fit)),
     truth = truth_twofac(ver),
     ml    = as.numeric(coef(fit)),
-    ebrm  = as.numeric(.ebrm),
     jack  = as.numeric(.jack),
     boot  = as.numeric(.boot),
+    ebrm  = as.numeric(.ebrm),
     # Convergences
     conv_ml   = fit@Fit@converged,
     conv_jack = sum(attr(.jack, "meta")$ok),
     conv_boot = sum(attr(.boot, "meta")$ok),
+    conv_ebrm = !inherits(.ebrm, "try-error"),
     # Timings
-    time_ebrm = attr(.ebrm, "timing"),
-    time_jack = attr(.jack, "timing"),
-    time_boot = boot_time
+    time_jack = jack_time,
+    time_boot = boot_time,
+    time_ebrm = ebrm_time
   )
 }
 
