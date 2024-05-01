@@ -1,5 +1,11 @@
+# FIXME: Note that the below uses semList(). Maybe in the future want to do
+# lavaanList() with optional cmd argument for sem/cfa/efa etc.
+
 # Jackknife bias correction ----------------------------------------------------
 rb_jack <- function(fit, data) {
+
+  start_time <- Sys.time()
+
   resample.jackknife <- function(.data){
     df.list <- vector(mode = "list", length = nrow(.data))
     for(i in 1:nrow(.data)) { df.list[[i]] <- .data[-i, ] }
@@ -16,17 +22,28 @@ rb_jack <- function(fit, data) {
     store.slots = "partable"
   )
 
+  end_time <- Sys.time()
+
   # Compute bias-corrected estimates (Equation 10)
-  nrow(data) * coef(fit) - (nrow(data)- 1 ) * rowMeans(coef(jack.estimates))
+  out <- nrow(data) * coef(fit) -
+    (nrow(data)- 1 ) * rowMeans(coef(jack.estimates), na.rm = TRUE)
+
+  attr(out, "meta") <- jack.estimates@meta
+  attr(out, "timing") <- end_time - start_time
+  out
 }
 
 # Bootstrap bias correction ----------------------------------------------------
-rb_boot <- function(fit, data) {
+rb_boot <- function(fit, data, bootsamp = 500) {
+
+  start_time <- Sys.time()
+
   resample.bootstrap <- function(.data){
-    df.list <- vector(mode = "list", length = 500)
-    for(i in 1:500) { df.list[[i]] <- data[sample.int(nrow(.data),
-                                                      size = nrow(.data),
-                                                      replace = TRUE), ] }
+    df.list <- vector(mode = "list", length = bootsamp)
+    for(i in seq_len(bootsamp)) {
+      rowz <- sample.int(nrow(.data), size = nrow(.data), replace = TRUE)
+      df.list[[i]] <- .data[rowz, ]
+    }
     return(df.list)
   }
 
@@ -40,6 +57,12 @@ rb_boot <- function(fit, data) {
     store.slots = "partable"
   )
 
+  end_time <- Sys.time()
+
   # Compute bias-corrected estimates (Equation 12)
-  2 * coef(fit) - rowMeans(coef(boot.estimates))
+  out <- 2 * coef(fit) - rowMeans(coef(boot.estimates), na.rm = TRUE)
+
+  attr(out, "meta") <- boot.estimates@meta
+  attr(out, "timing") <- end_time - start_time
+  out
 }
