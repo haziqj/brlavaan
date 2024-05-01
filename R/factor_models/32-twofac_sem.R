@@ -4,26 +4,13 @@ library(furrr)
 plan(multisession, workers = parallel::detectCores() - 2)
 source("R/factor_models/10-ebrm_explicit.R")
 source("R/factor_models/20-jackknife_bootstrap.R")
-B <- 1000  # no of sims
+source("R/factor_models/33-pop_param.R")
+B  <- 1000  # no of sims
+NB <- 500   # bootstrap samples
 
-twofac_sim_fn <- function(i = 1, n = 200) {
-  # Generate data
-  mod <- "
-  eta1 =~ 1*y1 + 0.7*y2 + 0.6*y3
-  eta2 =~ 1*y4 + 0.7*y5 + 0.6*y6
-  eta2 ~ 0.25*eta1
-
-  eta1 ~~ 1*eta1
-  eta2 ~~ 1*eta2
-  y1 ~~ 0.25*y1
-  y4 ~~ 0.25*y4
-  y2 ~~ 0.09*y2
-  y5 ~~ 0.09*y5
-  y3 ~~ 0.1225*y3
-  y6 ~~ 0.1225*y6
-  "
-  dat <- simulateData(model = mod, sample.nobs = n)
-
+twofac_sim_fn <- function(i = 1, n = 15, ver = 1, nboot = 5) {
+  # Generate and fit data
+  dat <- simulateData(model = txt_mod_twofac(ver), sample.nobs = n)
   fit <- sem(
     model = "
     eta1 =~ y1 + y2 + y3
@@ -33,41 +20,129 @@ twofac_sim_fn <- function(i = 1, n = 200) {
     data = dat
   )
 
+  # Bias reducing methods
+  .ebrm <- rb_empr(fit)
+  .jack <- rb_jack(fit, dat)
+  .boot <- try(rb_boot(fit, dat, nboot), silent = TRUE)
+  if(inherits(.boot, "try-error")) boot_time <- difftime(NA, Sys.time())
+  else boot_time <- attr(.boot, "timing")
+
   tibble(
     i     = i,
     n     = n,
+    rel   = ifelse(ver == 1, "0.8", "0.5"),
     par   = names(coef(fit)),
-    truth = c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.09, 0.1225), 2), 1, 1),
-    ml    = coef(fit),
-    ebrm  = rb_empr(fit),
-    jack  = rb_jack(fit, dat),
-    boot  = rb_boot(fit, dat)
+    truth = truth_twofac(ver),
+    ml    = as.numeric(coef(fit)),
+    ebrm  = as.numeric(.ebrm),
+    jack  = as.numeric(.jack),
+    boot  = as.numeric(.boot),
+    # Convergences
+    conv_ml   = fit@Fit@converged,
+    conv_jack = sum(attr(.jack, "meta")$ok),
+    conv_boot = sum(attr(.boot, "meta")$ok),
+    # Timings
+    time_ebrm = attr(.ebrm, "timing"),
+    time_jack = attr(.jack, "timing"),
+    time_boot = boot_time
   )
 }
-twofac_sim_fn <- possibly(twofac_sim_fn, NA)
 
 res_twofac <- list()
 i <- 1
 for (samp_size in c(15, 20, 50, 100, 1000)) {
-  res_twofac[[i]] <-
-    furrr::future_map(
-      .x = 1:B,
-      .f = \(x) twofac_sim_fn(i = x, n = samp_size),
-      .progress = TRUE,
-      .options = furrr_options(seed = TRUE)
-    )
-  i <- i + 1
-}
-save(res_twofac, file = "R/factor_models/sim_twofac_sem.RData")
+  for (ver in 1:2) {
+    rel <- ifelse(ver == 1, "0.8", "0.5")
+    cli::cli_alert_info("Running 2-fac model sims (rel = {rel} / n = {samp_size})")
 
-d1 <- do.call(rbind, res_twofac[[1]]) |> mutate(n = 15)
-d2 <- do.call(rbind, res_twofac[[2]]) |> mutate(n = 20)
-d3 <- do.call(rbind, res_twofac[[3]]) |> mutate(n = 50)
-d4 <- do.call(rbind, res_twofac[[4]]) |> mutate(n = 1000)
-rbind(
-  d1, d2, d3, d4
-) |>
+    res_twofac[[i]] <-
+      furrr::future_map(
+        .x = 1:B,
+        .f = \(x) twofac_sim_fn(i = x, n = samp_size, ver = ver, nboot = NB),
+        .progress = TRUE,
+        .options = furrr_options(seed = TRUE)
+      )
+
+    i <- i + 1
+    cat("\n")
+  }
+}
+# save(res_twofac, file = "R/factor_models/sim_twofac_curve.RData")
+
+res_twofac_all <-
+  lapply(res_twofac, \(x) do.call(rbind, x)) |>
+  do.call(what = rbind) |>
+  mutate(par2 = case_when(
+    grepl("^y([1-6])~~y\\1$", par) ~ "theta",
+    par == "eta1~~eta1" ~ "Psi11",
+    par == "eta2~~eta2" ~ "Psi22",
+    par == "eta2~eta1" ~ "beta",
+    par == "eta1=~y2" ~ "Lambda21",
+    TRUE ~ "ignore"
+  )) |>
+  filter(par2 != "ignore") |>
+  mutate(
+    par2 = factor(par2, levels = c("theta", "Psi11", "Psi22", "beta", "Lambda21"))
+  )
+
+# Convergence failures and timing
+res_twofac_all |>
   summarise(
-    across(c(ml, ebrm, jack, boot), \(x) mean(x - truth, na.rm = TRUE)),
-    .by = c(par, n)
-  ) |> print(n = 100)
+    across(starts_with("conv"), first),
+    across(starts_with("time"), first),
+    .by = c(i, rel, n)
+  ) |>
+  summarise(
+    fail_ml = 1 - mean(conv_ml),
+    fail_jack = 1 - mean(conv_jack / n),
+    fail_boot = 1 - mean(conv_boot / NB),
+    across(starts_with("time"), \(x) mean(x, na.rm = TRUE)),
+    .by = c(rel, n)
+  ) |>
+  arrange(desc(rel), n)
+
+# Relative mean bias table
+res_twofac_summary <-
+  res_twofac_all |>
+  summarise(
+    across(c(ml, ebrm, jack, boot), \(x) mean((x - truth)/truth, na.rm = TRUE)),
+    .by = c(rel, n, par2)
+  ) |>
+  pivot_longer(
+    cols = ml:boot,
+    names_to = "method",
+    values_to = "rel_bias"
+  ) |>
+  mutate(method = factor(method, c("ml", "jack", "boot", "ebrm"))) |>
+  arrange(desc(rel), n, par2, method)
+
+res_twofac_summary |>
+  pivot_wider(
+    names_from = n,
+    names_prefix = "n = ",
+    values_from = rel_bias
+  )
+
+# Relative mean bias plot
+res_twofac_summary |>
+  mutate(
+    x = as.numeric(as.factor(n)),
+    rel = paste0("Reliability = ", rel)
+  ) |>
+  ggplot(aes(x, rel_bias, color = method, shape = method)) +
+  geom_hline(yintercept = 0, linetype = "dashed", col = "gray") +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(
+    breaks = c(1, 2, 3, 4, 5),
+    labels = c(15, 20, 50, 100, 1000),
+    name = "Sample size"
+  ) +
+  scale_y_continuous(labels = scales::percent, name = "Relative mean bias") +
+  ggsci::scale_colour_npg(name = NULL) +
+  scale_shape_manual(values = c(15, 5, 9, 16), name = NULL) +
+  facet_grid(par2 ~ rel) +
+  theme_bw() +
+  theme(
+    legend.position = "top"
+  )

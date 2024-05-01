@@ -65,12 +65,17 @@ AAA <- function(theta, object = fit) {
 }
 
 rb_empr <- function(fit) {
+  start_time <- Sys.time()
   theta_hat <- coef(fit)
   n <- fit@Data@nobs[[1]]
 
   A <- AAA(theta_hat, fit)
   Hinv <- solve(HHH(theta_hat, fit, unit_information = FALSE))
   theta_tilde <- c(theta_hat + Hinv %*% A / n)  # FIXME: I think???
+
+  end_time <- Sys.time()
+
   names(theta_tilde) <- names(coef(fit))
+  attr(theta_tilde, "timing") <- end_time - start_time
   theta_tilde
 }
