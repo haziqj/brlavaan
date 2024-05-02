@@ -1,6 +1,9 @@
 ---
 title: "Empirical bias reducing methods for Structural Equation Models"
 format: gfm
+execute: 
+  echo: false
+  warning: false
 ---
 
 ```{r}
@@ -9,16 +12,17 @@ format: gfm
 library(tidyverse)
 library(lavaan)
 library(semPlot)
+library(gt)
 ```
 
-## Preliminary results
 
 Last modified: `r Sys.Date()`
 
-### Normal CFA toy example
+## Normal CFA toy example
 
 ```{r}
 #| label: fig-toyexample
+#| echo: true
 # Simulate data
 mod <- "fx =~ 1*x1 + 0.8*x2 + 0.6*x3"
 n   <- 200
@@ -46,11 +50,36 @@ do.call(rbind, res) |>
   )
 ```
 
-### Growth curve models
+## Growth curve models
 
-TBC
+### Convergence failures and timings
 
-### Two factor SEM
+```{r}
+#| label: tab-bootfail-growth
+load("R/factor_models/summary_growth_sim.RData")
+tab_time_fail_growth |>
+  mutate(across(starts_with("fail"), \(x) {
+    out <- x
+    out[x == 0] <- NA
+    out
+  })) |>
+  gt() |>
+  fmt_percent(starts_with("fail"))|>
+  fmt_missing(missing_text = "") |>
+  fmt_duration(starts_with("time"))
+```
+
+### Relative median bias plot
+
+```{r}
+#| label: fig-bias-growth
+#| fig-dpi: 300
+#| out-width: 100%
+p_med_bias_growth
+```
+
+
+## Two factor SEM
 
 TBC
 

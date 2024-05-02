@@ -90,7 +90,8 @@ res_growth_all <-
   )
 
 # Convergence failures and timing
-res_growth_all |>
+tab_time_fail_growth <-
+  res_growth_all |>
   summarise(
     across(starts_with("conv"), first),
     across(starts_with("time"), first),
@@ -100,16 +101,18 @@ res_growth_all |>
     fail_ml = 1 - mean(conv_ml),
     fail_jack = 1 - mean(conv_jack / n),
     fail_boot = 1 - mean(conv_boot / NB),
+    fail_ebrm = 1 - mean(conv_ebrm),
     across(starts_with("time"), \(x) mean(x, na.rm = TRUE)),
     .by = c(rel, n)
   ) |>
   arrange(desc(rel), n)
 
-# Relative mean bias table
-res_growth_summary <-
+# Relative median bias plot
+p_med_bias_growth <-
   res_growth_all |>
+  filter(conv_ml == TRUE) |>
   summarise(
-    across(c(ml, ebrm, jack, boot), \(x) mean((x - truth)/truth, na.rm = TRUE)),
+    across(c(ml, ebrm, jack, boot), \(x) median((x - truth)/truth, na.rm = TRUE)),
     .by = c(rel, n, par2)
   ) |>
   pivot_longer(
@@ -117,21 +120,16 @@ res_growth_summary <-
     names_to = "method",
     values_to = "rel_bias"
   ) |>
-  mutate(method = factor(method, c("ml", "jack", "boot", "ebrm"))) |>
-  arrange(desc(rel), n, par2, method)
-
-res_growth_summary |>
-  pivot_wider(
-    names_from = n,
-    names_prefix = "n = ",
-    values_from = rel_bias
-  )
-
-# Relative mean bias plot
-res_growth_summary |>
+  mutate(method = factor(
+    method,
+    levels = c("ml", "jack", "boot", "ebrm"),
+    labels = c("ML", "Jackknife", "Bootstrap", "Explicit BRM")
+  )) |>
+  arrange(desc(rel), n, par2, method) |>
   mutate(
     x = as.numeric(as.factor(n)),
-    rel = paste0("Reliability = ", rel)
+    rel = paste0("Reliability = ", rel),
+    rel = factor(rel, levels = (unique(rel)))
   ) |>
   ggplot(aes(x, rel_bias, color = method, shape = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray") +
@@ -150,3 +148,6 @@ res_growth_summary |>
   theme(
     legend.position = "top"
   )
+
+# Save objects for README
+save(tab_time_fail_growth, p_med_bias_growth, file = "R/factor_models/summary_growth_sim.RData")
