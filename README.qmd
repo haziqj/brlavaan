@@ -12,7 +12,6 @@ execute:
 library(tidyverse)
 library(lavaan)
 library(semPlot)
-library(gt)
 ```
 
 
@@ -57,16 +56,18 @@ do.call(rbind, res) |>
 ```{r}
 #| label: tab-bootfail-growth
 load("R/factor_models/summary_growth_sim.RData")
+options(knitr.kable.NA = "")
 tab_time_fail_growth |>
   mutate(across(starts_with("fail"), \(x) {
     out <- x
     out[x == 0] <- NA
     out
   })) |>
-  gt() |>
-  fmt_percent(starts_with("fail"))|>
-  fmt_missing(missing_text = "") |>
-  fmt_duration(starts_with("time"))
+  mutate(
+    across(starts_with("fail"), \(x) scales::percent(x, accuracy = 0.01)),
+    across(starts_with("time"), gt::vec_fmt_duration)
+  ) |>
+  kableExtra::kbl(format = "pipe")
 ```
 
 ### Relative median bias plot
