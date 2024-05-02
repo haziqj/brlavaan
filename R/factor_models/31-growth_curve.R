@@ -140,7 +140,7 @@ p_med_bias_growth <-
     labels = c(15, 20, 50, 100, 1000),
     name = "Sample size"
   ) +
-  scale_y_continuous(labels = scales::percent, name = "Relative mean bias") +
+  scale_y_continuous(labels = scales::percent, name = "Relative median bias") +
   ggsci::scale_colour_npg(name = NULL) +
   scale_shape_manual(values = c(15, 5, 9, 16), name = NULL) +
   facet_grid(par2 ~ rel) +
