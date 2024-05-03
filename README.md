@@ -1,7 +1,7 @@
 # Empirical bias reducing methods for Structural Equation Models
 
 
-Last modified: 2024-05-02
+Last modified: 2024-05-03
 
 ## Normal CFA toy example
 

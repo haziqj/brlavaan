@@ -34,7 +34,7 @@ Average bias across `B=1000` simulations (sample size n = 200):
 
 ```{r}
 #| echo: false
-load("R/factor_models/sims_toyexample.RData")
+load("R/sims_toyexample.RData")
 do.call(rbind, res) |>
   # mutate(across(c(ml, ebrm, jack, boot), \(x) as.vector(x - truth))) |>
   # pivot_longer(
@@ -55,7 +55,7 @@ do.call(rbind, res) |>
 
 ```{r}
 #| label: tab-bootfail-growth
-load("R/factor_models/summary_growth_sim.RData")
+load("R/summary_growth_sim.RData")
 options(knitr.kable.NA = "")
 tab_time_fail_growth |>
   mutate(across(starts_with("fail"), \(x) {
