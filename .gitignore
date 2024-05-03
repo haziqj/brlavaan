@@ -49,3 +49,5 @@ po/*~
 rsconnect/
 .DS_Store
 *.log
+R/dhaene_rosseel/02_Results/2FSEM_est_combined_final.RData
+R/dhaene_rosseel/02_Results/GCM_est_combined_final.RData
