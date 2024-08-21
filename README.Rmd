@@ -116,3 +116,11 @@ tab_mab_by_type
 ```{r}
 p_bias
 ```
+
+Notes:
+
+1. Most of the bias of the ML parameter estimates is due to things going in wrong in the optimiser. The implicit RBM method is much more stable. If we set an arbitrary cut off for the ML (say consider only parameters < 10 in absolute value) then the bias difference would be much smaller.
+
+2. I coded the objective function in a lazy way. Currently only works for this specific example. Ideally we dive into the `{lavaan}` source code and create a new objective function there...
+
+3. Noticed lots of numerical issues in the `optim()` routine. When the optimiser takes a weird turn in the parameter space things go haywire -- the `JJJ()` and `HHH()` returns crazy values and the Hessian is not invertible. For now I cheated and used L-BFGS-B bounds to keep the optimiser in check.
