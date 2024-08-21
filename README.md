@@ -23,13 +23,13 @@ dat <- simulateData(
   sample.nobs = n
 )
 head(dat)
-#>           y1          y2         y3          y4         y5           y6
-#> 1 -0.1987795  1.47569521  0.3345119 -0.09372872  0.3556238  0.335905798
-#> 2  0.7488490  1.66811067 -1.4445715 -0.52152669  1.4140433  1.224748671
-#> 3  0.6114716  1.01155380  0.3142461 -0.09042748 -0.9637810 -0.671176232
-#> 4  0.2580086  0.29322528 -1.1469406 -1.27516000 -1.3781009 -0.004485155
-#> 5 -2.4213952 -0.08839775  0.5260221  0.88702457 -0.8357927  1.680179704
-#> 6  0.1014696 -1.45620112 -0.1933923  1.25690247  0.6028781  0.773355780
+#>           y1          y2          y3         y4         y5           y6
+#> 1  0.6813519  0.09573879  0.22580113 -1.1693866  0.3164890  0.353604230
+#> 2  0.4179522  0.36136792  1.14284107  1.1741100  0.3797073  2.173895157
+#> 3 -0.3504405 -0.74416172 -0.19416321 -0.1794421  1.2365683 -0.909332334
+#> 4 -0.8222861 -0.72477549 -0.51935492 -1.0326628  0.1856429 -1.665372696
+#> 5 -2.4349577 -0.57915228 -1.97972924 -4.1888494 -0.3345901  0.377470995
+#> 6 -0.3704730  2.18032880 -0.07861724 -1.3124645 -3.2150772 -0.009681741
 ```
 
 ![](README_files/figure-gfm/sempath-1.png)<!-- -->
@@ -79,3 +79,21 @@ p_bias
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+Notes:
+
+1.  Most of the bias of the ML parameter estimates is due to things
+    going in wrong in the optimiser. The implicit RBM method is much
+    more stable. If we set an arbitrary cut off for the ML (say consider
+    only parameters \< 10 in absolute value) then the bias difference
+    would be much smaller.
+
+2.  I coded the objective function in a lazy way. Currently only works
+    for this specific example. Ideally we dive into the `{lavaan}`
+    source code and create a new objective function there…
+
+3.  Noticed lots of numerical issues in the `optim()` routine. When the
+    optimiser takes a weird turn in the parameter space things go
+    haywire – the `JJJ()` and `HHH()` returns crazy values and the
+    Hessian is not invertible. For now I cheated and used L-BFGS-B
+    bounds to keep the optimiser in check.
