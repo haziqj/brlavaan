@@ -14,7 +14,7 @@ theta_true <- c(
 )
 m <- length(theta_true)
 
-B <- 10  # no of sims
+B <- 100  # no of sims
 res <- list()
 nvec <- c(15, 20, 50, 100, 1000)
 
@@ -65,9 +65,9 @@ res_summ <-
           mutate(
             across(c(ml, iRBMp), \(x) x - truth),
             type = case_when(
-              grepl("=~", param) ~ "loadings",
-              grepl("~~", param) ~ "variance",
-              TRUE ~ "regression"
+              grepl("=~", param) ~ "Loadings",
+              grepl("~~", param) ~ "Variances",
+              TRUE ~ "Regressions"
             )
           )
       } else {
@@ -80,12 +80,45 @@ res_summ <- do.call("rbind", res_summ)
 res_summ$n <- factor(res_summ$n, levels = nvec)
 
 # Results ----------------------------------------------------------------------
-res_summ |>
+
+# Mean absolute bias table
+tab_mab <-
+  res_summ |>
+  group_by(n) |>
+  summarise(
+    across(c(ml, iRBMp), ~ mean(abs(.x), na.rm = TRUE)),
+    nok = mean(nok),
+    .groups = "drop"
+  )
+
+tab_mab_by_type <-
+  res_summ |>
+  group_by(n, type) |>
+  summarise(
+    across(c(ml, iRBMp), ~ mean(abs(.x), na.rm = TRUE)),
+    nok = mean(nok),
+    .groups = "drop"
+  )
+
+# Bias plot
+p_bias <-
+  res_summ |>
   pivot_longer(c(ml, iRBMp), names_to = "method", values_to = "bias") |>
   ggplot(aes(as.numeric(n), abs(bias), col = method)) +
-  geom_point(size = 0.5, alpha = 0.5, position = position_dodge(width = 0.1)) +
-  geom_smooth(se = FALSE) +
-  scale_y_log10() +
+  geom_point(size = 0.5, alpha = 0.3, position = position_dodge(width = 0.1)) +
+  geom_line(
+    data = pivot_longer(
+      tab_mab_by_type,
+      c(ml, iRBMp),
+      names_to = "method",
+      values_to = "bias"
+    ),
+    linewidth = 1
+  ) +
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", \(x) 10 ^ x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x)),
+  ) +
   scale_x_continuous(breaks = 1:5, labels = nvec) +
   facet_grid(type ~ .) +
   labs(
@@ -94,13 +127,4 @@ res_summ |>
     col = "Method"
   )
 
-# Mean absolute bias
-res_summ |>
-  group_by(n) |>
-  summarise(
-    across(c(ml, iRBMp), ~ mean(abs(.x), na.rm = TRUE)),
-    .groups = "drop"
-  )
-
-
-
+save(p_bias, tab_mab, tab_mab_by_type, file = "R/prelim_implicit_sims.RData")

@@ -83,8 +83,9 @@ imp_twofac <- function(dat, trace = FALSE) {
   }
 
   obj_fun <- function(theta) {
+    # print(theta)
     e <- JJJ(theta)
-    j <- HHH(theta)
+    j <- HHH(theta) + diag(1e-7, nrow(e))
     # out <- loglik(theta) - 0.5 * sum(diag(MASS::ginv(j) %*% e))
     out <- loglik(theta) - 0.5 * sum(diag(solve(j, e))) - sum(theta ^ 2) / n
     out
@@ -97,9 +98,9 @@ imp_twofac <- function(dat, trace = FALSE) {
   res <- try(optim(
     par = theta_start,
     fn = obj_fun,
-    method = "BFGS",
-    # lower = c(rep(-Inf, 5), rep(-2, m - 5)),
-    # upper = c(rep(Inf, 5), rep(2, m - 5)),
+    method = "L-BFGS-B",
+    lower = rep(-5, m),
+    upper = rep(5, m),
     control = list(fnscale = -1, trace = trace)
   ))
   if (inherits(res, "try-error")) {
@@ -114,3 +115,15 @@ imp_twofac <- function(dat, trace = FALSE) {
     iRBMp = theta_iRBMp
   )
 }
+
+# Test
+n <- 50
+dat <- simulateData(
+  model = "
+    eta1 =~ 1*y1 + 0.8*y2 + 0.6*y3
+    eta2 =~ 1*y4 + 0.8*y5 + 0.6*y6
+    eta2 ~ 0.3*eta1
+  ",
+  sample.nobs = n
+)
+imp_twofac(dat, trace = 10)
