@@ -78,6 +78,11 @@ res_summ <-
 res_summ <- imap(res_summ, ~ mutate(.x, n = .y))
 res_summ <- do.call("rbind", res_summ)
 res_summ$n <- factor(res_summ$n, levels = nvec)
+# res_summ <-
+#   filter(
+#     res_summ,
+#     abs(ml) < 5 & abs(iRBMp) < 5
+#   )
 
 # Results ----------------------------------------------------------------------
 
