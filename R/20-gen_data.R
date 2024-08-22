@@ -294,7 +294,7 @@ txt_mod_twofac_pop <- function(rel) {
   mod
 }
 
-txt_mod_twofac <- function() {
+txt_mod_twofac <- function(rel) {
   "
     fx =~ x1 + x2 + x3
     fy =~ y1 + y2 + y3
@@ -309,6 +309,13 @@ truth_twofac <- function(rel) {
   if (rel == "0.5") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(1, 0.49, 0.36), 2), 1, 1)
   }
+
+  names(truth) <- c(
+    "fx=~x2", "fx=~x3", "fy=~y2", "fy=~y3",
+    "fy~fx",
+    "x1~~x1", "x2~~x2", "x3~~x3", "y1~~y1", "y2~~y2", "y3~~y3",
+    "fx~~fx", "fy~~fy"
+  )
 
   truth
 }

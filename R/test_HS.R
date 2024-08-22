@@ -47,6 +47,7 @@ with(get_lav_stuff(fit_lav), {
 })
 expect_equal(grad.lav, rep(0, length(grad.lav)), tol = 1e-4)
 expect_equal(grad.lav, grad.num, tol = 1e-4)
+expect_equal(sign(grad.lav), sign(grad.num))
 
 # Test Hessian -----------------------------------------------------------------
 with(get_lav_stuff(fit_lav), {

@@ -17,7 +17,7 @@ fit_iRBM  <- fit_sem(mod, dat, method = "iRBM")
 fit_iRBMp <- fit_sem(mod, dat, method = "iRBMp")
 
 # Reliability == 0.5 -----------------------------------------------------------
-dat <- gen_data_twofac(n = 100, rel = 0.5, dist = "Non-normal")
+dat <- gen_data_twofac(n = 1000, rel = 0.5, dist = "Non-normal")
 
 fit_lav   <- sem(mod, dat)
 fit_ML    <- fit_sem(mod, dat, method = "ML")
