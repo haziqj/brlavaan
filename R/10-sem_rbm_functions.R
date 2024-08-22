@@ -230,6 +230,7 @@ fit_sem <- function(
   }
 
   # Start fitting process ------------------------------------------------------
+  start_time <- Sys.time()
   if (is_ML | is_eRBM) {
     # ML or explicit RBM -- either way requires MLE
     res <- nlminb(
@@ -268,6 +269,7 @@ fit_sem <- function(
     )
     est <- res$par
   }
+  end_time <- Sys.time()
 
   # Standard errors ------------------------------------------------------------
   j <- hessian_loglik(
@@ -280,7 +282,7 @@ fit_sem <- function(
   sds <- try(sqrt(diag(solve(j))), silent = TRUE)
   if (inherits(sds, "try-error")) sds <- rep(NA, length(est))
 
-  list(coefficients = est, stderr = sds)
+  list(coefficients = est, stderr = sds, time = end_time - start_time)
 }
 
 get_lav_stuff <- function(fit) {
