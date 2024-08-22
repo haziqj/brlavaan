@@ -26,7 +26,7 @@ lavoptions     <- fit0@Options
 
 # extract ingredients needed for explicit bias reduction
 # starting from the loglikelihood, not the objective function used
-# by lavaan 
+# by lavaan
 
 # theta = the parameter vector
 
@@ -65,9 +65,9 @@ grad.num <- numDeriv::grad(func = obj_loglik, x = theta.init)
 grad_loglik <- function(theta) {
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # gradient of F_ML (not loglik yet) 
-  grad.F <- lavaan:::lav_model_gradient(lavmodel = this.lavmodel, 
-              lavsamplestats = lavsamplestats, lavdata = lavdata) 
+  # gradient of F_ML (not loglik yet)
+  grad.F <- lavaan:::lav_model_gradient(lavmodel = this.lavmodel,
+              lavsamplestats = lavsamplestats, lavdata = lavdata)
   # rescale so we get gradient of loglik
   N <- lavsamplestats@ntotal
   grad.loglik <- -1 * N * grad.F
@@ -86,11 +86,13 @@ min_grad_loglik <- function(theta) {
   # minimize
   -1 * grad_loglik
 }
-est1 <- nlminb(start = theta.init, objective = min_obj_loglik, 
+est1 <- nlminb(start = theta.init, objective = min_obj_loglik,
                gradient = min_grad_loglik)
 round(est1$par, 3)
 
-
+# HJ: no gradients?
+est1a <- nlminb(start = theta.init, objective = min_obj_loglik)
+round(est1a$par, 3)
 
 # nummeric hessian (just to double-check)
 hessian.num1 <- numDeriv::hessian(func = obj_loglik, x = theta.init)
@@ -101,7 +103,7 @@ hessian.num <- numDeriv::jacobian(func = grad_loglik, x = theta.init)
 hessian_loglik <- function(theta) {
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # gradient of F_ML (not loglik yet) 
+  # gradient of F_ML (not loglik yet)
   hessian.F <- lavaan:::lav_model_hessian(lavmodel = this.lavmodel,
               lavsamplestats = lavsamplestats, lavdata = lavdata,
               lavoptions = lavoptions)
@@ -117,7 +119,7 @@ min_hessian_loglik <- function(theta) {
   hessian.loglik <- hessian_loglik(theta)
   -1 * hessian.loglik
 }
-est2 <- nlminb(start = theta.init, objective = min_obj_loglik, 
+est2 <- nlminb(start = theta.init, objective = min_obj_loglik,
                gradient = min_grad_loglik, hessian = min_hessian_loglik)
 # only 9 iterations were needed, but each iteration is (much) slower
 # as it takes time to compute the hessian every time
@@ -163,10 +165,10 @@ first_order_unit_information_loglik <- function(theta) {
 }
 
 # compare
-# tmp1 <- crossprod(scores_loglik(theta.init))/nobs(fit0)
+tmp1 <- crossprod(scores_loglik(theta.init))/nobs(fit0)
 # versus
-# tmp2 <- first_order_unit_information_loglik(theta.init)
-# range(tmp1 - tmp2)
+tmp2 <- first_order_unit_information_loglik(theta.init)
+range(tmp1 - tmp2)
 
 # ingredients for bias reduction
 j_theta <- function(theta) {
@@ -206,5 +208,5 @@ theta.correction <- j.theta.ml %*% A.theta.ml
 # divide by N perhaps?
 
 # once ok, then:
-# theta.ml.br <- theta.ml + theta.correction 
+# theta.ml.br <- theta.ml + theta.correction
 
