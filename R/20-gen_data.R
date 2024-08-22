@@ -1,6 +1,6 @@
 # Growth curve models (model a) ------------------------------------------------
-txt_mod_growth <- function(ver = c(1, 2)) {
-  if (ver == 1) {
+txt_mod_growth <- function(rel) {
+  if (rel == "0.8") {
     # Mean reliability 0.80 ----------------------------------------------------
     mod <- "
     i =~ 1*y1 + 1*y2 + 1*y3 + 1*y4 + 1*y5 + 1*y6 + 1*y7 + 1*y8 + 1*y9 + 1*y10
@@ -21,7 +21,7 @@ txt_mod_growth <- function(ver = c(1, 2)) {
     y10 ~~ 500 * y10
     "
   }
-  if (ver == 2) {
+  if (rel == "0.5") {
     # Mean reliability 0.50 ----------------------------------------------------
     mod <- "
     i =~ 1*y1 + 1*y2 + 1*y3 + 1*y4 + 1*y5 + 1*y6 + 1*y7 + 1*y8 + 1*y9 + 1*y10
@@ -46,28 +46,28 @@ txt_mod_growth <- function(ver = c(1, 2)) {
   mod
 }
 
-truth_growth <- function(ver = c(1, 2)) {
-  if (ver == 1) {
+truth_growth <- function(rel) {
+  if (rel == "0.8") {
     truth <- c(rep(500, 10), 550, 100, 40)
   }
-  if (ver == 2) {
+  if (rel == "0.5") {
     truth <- c(rep(1300, 10), 275, 50, 20)
   }
 
   truth
 }
 
-gen_data_growth <- function(n = 100, ver = 1) {
-  mod <- txt_mod_growth(ver = ver)
-  # truth <- truth_growth(ver)
+gen_data_growth <- function(n = 100, rel = 0.8) {
+  mod <- txt_mod_growth(rel = as.character(rel))
+  # truth <- truth_growth(rel)
   dat <- simulateData(model = mod, sample.nobs = n)
   # dat$truth <- truth
   dat
 }
 
 # Two-factor SEM models (model b) ----------------------------------------------
-txt_mod_twofac <- function(ver = c(1, 2)) {
-  if (ver == 1) {
+txt_mod_twofac <- function(rel) {
+  if (rel == "0.8") {
     # Reliabilities 0.80 -------------------------------------------------------
     mod <- "
     eta1 =~ 1*y1 + 0.7*y2 + 0.6*y3
@@ -84,7 +84,7 @@ txt_mod_twofac <- function(ver = c(1, 2)) {
     y6 ~~ 0.1225*y6
     "
   }
-  if (ver == 2) {
+  if (rel == "0.5") {
     # Reliabilities 0.50 -------------------------------------------------------
     mod <- "
     eta1 =~ 1*y1 + 0.7*y2 + 0.6*y3
@@ -105,20 +105,20 @@ txt_mod_twofac <- function(ver = c(1, 2)) {
   mod
 }
 
-truth_twofac <- function(ver = c(1, 2)) {
-  if (ver == 1) {
+truth_twofac <- function(rel) {
+  if (rel == "0.8") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.09, 0.1225), 2), 1, 1)
   }
-  if (ver == 2) {
+  if (rel == "0.5") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(1, 0.49, 0.36), 2), 1, 1)
   }
 
   truth
 }
 
-gen_data_twofac <- function(n = 100, ver = 1) {
-  mod <- txt_mod_twofac(ver = ver)
-  # truth <- truth_twofac(ver)
+gen_data_twofac <- function(n = 100, rel = 0.8) {
+  mod <- txt_mod_twofac(rel = as.character(rel))
+  # truth <- truth_twofac(rel)
   dat <- simulateData(model = mod, sample.nobs = n)
   # dat$truth <- truth
   dat
