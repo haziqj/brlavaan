@@ -161,10 +161,10 @@ txt_mod_growth <- function(rel) {
 
 truth_growth <- function(rel) {
   if (rel == "0.8") {
-    truth <- c(rep(500, 10), 550, 100, 40)
+    truth <- c(550, 0, 100, 0, 40, rep(500, 10))
   }
   if (rel == "0.5") {
-    truth <- c(rep(1300, 10), 275, 50, 20)
+    truth <- c(275, 0, 50, 0, 20, rep(1300, 10))
   }
 
   truth
@@ -251,7 +251,7 @@ gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
     colnames(dat) <- paste0("Day", 0:9)
   }
 
-  attr(dat, "truth") <- "FIXME"
+  attr(dat, "truth") <- truth_growth(rel)
   attr(dat, "dist") <- dist
   dat
 }
@@ -304,7 +304,7 @@ txt_mod_twofac <- function() {
 
 truth_twofac <- function(rel) {
   if (rel == "0.8") {
-    truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.09, 0.1225), 2), 1, 1)
+    truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.1225, 0.09), 2), 1, 1)
   }
   if (rel == "0.5") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(1, 0.49, 0.36), 2), 1, 1)
@@ -404,7 +404,9 @@ gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
     colnames(dat) <- c("x1", "x2", "x3", "y1", "y2", "y3")
   }
 
-  attr(dat, "truth") <- "FIXME"
+  attr(dat, "truth") <- truth_twofac(rel)
   attr(dat, "dist") <- dist
   dat
 }
+
+truth <- function(x) attr(x, "truth")
