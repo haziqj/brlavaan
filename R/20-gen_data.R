@@ -1,5 +1,5 @@
 # Growth curve models (model a) ------------------------------------------------
-txt_mod_growth <- function(rel) {
+txt_mod_growth_pop <- function(rel) {
   if (rel == "0.8") {
     # Mean reliability 0.80 ----------------------------------------------------
     mod <- "
@@ -66,6 +66,88 @@ txt_mod_growth <- function(rel) {
   mod
 }
 
+txt_mod_growth <- function(rel) {
+  rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+
+  if (rel == "0.8") {
+    mod <- "
+      # intercept with coefficients fixed to 1
+      i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+            1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
+
+      # slope with coefficients fixed to 0:9 (number of days)
+      s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+            5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+
+      i ~~ start(550)*i
+      i ~ start(0)*1
+
+      s ~~ start(100)*s
+      s ~ start(0)*1
+
+      i ~~ start(40)*s
+
+      # fix intercepts
+      Day0 ~ 0*1
+      Day1 ~ 0*1
+      Day2 ~ 0*1
+      Day3 ~ 0*1
+      Day4 ~ 0*1
+      Day5 ~ 0*1
+      Day6 ~ 0*1
+      Day7 ~ 0*1
+      Day8 ~ 0*1
+      Day9 ~ 0*1
+
+
+      # apply equality constraints
+      Day0 ~~ v*Day0 + start(500)*Day0
+      Day1 ~~ v*Day1 + start(500)*Day1
+      Day2 ~~ v*Day2 + start(500)*Day2
+      Day3 ~~ v*Day3 + start(500)*Day3
+      Day4 ~~ v*Day4 + start(500)*Day4
+      Day5 ~~ v*Day5 + start(500)*Day5
+      Day6 ~~ v*Day6 + start(500)*Day6
+      Day7 ~~ v*Day7 + start(500)*Day7
+      Day8 ~~ v*Day8 + start(500)*Day8
+      Day9 ~~ v*Day9 + start(500)*Day9
+    "
+  }
+  if (rel == "0.5") {
+    mod <- "
+      # intercept with coefficients fixed to 1
+      i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+            1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
+
+      # slope with coefficients fixed to 0:9 (number of days)
+      s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+            5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+
+      i ~~ start(275)*i
+      i ~ start(0)*1
+
+      s ~~ start(50)*s
+      s ~ start(0)*1
+
+      i ~~ start(20)*s
+
+      # apply equality constraints
+      Day0 ~~ v*Day0 + start(1300)*Day0
+      Day1 ~~ v*Day1 + start(1300)*Day1
+      Day2 ~~ v*Day2 + start(1300)*Day2
+      Day3 ~~ v*Day3 + start(1300)*Day3
+      Day4 ~~ v*Day4 + start(1300)*Day4
+      Day5 ~~ v*Day5 + start(1300)*Day5
+      Day6 ~~ v*Day6 + start(1300)*Day6
+      Day7 ~~ v*Day7 + start(1300)*Day7
+      Day8 ~~ v*Day8 + start(1300)*Day8
+      Day9 ~~ v*Day9 + start(1300)*Day9
+    "
+  }
+
+  mod
+}
+
 truth_growth <- function(rel) {
   if (rel == "0.8") {
     truth <- c(rep(500, 10), 550, 100, 40)
@@ -84,7 +166,7 @@ gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
   nobs <- n
   n.factors <- 2
   n.indicators <- 10
-  mod <- txt_mod_growth(rel = rel)
+  mod <- txt_mod_growth_pop(rel = rel)
 
   # Population parameters ------------------------------------------------------
   if (rel == "0.8") {
@@ -164,7 +246,7 @@ gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
 }
 
 # Two-factor SEM models (model b) ----------------------------------------------
-txt_mod_twofac <- function(rel) {
+txt_mod_twofac_pop <- function(rel) {
   if (rel == "0.8") {
     # Reliabilities 0.80 -------------------------------------------------------
     mod <- "
@@ -201,6 +283,14 @@ txt_mod_twofac <- function(rel) {
   mod
 }
 
+txt_mod_twofac <- function() {
+  "
+    fx =~ x1 + x2 + x3
+    fy =~ y1 + y2 + y3
+    fy ~ fx
+  "
+}
+
 truth_twofac <- function(rel) {
   if (rel == "0.8") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.09, 0.1225), 2), 1, 1)
@@ -219,7 +309,7 @@ gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
   nobs <- n
   n.factors <- 2
   n.indicators <- 6
-  mod <- txt_mod_twofac(rel = rel)
+  mod <- txt_mod_twofac_pop(rel = rel)
 
   # Population parameters ------------------------------------------------------
 
