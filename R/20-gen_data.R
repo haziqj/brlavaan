@@ -99,7 +99,6 @@ txt_mod_growth <- function(rel) {
       Day8 ~ 0*1
       Day9 ~ 0*1
 
-
       # apply equality constraints
       Day0 ~~ v*Day0 + start(500)*Day0
       Day1 ~~ v*Day1 + start(500)*Day1
@@ -130,6 +129,18 @@ txt_mod_growth <- function(rel) {
       s ~ start(0)*1
 
       i ~~ start(20)*s
+
+      # fix intercepts
+      Day0 ~ 0*1
+      Day1 ~ 0*1
+      Day2 ~ 0*1
+      Day3 ~ 0*1
+      Day4 ~ 0*1
+      Day5 ~ 0*1
+      Day6 ~ 0*1
+      Day7 ~ 0*1
+      Day8 ~ 0*1
+      Day9 ~ 0*1
 
       # apply equality constraints
       Day0 ~~ v*Day0 + start(1300)*Day0

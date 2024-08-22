@@ -15,3 +15,13 @@ fit_ML    <- fit_sem(mod, dat, method = "ML")
 fit_eRBM  <- fit_sem(mod, dat, method = "eRBM")
 fit_iRBM  <- fit_sem(mod, dat, method = "iRBM")
 fit_iRBMp <- fit_sem(mod, dat, method = "iRBMp")
+
+# Reliability == 0.8 -----------------------------------------------------------
+dat <- gen_data_growth(n = 100, rel = 0.5, dist = "Kurtosis")
+mod <- txt_mod_growth(0.5)
+
+fit_lav   <- sem(mod, dat)
+fit_ML    <- fit_sem(mod, dat, method = "ML")
+fit_eRBM  <- fit_sem(mod, dat, method = "eRBM")
+fit_iRBM  <- fit_sem(mod, dat, method = "iRBM")
+fit_iRBMp <- fit_sem(mod, dat, method = "iRBMp")
