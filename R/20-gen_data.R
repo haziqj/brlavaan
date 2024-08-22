@@ -57,6 +57,14 @@ truth_growth <- function(ver = c(1, 2)) {
   truth
 }
 
+gen_data_growth <- function(n = 100, ver = 1) {
+  mod <- txt_mod_growth(ver = ver)
+  # truth <- truth_growth(ver)
+  dat <- simulateData(model = mod, sample.nobs = n)
+  # dat$truth <- truth
+  dat
+}
+
 # Two-factor SEM models (model b) ----------------------------------------------
 txt_mod_twofac <- function(ver = c(1, 2)) {
   if (ver == 1) {
@@ -106,4 +114,12 @@ truth_twofac <- function(ver = c(1, 2)) {
   }
 
   truth
+}
+
+gen_data_twofac <- function(n = 100, ver = 1) {
+  mod <- txt_mod_twofac(ver = ver)
+  # truth <- truth_twofac(ver)
+  dat <- simulateData(model = mod, sample.nobs = n)
+  # dat$truth <- truth
+  dat
 }
