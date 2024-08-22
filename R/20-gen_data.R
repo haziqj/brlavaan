@@ -3,43 +3,63 @@ txt_mod_growth <- function(rel) {
   if (rel == "0.8") {
     # Mean reliability 0.80 ----------------------------------------------------
     mod <- "
-    i =~ 1*y1 + 1*y2 + 1*y3 + 1*y4 + 1*y5 + 1*y6 + 1*y7 + 1*y8 + 1*y9 + 1*y10
-    s =~ 0*y1 + 1*y2 + 2*y3 + 3*y4 + 4*y5 + 5*y6 + 6*y7 + 7*y8 + 8*y9 + 9*y10
+    # intercept with coefficients fixed to 1
+    i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+          1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
 
-    i ~~ 550 * i
-    s ~~ 100 * s
-    i ~~ 40 * s
-    y1 ~~ 500 * y1
-    y2 ~~ 500 * y2
-    y3 ~~ 500 * y3
-    y4 ~~ 500 * y4
-    y5 ~~ 500 * y5
-    y6 ~~ 500 * y6
-    y7 ~~ 500 * y7
-    y8 ~~ 500 * y8
-    y9 ~~ 500 * y9
-    y10 ~~ 500 * y10
+    # slope with coefficients fixed to 0:9 (number of days)
+    s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+          5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+
+    i ~~ 550*i
+    i ~ 0*1
+
+    s ~~ 100*s
+    s ~ 0*1
+
+    i ~~ 40*s
+
+    Day0 ~~ 500*Day0
+    Day1 ~~ 500*Day1
+    Day2 ~~ 500*Day2
+    Day3 ~~ 500*Day3
+    Day4 ~~ 500*Day4
+    Day5 ~~ 500*Day5
+    Day6 ~~ 500*Day6
+    Day7 ~~ 500*Day7
+    Day8 ~~ 500*Day8
+    Day9 ~~ 500*Day9
     "
   }
   if (rel == "0.5") {
     # Mean reliability 0.50 ----------------------------------------------------
     mod <- "
-    i =~ 1*y1 + 1*y2 + 1*y3 + 1*y4 + 1*y5 + 1*y6 + 1*y7 + 1*y8 + 1*y9 + 1*y10
-    s =~ 0*y1 + 1*y2 + 2*y3 + 3*y4 + 4*y5 + 5*y6 + 6*y7 + 7*y8 + 8*y9 + 9*y10
+    # intercept with coefficients fixed to 1
+    i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+          1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
 
-    i ~~ 275 * i
-    s ~~ 50 * s
-    i ~~ 20 * s
-    y1 ~~ 1300 * y1
-    y2 ~~ 1300 * y2
-    y3 ~~ 1300 * y3
-    y4 ~~ 1300 * y4
-    y5 ~~ 1300 * y5
-    y6 ~~ 1300 * y6
-    y7 ~~ 1300 * y7
-    y8 ~~ 1300 * y8
-    y9 ~~ 1300 * y9
-    y10 ~~ 1300 * y10
+    # slope with coefficients fixed to 0:9 (number of days)
+    s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+          5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+
+    i ~~ 275*i
+    i ~ 0*1
+
+    s ~~ 50*s
+    s ~ 0*1
+
+    i ~~ 20*s
+
+    Day0 ~~ 1300*Day0
+    Day1 ~~ 1300*Day1
+    Day2 ~~ 1300*Day2
+    Day3 ~~ 1300*Day3
+    Day4 ~~ 1300*Day4
+    Day5 ~~ 1300*Day5
+    Day6 ~~ 1300*Day6
+    Day7 ~~ 1300*Day7
+    Day8 ~~ 1300*Day8
+    Day9 ~~ 1300*Day9
     "
   }
 
@@ -57,11 +77,89 @@ truth_growth <- function(rel) {
   truth
 }
 
-gen_data_growth <- function(n = 100, rel = 0.8) {
-  mod <- txt_mod_growth(rel = as.character(rel))
-  # truth <- truth_growth(rel)
-  dat <- simulateData(model = mod, sample.nobs = n)
-  # dat$truth <- truth
+gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE) {
+  dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
+  if (isTRUE(lavsim)) dist <- "Normal_lav"
+  rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+  nobs <- n
+  n.factors <- 2
+  n.indicators <- 10
+  mod <- txt_mod_growth(rel = rel)
+
+  # Population parameters ------------------------------------------------------
+  if (rel == "0.8") {
+    lambda <- matrix(data = c(rep(1, times = n.indicators), 0:(n.indicators-1)),
+                     nrow = n.indicators,
+                     ncol = n.factors)
+    psi <- matrix(data = c(550, 40, 40, 100),
+                  nrow = n.factors,
+                  ncol = n.factors)
+    theta <- matrix(data = 0,
+                    nrow = n.indicators,
+                    ncol = n.indicators)
+    diag(theta) <- 500
+  }
+  if (rel == "0.5") {
+    lambda <- matrix(data = c(rep(1, times = n.indicators), 0:(n.indicators-1)),
+                     nrow = n.indicators,
+                     ncol = n.factors)
+    psi <- matrix(data = c(275, 20, 20, 50),
+                  nrow = n.factors,
+                  ncol = n.factors)
+    theta <- matrix(data = 0,
+                    nrow = n.indicators,
+                    ncol = n.indicators)
+    diag(theta) <- 1300
+  }
+
+  # Simulate data --------------------------------------------------------------
+  if (dist == "Normal_lav") {
+    dat <- lavaan::simulateData(model = mod, sample.nobs = n)
+  } else {
+    if(dist == "Normal") {
+      factors <- t(covsim::rIG(N = nobs,
+                               sigma.target = psi,
+                               skewness = rep(0, times = ncol(lambda)),
+                               excesskurtosis = rep(0, times = ncol(lambda)),
+                               reps = 1)[[1]])
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(0, times = nrow(theta)),
+                         excesskurtosis = rep(0, times = nrow(theta)),
+                         reps = 1)[[1]])
+    } else if (dist == "Kurtosis") {
+      factors <- t(covsim::rIG(N = nobs,
+                               sigma.target = psi,
+                               skewness = rep(0, times = ncol(lambda)),
+                               excesskurtosis = rep(6, times = ncol(lambda)),
+                               reps = 1)[[1]])
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(0, times = nrow(theta)),
+                         excesskurtosis = rep(6, times = nrow(theta)),
+                         reps = 1)[[1]])
+    } else if (dist == "Non-normal") {
+      factors <- t(covsim::rIG(N = nobs,
+                               sigma.target = psi,
+                               skewness = rep(-2, times = ncol(lambda)),
+                               excesskurtosis = rep(6, times = ncol(lambda)),
+                               reps = 1)[[1]])
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(-2, times = nrow(theta)),
+                         excesskurtosis = rep(6, times = nrow(theta)),
+                         reps = 1)[[1]])
+    }
+
+    dat <- as.data.frame(t(lambda %*% factors + e))
+    colnames(dat) <- paste0("Day", 0:9)
+  }
+
+  attr(dat, "truth") <- "FIXME"
+  attr(dat, "dist") <- dist
   dat
 }
 
@@ -70,35 +168,33 @@ txt_mod_twofac <- function(rel) {
   if (rel == "0.8") {
     # Reliabilities 0.80 -------------------------------------------------------
     mod <- "
-    eta1 =~ 1*y1 + 0.7*y2 + 0.6*y3
-    eta2 =~ 1*y4 + 0.7*y5 + 0.6*y6
-    eta2 ~ 0.25*eta1
+    fx =~ 1*x1 + 0.7*x2 + 0.6*x3
+    fy =~ 1*y1 + 0.7*y2 + 0.6*y3
+    fy ~ 0.25*fx
 
-    eta1 ~~ 1*eta1
-    eta2 ~~ 1*eta2
+    x1 ~~ 0.25*x1
+    x2 ~~ 0.1225*x2
+    x3 ~~ 0.09*x3
+
     y1 ~~ 0.25*y1
-    y2 ~~ 0.09*y2
-    y3 ~~ 0.1225*y3
-    y4 ~~ 0.25*y4
-    y5 ~~ 0.09*y5
-    y6 ~~ 0.1225*y6
+    y2 ~~ 0.1225*y2
+    y3 ~~ 0.09*y3
     "
   }
   if (rel == "0.5") {
     # Reliabilities 0.50 -------------------------------------------------------
     mod <- "
-    eta1 =~ 1*y1 + 0.7*y2 + 0.6*y3
-    eta2 =~ 1*y4 + 0.7*y5 + 0.6*y6
-    eta2 ~ 0.25*eta1
+    fx =~ 1*x1 + 0.7*x2 + 0.6*x3
+    fy =~ 1*y1 + 0.7*y2 + 0.6*y3
+    fy ~ 0.25*fx
 
-    eta1 ~~ 1*eta1
-    eta2 ~~ 1*eta2
+    x1 ~~ 1*x1
+    x2 ~~ 0.49*x2
+    x3 ~~ 0.36*x3
+
     y1 ~~ 1*y1
     y2 ~~ 0.49*y2
     y3 ~~ 0.36*y3
-    y4 ~~ 1*y4
-    y5 ~~ 0.49*y5
-    y6 ~~ 0.36*y6
     "
   }
 
@@ -116,10 +212,98 @@ truth_twofac <- function(rel) {
   truth
 }
 
-gen_data_twofac <- function(n = 100, rel = 0.8) {
-  mod <- txt_mod_twofac(rel = as.character(rel))
-  # truth <- truth_twofac(rel)
-  dat <- simulateData(model = mod, sample.nobs = n)
-  # dat$truth <- truth
+gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE) {
+  dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
+  if (isTRUE(lavsim)) dist <- "Normal_lav"
+  rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+  nobs <- n
+  n.factors <- 2
+  n.indicators <- 6
+  mod <- txt_mod_twofac(rel = rel)
+
+  # Population parameters ------------------------------------------------------
+
+  # Create (empty) matrices
+  lambda <- matrix(data = 0, nrow = n.indicators, ncol = n.factors)
+  psi <- matrix(data = 0, nrow = n.factors, ncol = n.factors)
+  beta <- matrix(data = 0, nrow = n.factors, ncol = n.factors)
+  theta <- matrix(data = 0, nrow = n.indicators, ncol = n.indicators)
+  eta <- matrix(data = NA, nrow = n.factors, ncol = nobs)
+  e <- matrix(data = NA, nrow = n.indicators, ncol = nobs)
+
+  # Define aspired reliability of indicators
+  reliability <- matrix(data = 0, nrow = n.indicators, ncol = n.indicators)
+  diag(reliability) <- as.numeric(rel)
+
+  # Define factor loadings, factor variances and residual variances
+  lambda[1:6, 1] <- c(1, 0.7, 0.6, 0, 0, 0)
+  lambda[1:6, 2] <- c(0, 0, 0, 1, 0.7, 0.6)
+  diag(psi) <- c(1, 1)
+  beta[2, 1] <- 0.25
+  diag(theta) <- diag((lambda %*% psi %*% t(lambda)) %*%
+                        solve(reliability) - (lambda %*% psi %*% t(lambda)))
+
+  # Simulate data --------------------------------------------------------------
+  if (dist == "Normal_lav") {
+    dat <- lavaan::simulateData(model = mod, sample.nobs = n)
+  } else {
+    if(dist == "Normal") {
+      random <- covsim::rIG(N = nobs,
+                            sigma.target = psi,
+                            skewness = rep(0, times = ncol(lambda)),
+                            excesskurtosis = rep(0, times = ncol(lambda)),
+                            reps = 1)[[1]]
+
+      fx <- random[ , 1]
+      fy <- fx*beta[2, 1] + random[ , 2]
+      factors <- rbind(fx, fy)
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(0, times = nrow(theta)),
+                         excesskurtosis = rep(0, times = nrow(theta)),
+                         reps = 1)[[1]])
+    }
+    if (dist == "Kurtosis") {
+      random <- covsim::rIG(N = nobs,
+                            sigma.target = psi,
+                            skewness = rep(0, times = ncol(lambda)),
+                            excesskurtosis = rep(6, times = ncol(lambda)),
+                            reps = 1)[[1]]
+
+      fx <- random[ , 1]
+      fy <- fx*beta[2, 1] + random[ , 2]
+      factors <- rbind(fx, fy)
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(0, times = nrow(theta)),
+                         excesskurtosis = rep(6, times = nrow(theta)),
+                         reps = 1)[[1]])
+    }
+    if (dist == "Non-normal") {
+      random <- covsim::rIG(N = nobs,
+                            sigma.target = psi,
+                            skewness = rep(-2, times = ncol(lambda)),
+                            excesskurtosis = rep(6, times = ncol(lambda)),
+                            reps = 1)[[1]]
+
+      fx <- random[ , 1]
+      fy <- fx*beta[2, 1] + random[ , 2]
+      factors <- rbind(fx, fy)
+
+      e <- t(covsim::rIG(N = nobs,
+                         sigma.target = theta,
+                         skewness = rep(-2, times = nrow(theta)),
+                         excesskurtosis = rep(6, times = nrow(theta)),
+                         reps = 1)[[1]])
+    }
+
+    dat <- as.data.frame(t(lambda %*% factors + e))
+    colnames(dat) <- c("x1", "x2", "x3", "y1", "y2", "y3")
+  }
+
+  attr(dat, "truth") <- "FIXME"
+  attr(dat, "dist") <- dist
   dat
 }
