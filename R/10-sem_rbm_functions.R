@@ -183,7 +183,6 @@ fit_sem <- function(
     model,
     data,
     method = "ML",
-    plugin = FALSE,
     debug = FALSE,
     theta_init = NULL
   ) {
