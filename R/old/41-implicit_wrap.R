@@ -1,13 +1,8 @@
-library(tidyverse)
-library(lavaan)
-theme_set(theme_bw())
-
 imp_twofac <- function(dat, trace = FALSE) {
   # {lavaan} fit ---------------------------------------------------------------
   mod <- "
     eta1 =~ y1 + y2 + y3
     eta2 =~ y4 + y5 + y6
-    eta2 ~ eta1
   "
   fit_lav <- sem(mod, dat)
   theta_lav <- coef(fit_lav)
@@ -115,15 +110,3 @@ imp_twofac <- function(dat, trace = FALSE) {
     iRBMp = theta_iRBMp
   )
 }
-
-# Test
-n <- 50
-dat <- simulateData(
-  model = "
-    eta1 =~ 1*y1 + 0.8*y2 + 0.6*y3
-    eta2 =~ 1*y4 + 0.8*y5 + 0.6*y6
-    eta2 ~ 0.3*eta1
-  ",
-  sample.nobs = n
-)
-imp_twofac(dat, trace = 10)
