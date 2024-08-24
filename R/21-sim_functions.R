@@ -6,7 +6,7 @@ source("R/20-gen_data.R")
 
 ncores <- parallel::detectCores() - 2
 future::plan(multisession, workers = ncores)
-nsimu <- 10
+nsimu <- 4
 
 sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim = FALSE) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
@@ -31,7 +31,7 @@ sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim
 
   simu_res <- future_map(
     seq_len(nsimu),
-    function(j) {
+    safely(function(j) {
       dat <- datasets[[j]]
 
       fit_ML    <- fit_sem(model = mod, data = dat, method = "ML")
@@ -51,12 +51,21 @@ sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim
         method = rep(c("ML", "eRBM", "iRBM", "iRBMp"), each = length(true_vals)),
         time = rep(c(fit_ML$time, fit_eRBM$time, fit_iRBM$time, fit_iRBMp$time), each = length(true_vals))
       )
-    },
+    }, otherwise = NA),
     .progress = TRUE,
     .options = furrr_options(seed = TRUE)
   )
+  simu_res
 
-  # do.call("rbind", simu_res)
+  # Clean up -------------------------------------------------------------------
+  where_error <- which(sapply(simu_res, \(x) !is.null(x$error)))
+  error_list <- lapply(simu_res[where_error], \(x) x$error)
+  names(error_list) <- where_error
+
+  list(
+    simu_res = do.call("rbind", lapply(simu_res, \(x) x$result)),
+    errors = error_list
+  )
 }
 
 # simu_id <-
@@ -70,7 +79,8 @@ sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim
 
 simu_id <-
   expand_grid(
-    dist = c("Normal", "Kurtosis", "Non-normal"),
+    # dist = c("Normal", "Kurtosis", "Non-normal"),
+    dist = "Normal",
     model = "twofac",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
@@ -85,7 +95,7 @@ for (i in seq_len(nrow(simu_id))) {
   n     <- simu_id$n[i]
 
   cli::cli_inform("[{i} / {nrow(simu_id)}] Now running {model} models ({dist}) rel = {rel}, n = {n}\n")
-  simu_res[[i]] <- sim_fun(dist, model, rel, n, lavsim = FALSE)
+  simu_res[[i]] <- sim_fun(dist, model, rel, n, lavsim = TRUE)
   cat("\n")
 }
 
