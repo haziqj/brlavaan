@@ -99,10 +99,10 @@ for (i in seq_len(nrow(simu_id))) {
   cat("\n")
 }
 
-results <- do.call(rbind, simu_res)
+results <- do.call(rbind, lapply(simu_res, \(x) x$simu_res))
 results |>
   group_by(dist, model, rel, n, method) |>
-  filter(abs(est) < 300) |>
+  # filter(abs(est) < 300) |>
   summarise(
     bias = mean(est - truth),
     mse = mean((est - truth) ^ 2),
