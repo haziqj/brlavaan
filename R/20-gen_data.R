@@ -167,6 +167,7 @@ truth_growth <- function(rel) {
     truth <- c(275, 0, 50, 0, 20, rep(1300, 10))
   }
 
+  names(truth) <- c("i~~i", "i~1", "s~~s", "s~1", "i~~s", rep("v", 10))
   truth
 }
 
