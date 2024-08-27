@@ -199,22 +199,26 @@ fit_sem <- function(
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
   lavoptions     <- fit0@Options
+  pt             <- partable(fit0)
 
   if (is.null(theta_init)) theta_init <- coef(fit0)  # starting values
   n <- nobs(fit0)
+
+  # Parameter constraints
+  theta_init <- contract_theta(theta_init, pt)
 
   # DEBUG ----------------------------------------------------------------------
   if (isTRUE(debug)) {
     out <- with(
       list(
-        theta = theta_init,
+        theta = expand_theta(theta_init, pt),
         lavmodel = lavmodel,
         lavsamplestats = lavsamplestats,
         lavdata = lavdata,
         lavoptions = lavoptions
       ),
       list(
-        theta = theta_init,
+        theta = expand_theta(theta_init, pt),
         n = n,
         loglik = loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
         grad_loglik = grad_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
@@ -234,8 +238,8 @@ fit_sem <- function(
     # ML or explicit RBM -- either way requires MLE
     res <- nlminb(
       start = theta_init,
-      objective = function(x, ...) -loglik(x, ...),
-      gradient = function(x, ...) -grad_loglik(x, ...),
+      objective = function(x, ...) -loglik(expand_theta(x, pt), ...),
+      gradient = function(x, ...) -grad_loglik(expand_theta(x, pt), ...),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -289,6 +293,54 @@ get_lav_stuff <- function(fit) {
     lavmodel       = fit@Model,
     lavsamplestats = fit@SampleStats,
     lavdata        = fit@Data,
-    lavoptions     = fit@Options
+    lavoptions     = fit@Options,
+    pt             = partable(fit)
   )
 }
+
+contract_theta <- function(theta = coef(fit_lav), pt = partable(fit_lav)) {
+
+  x <- theta
+  names(x) <- plabs <- pt$plabel[pt$free > 0]
+
+  equal_pt <- pt[pt$op == "==", ]
+  if (nrow(equal_pt) > 0) {
+    for (i in seq_len(nrow(equal_pt))) {
+      cur_rhs <- equal_pt$rhs[i]
+      cur_lhs <- equal_pt$lhs[i]
+      names(x)[plabs == cur_rhs] <- cur_lhs
+    }
+
+    idx <- unique(match(names(x), unique(names(x))))
+    x <- x[idx]
+    attr(x, "idx") <- idx
+  } else {
+    x <- theta
+  }
+
+  x
+}
+
+expand_theta <- function(theta = contract_theta(coef(fit_lav), partable(fit_lav)),
+                         pt = partable(fit_lav)) {
+
+  plabs <- pt$plabel[pt$free > 0]
+  equal_pt <- pt[pt$op == "==", ]
+
+  if (nrow(equal_pt) > 0) {
+    for (i in seq_len(nrow(equal_pt))) {
+      cur_rhs <- equal_pt$rhs[i]
+      cur_lhs <- equal_pt$lhs[i]
+      plabs[plabs == cur_rhs] <- cur_lhs
+    }
+
+    x <- theta[plabs]
+    # names(x) <- pt$plabel[pt$free > 0]
+  } else {
+    x <- theta
+  }
+
+  x
+
+}
+
