@@ -4,8 +4,11 @@ loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
+
+  theta <- expand_theta(theta, idx)
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # compute model implied mean and (co)variance matrix
@@ -38,8 +41,10 @@ grad_loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
+  theta <- expand_theta(theta, idx)
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # gradient of F_ML (not loglik yet)
@@ -48,7 +53,7 @@ grad_loglik <- function(
   # rescale so we get gradient of loglik
   N <- lavsamplestats@ntotal
   grad.loglik <- -1 * N * grad.F
-  grad.loglik
+  grad.loglik[unique(idx)]
 }
 
 # Hessian
@@ -57,8 +62,10 @@ hessian_loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
+  theta <- expand_theta(theta, idx)
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # gradient of F_ML (not loglik yet)
@@ -69,7 +76,7 @@ hessian_loglik <- function(
   N <- lavsamplestats@ntotal
   # hessian.loglik <- -1 * N * hessian.F
   hessian.loglik <- N * hessian.F  # FIXME: Multiply by -1 or not?
-  hessian.loglik
+  hessian.loglik[unique(idx), unique(idx)]
 }
 
 # Casewise scores (score = grad of loglik for a single observation)
@@ -78,8 +85,10 @@ scores_loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
+  theta <- expand_theta(theta, idx)
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # compute model implied mean and (co)variance matrix
@@ -98,7 +107,7 @@ scores_loglik <- function(
     moments = moments, lavdata = lavdata, lavsamplestats = lavsamplestats,
     lavmodel = lavmodel, lavoptions = lavoptions, scaling = FALSE
   )
-  score_matrix
+  score_matrix[, unique(idx)]
 }
 
 # Outer product of casewise scores
@@ -107,8 +116,10 @@ first_order_unit_information_loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
+  theta <- expand_theta(theta, idx)
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # compute model implied mean and (co)variance matrix
@@ -120,7 +131,8 @@ first_order_unit_information_loglik <- function(
   )
 
   # this is unit information, so multiply by N
-  info * lavsamplestats@ntotal
+  out <- info * lavsamplestats@ntotal
+  out[unique(idx), unique(idx)]
 }
 
 penalty <- function(
@@ -128,21 +140,24 @@ penalty <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
   e <- first_order_unit_information_loglik(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx
   )
   j <- hessian_loglik(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx
   )
   jinv <- try(solve(j), silent = TRUE)
 
@@ -158,14 +173,16 @@ bias <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    idx
   ) {
   j <- hessian_loglik(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx
   )
   jinv <- try(solve(j), silent = TRUE)
   A <- numDeriv::grad(
@@ -174,7 +191,8 @@ bias <- function(
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx
   )
   -drop(jinv %*% A)
 }
@@ -205,28 +223,31 @@ fit_sem <- function(
   n <- nobs(fit0)
 
   # Parameter constraints
-  theta_init <- contract_theta(theta_init, pt)
+  idx_constr <- get_constr_idx(pt)
+  theta_init <- contract_theta(theta_init, idx_constr)
 
   # DEBUG ----------------------------------------------------------------------
   if (isTRUE(debug)) {
     out <- with(
       list(
-        theta = expand_theta(theta_init, pt),
+        theta = theta_init,
         lavmodel = lavmodel,
         lavsamplestats = lavsamplestats,
         lavdata = lavdata,
-        lavoptions = lavoptions
+        lavoptions = lavoptions,
+        idx = idx_constr
       ),
       list(
-        theta = expand_theta(theta_init, pt),
+        theta_nlimb = theta_init,
+        theta = expand_theta(theta_init, idx),
         n = n,
-        loglik = loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        grad_loglik = grad_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        j = hessian_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        e = first_order_unit_information_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        scores_loglik = scores_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        penalty = penalty(theta, lavmodel, lavsamplestats, lavdata, lavoptions),
-        bias = bias(theta, lavmodel, lavsamplestats, lavdata, lavoptions)
+        loglik = loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        grad_loglik = grad_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        j = hessian_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        e = first_order_unit_information_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        scores_loglik = scores_loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        penalty = penalty(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
+        bias = bias(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx)
       )
     )
     return(out)
@@ -238,12 +259,13 @@ fit_sem <- function(
     # ML or explicit RBM -- either way requires MLE
     res <- nlminb(
       start = theta_init,
-      objective = function(x, ...) -loglik(expand_theta(x, pt), ...),
-      gradient = function(x, ...) -grad_loglik(expand_theta(x, pt), ...),
+      objective = function(x, ...) -loglik(x, ...),
+      gradient = function(x, ...) -grad_loglik(x, ...),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      idx = idx_constr
     )
     b <- 0
     if (is_eRBM) b <- b + bias(
@@ -251,7 +273,8 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      idx = idx_constr
     )
     est <- res$par - b
   } else {
@@ -268,7 +291,8 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      idx = idx_constr
     )
     est <- res$par
   }
@@ -280,12 +304,17 @@ fit_sem <- function(
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
   sds <- try(sqrt(diag(solve(j))), silent = TRUE)
   if (inherits(sds, "try-error")) sds <- rep(NA, length(est))
 
-  list(coefficients = est, stderr = sds, time = end_time - start_time)
+  list(
+    coefficients = expand_theta(est, idx_constr),
+    stderr = expand_theta(sds, idx_constr),
+    time = end_time - start_time
+  )
 }
 
 get_lav_stuff <- function(fit) {
@@ -294,53 +323,38 @@ get_lav_stuff <- function(fit) {
     lavsamplestats = fit@SampleStats,
     lavdata        = fit@Data,
     lavoptions     = fit@Options,
-    pt             = partable(fit)
+    idx_constr     = get_constr_idx(partable(fit))
   )
 }
 
-contract_theta <- function(theta = coef(fit_lav), pt = partable(fit_lav)) {
-
-  x <- theta
-  names(x) <- plabs <- pt$plabel[pt$free > 0]
-
+get_constr_idx <- function(pt) {
+  free_params <- plabs <- pt$plabel[pt$free > 0]
+  idx <- seq_along(free_params)
   equal_pt <- pt[pt$op == "==", ]
   if (nrow(equal_pt) > 0) {
     for (i in seq_len(nrow(equal_pt))) {
       cur_rhs <- equal_pt$rhs[i]
       cur_lhs <- equal_pt$lhs[i]
-      names(x)[plabs == cur_rhs] <- cur_lhs
+      free_params[plabs == cur_rhs] <- cur_lhs
     }
 
-    idx <- unique(match(names(x), unique(names(x))))
-    x <- x[idx]
-    attr(x, "idx") <- idx
-  } else {
-    x <- theta
+    idx <- match(free_params, unique(free_params))
   }
-
-  x
+  idx
 }
 
-expand_theta <- function(theta = contract_theta(coef(fit_lav), partable(fit_lav)),
-                         pt = partable(fit_lav)) {
+contract_theta <- function(theta, idx) {
+  if (is.null(idx))
+    return(theta)
+  else
+    return(theta[unique(idx)])
+}
 
-  plabs <- pt$plabel[pt$free > 0]
-  equal_pt <- pt[pt$op == "==", ]
-
-  if (nrow(equal_pt) > 0) {
-    for (i in seq_len(nrow(equal_pt))) {
-      cur_rhs <- equal_pt$rhs[i]
-      cur_lhs <- equal_pt$lhs[i]
-      plabs[plabs == cur_rhs] <- cur_lhs
-    }
-
-    x <- theta[plabs]
-    # names(x) <- pt$plabel[pt$free > 0]
-  } else {
-    x <- theta
+expand_theta <- function(theta, idx) {
+  if (is.null(idx))
+    return(theta)
+  else {
+    return(theta[idx])
   }
-
-  x
-
 }
 

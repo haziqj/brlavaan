@@ -34,7 +34,8 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
   grad.num <<- numDeriv::grad(
     func = loglik,
@@ -42,7 +43,8 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
 })
 expect_equal(grad.lav, rep(0, length(grad.lav)), tol = 1e-4)
@@ -56,7 +58,8 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
   hessian.num1 <<- -numDeriv::hessian(
     func = loglik,
@@ -64,7 +67,8 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
   hessian.num2 <<- -numDeriv::jacobian(
     func = grad_loglik,
@@ -72,7 +76,8 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
 })
 expect_equal(hessian.lav, hessian.num1, tol = 1e-5)
@@ -85,14 +90,16 @@ with(get_lav_stuff(fit_lav), {
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   )
   e_mat2 <<- crossprod(scores_loglik(
     theta = coef(fit_lav),
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    idx = idx_constr
   ))
 })
 expect_equal(e_mat1, e_mat2, tol = 1e-5)
