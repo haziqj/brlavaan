@@ -49,7 +49,8 @@ grad_loglik <- function(
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # gradient of F_ML (not loglik yet)
   grad.F <- lavaan:::lav_model_gradient(lavmodel = this.lavmodel,
-                                        lavsamplestats = lavsamplestats, lavdata = lavdata)
+                                        lavsamplestats = lavsamplestats,
+                                        lavdata = lavdata)
   # rescale so we get gradient of loglik
   N <- lavsamplestats@ntotal
   grad.loglik <- -1 * N * grad.F
@@ -70,7 +71,8 @@ hessian_loglik <- function(
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # gradient of F_ML (not loglik yet)
   hessian.F <- lavaan:::lav_model_hessian(lavmodel = this.lavmodel,
-                                          lavsamplestats = lavsamplestats, lavdata = lavdata,
+                                          lavsamplestats = lavsamplestats,
+                                          lavdata = lavdata,
                                           lavoptions = lavoptions)
   # rescale so we get gradient of loglik
   N <- lavsamplestats@ntotal
@@ -126,7 +128,9 @@ first_order_unit_information_loglik <- function(
   lavimplied <- lav_model_implied(this.lavmodel)
 
   info <- lavaan:::lav_model_information_firstorder(
-    lavmodel = this.lavmodel, lavdata = lavdata, lavsamplestats = lavsamplestats,
+    lavmodel = this.lavmodel,
+    lavdata = lavdata,
+    lavsamplestats = lavsamplestats,
     lavoptions = lavoptions
   )
 
@@ -238,7 +242,7 @@ fit_sem <- function(
         idx = idx_constr
       ),
       list(
-        theta_nlimb = theta_init,
+        theta_nlminb = theta_init,
         theta = expand_theta(theta_init, idx),
         n = n,
         loglik = loglik(theta, lavmodel, lavsamplestats, lavdata, lavoptions, idx),
