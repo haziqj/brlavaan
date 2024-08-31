@@ -318,6 +318,7 @@ fit_sem <- function(
 }
 
 get_lav_stuff <- function(fit) {
+  # Utility function to extract lavaan stuff
   list(
     lavmodel       = fit@Model,
     lavsamplestats = fit@SampleStats,
@@ -328,6 +329,7 @@ get_lav_stuff <- function(fit) {
 }
 
 get_constr_idx <- function(pt) {
+  # Get the indices of the free parameters. Constrained indices are repeated.
   free_params <- plabs <- pt$plabel[pt$free > 0]
   idx <- seq_along(free_params)
   equal_pt <- pt[pt$op == "==", ]
@@ -344,6 +346,7 @@ get_constr_idx <- function(pt) {
 }
 
 contract_theta <- function(theta, idx) {
+  # Return only the unique parameters to optimise
   if (is.null(idx))
     return(theta)
   else
@@ -351,10 +354,10 @@ contract_theta <- function(theta, idx) {
 }
 
 expand_theta <- function(theta, idx) {
+  # Expand theta to include all parameters
   if (is.null(idx))
     return(theta)
-  else {
+  else
     return(theta[idx])
-  }
 }
 
