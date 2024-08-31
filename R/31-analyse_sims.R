@@ -27,14 +27,16 @@ results |>
 
 # Two factor model results -----------------------------------------------------
 results |>
+  as_tibble() |>
   filter(model == "Two factor model", dist %in% c("Normal", "Non-normal")) |>
   filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
   filter(abs(est) < 2) |>
   group_by(param, dist, rel, n, method) |>
   summarise(
-    bias = mean(est - truth, na.rm = TRUE),
+    max = max(est),
+    bias = median(est - truth, na.rm = TRUE),
     truth = first(truth)
-  ) |>
+  )
   mutate(
     rel_bias = bias / truth,
     param = factor(param, levels = c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")),
