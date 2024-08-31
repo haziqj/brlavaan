@@ -17,7 +17,6 @@ library(semPlot)
 library(semptools)
 library(kableExtra)
 theme_set(theme_bw())
-load("R/prelim_implicit_sims.RData")
 ```
 
 # Empirical bias reducing methods for Structural Equation Models
@@ -27,7 +26,7 @@ load("R/prelim_implicit_sims.RData")
 
 Last modified: `r Sys.Date()`
 
-## Two factor SEM toy example
+## Toy example: Two factor SEM
 
 Consider the following two factor SEM.
 
@@ -52,7 +51,7 @@ mod <- "
   eta2 ~ eta1
 "
 fit_lav <- sem(mod, dat)
-fit_lav@ParTable$est[-c(1, 4)] <- theta_true <- c(
+fit_lav@ParTable$est[-c(1, 4)] <- true_vals <- c(
   0.8, 0.6, 0.8, 0.6,  # lambda
   0.3,  # beta
   rep(1, 6),  # theta_eps
@@ -103,24 +102,29 @@ p2 <- set_sem_layout(
 plot(p2)
 ```
 
-Experiment: For each sample size `n` in `c(15, 20, 50, 100, 1000)`, we simulate `B = 100` datasets and estimate the model parameters in two ways. The first is maximum likelihood using `{lavaan}`. The second is the implicit RBM with a penalty term. We then analyse the bias produced by both methods.
+Experiment: For each sample size `n` in `c(15, 20, 50, 100, 1000)`, we simulate `B = 1000` datasets and estimate the model parameters in four ways.
+
+1. Maximum likelihood
+2. Explicit RBM
+3. Implicit RBM
+4. Implicit RBM with plugin penalty
+
+Tables and graph below show results (mean bias).
 
 ```{r}
-tab_mab
+#| echo: false
+load("R/toysims.RData")
+tab
 ```
+
 
 ```{r}
-tab_mab_by_type
+#| echo: false
+p
 ```
 
-```{r}
-p_bias
-```
+# Two factor SEM (D&R 2022)
 
-Notes:
 
-1. Most of the bias of the ML parameter estimates is due to things going in wrong in the optimiser. The implicit RBM method is much more stable. If we set an arbitrary cut off for the ML (say consider only parameters < 10 in absolute value) then the bias difference would be much smaller.
 
-2. I coded the objective function in a lazy way. Currently only works for this specific example. Ideally we dive into the `{lavaan}` source code and create a new objective function there...
-
-3. Noticed lots of numerical issues in the `optim()` routine. When the optimiser takes a weird turn in the parameter space things go haywire -- the `JJJ()` and `HHH()` returns crazy values and the Hessian is not invertible. For now I cheated and used L-BFGS-B bounds to keep the optimiser in check.
+# Growth model (D&R 2022)

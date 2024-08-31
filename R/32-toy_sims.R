@@ -142,7 +142,7 @@ p <-
 
 
 
-save(tab, p, file = "toysims.RData")
+save(tab, p, file = "R/toysims.RData")
 
 
 
