@@ -123,8 +123,21 @@ tab
 p
 ```
 
-# Two factor SEM (D&R 2022)
+# Growth model a (D&R 2022)
+
+```{r}
+#| echo: false
+#| fig-height: 7
+load("R/DR_sims.RData")
+p_growth
+```
+
+# Two factor SEM b (D&R 2022)
 
 
+```{r}
+#| echo: false
+#| fig-height: 7
+p_twofac
+```
 
-# Growth model (D&R 2022)
