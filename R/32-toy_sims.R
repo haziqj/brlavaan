@@ -23,7 +23,6 @@ names(true_vals) <- c(
   "y1~~y1", "y2~~y2", "y3~~y3", "y4~~y4", "y5~~y5", "y6~~y6",
   "eta1~~eta1", "eta2~~eta2"
 )
-m <- length(theta_true)
 
 res <- list()
 nvec <- c(15, 20, 50, 100, 1000)
@@ -99,21 +98,23 @@ results <-
   )
 
 # Analysis
-tab_sum <-
+tab <-
   results |>
-  filter(abs(est) < 5) |>
-  group_by(n, method) |>
+  filter(abs(est) < 1000) |>
+  group_by(n, method, type) |>
   summarise(
     bias = mean(bias),
     mse = mean(bias ^ 2),
     .groups = "drop"
-  )
+  ) |>
+  pivot_wider(id_cols = c(n, type), names_from = method, values_from = c(bias, mse))
 
 cutoff <- 1000
-results |>
+p <-
+  results |>
   filter(abs(est) < cutoff) |>
-  ggplot(aes(as.numeric(n), bias, col = method)) +
-  geom_point(size = 0.5, alpha = 0.3, position = position_dodge(width = 0.1)) +
+  ggplot(aes(as.numeric(n), abs(bias), col = method)) +
+  geom_point(size = 0.5, alpha = 0.1, position = position_dodge(width = 0.1)) +
   geom_line(
     data = results |>
       filter(abs(est) < cutoff) |>
@@ -123,13 +124,25 @@ results |>
         mse = mean(bias ^ 2),
         .groups = "drop"
       ),
-    aes(y = abs(bias))
+    aes(y = abs(bias)),
+    linewidth = 1,
+    alpha = 0.8
   ) +
-  scale_y_log10()
+  scale_y_log10(
+    breaks = scales::trans_breaks("log10", \(x) 10 ^ x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x)),
+  ) +
+  scale_x_continuous(labels = nvec) +
+  labs(
+    y = "(Absolute) Mean bias",
+    x = "Sample size",
+    col = NULL
+  ) +
+  theme(legend.position = "top")
 
 
 
-
+save(tab, p, file = "toysims.RData")
 
 
 
