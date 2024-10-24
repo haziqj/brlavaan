@@ -6,9 +6,9 @@ library(tinytest)
 source("R/10-sem_rbm_functions.R")
 
 HS.model <- "
-  visual  =~ x1 + x2 + x3
-  textual =~ x4 + x5 + x6
-  speed   =~ x7 + x8 + x9
+  visual  =~ x1 + a*x2 + x3
+  textual =~ x4 + a*x5 + x6
+  speed   =~ x7 + a*x8 + x9
 "
 
 fit_lav   <- cfa(HS.model, HolzingerSwineford1939)
