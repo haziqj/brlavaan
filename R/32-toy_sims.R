@@ -140,14 +140,4 @@ p <-
   ) +
   theme(legend.position = "top")
 
-
-
-save(tab, p, file = "R/toysims.RData")
-
-
-
-
-
-
-
-
+# save(results, tab, p, file = "R/toysims.RData")
