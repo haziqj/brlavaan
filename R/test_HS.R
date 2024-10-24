@@ -4,7 +4,7 @@
 library(tidyverse)
 library(lavaan)
 library(tinytest)
-source("R/10-sem_rbm_functions.R")
+source(here::here("R", "10-sem_rbm_functions.R"))
 
 HS.model <- "
   visual  =~ x1 + a*x2 + x3
