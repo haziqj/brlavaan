@@ -49,6 +49,17 @@ if (lavmodel@eq.constraints) {
 }
 start.x <- z.pack
 
+# and for gradients:
+# if (lavmodel@eq.constraints) {
+#   dx <- as.numeric(dx %*% lavmodel@eq.constraints.K)
+# }
+#
+# and I guess for hessians:
+# if (lavmodel@eq.constraints) {
+#   H <- t(lavmodel@eq.constraints.K) %*% H %*% lavmodel@eq.constraints.K
+# }
+
+
 
 
 
