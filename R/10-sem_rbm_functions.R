@@ -306,7 +306,7 @@ fit_sem <- function(
   if (is_ML | is_eRBM) {
     # ML or explicit RBM -- either way requires MLE
     res <- nlminb(
-      start = theta_init,
+      start = theta_pack,
       objective = function(x, ...) -loglik(x, ...),
       gradient = function(x, ...) -grad_loglik(x, ...),
       lavmodel = lavmodel,
@@ -332,7 +332,7 @@ fit_sem <- function(
       obj <- function(x, ...) -loglik(x, ...) - penalty(x, ...)
     }
     res <- nlminb(
-      start = theta_init,
+      start = theta_pack,
       objective = obj,
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
@@ -351,12 +351,19 @@ fit_sem <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  sds <- try(sqrt(diag(solve(j))), silent = TRUE)
-  if (inherits(sds, "try-error")) sds <- rep(NA, length(est))
+  vars <- try(diag(solve(j)), silent = TRUE)
+  if (inherits(vars, "try-error")) vars <- rep(NA, length(est))
+
+  # unpack est and se
+  if (lavmodel@eq.constraints) {
+    est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
+      lavmodel@eq.constraints.k0
+    vars <- as.numeric(lavmodel@eq.constraints.K %*% vars)
+  }
 
   list(
-    coefficients = expand_theta(est, idx_constr),
-    stderr = expand_theta(sds, idx_constr),
+    coefficients = est,
+    stderr = sqrt(vars),
     time = end_time - start_time
   )
 }
