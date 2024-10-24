@@ -1,4 +1,5 @@
 # Script to test SEM RBM functions using the HolzingerSwineford1939 dataset
+# test_results <- run_test_file("R/test_HS.R", verbose = 0)
 
 library(tidyverse)
 library(lavaan)
@@ -11,7 +12,7 @@ HS.model <- "
   speed   =~ x7 + a*x8 + x9
 "
 
-fit_lav   <- cfa(HS.model, HolzingerSwineford1939)
+fit_lav   <- cfa(HS.model, HolzingerSwineford1939, information = "observed")
 fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, method = "ML")
 fit_eRBM  <- fit_sem(HS.model, HolzingerSwineford1939, method = "eRBM")
 fit_iRBM  <- fit_sem(HS.model, HolzingerSwineford1939, method = "iRBM")
@@ -85,6 +86,10 @@ with(get_lav_stuff(fit_lav), {
     lavdata = lavdata,
     lavoptions = lavoptions
   )
+  if (lavmodel@eq.constraints) {
+    hessian.lav <<- t(lavmodel@eq.constraints.K) %*% hessian.lav %*%
+      lavmodel@eq.constraints.K
+  }
   hessian.num1 <<- -numDeriv::hessian(
     func = loglik,
     x = z.pack,
