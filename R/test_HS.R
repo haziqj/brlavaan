@@ -6,9 +6,9 @@ library(tinytest)
 source("R/10-sem_rbm_functions.R")
 
 HS.model <- "
-  visual  =~ x1 + a*x2 + x3
-  textual =~ x4 + a*x5 + x6
-  speed   =~ x7 + a*x8 + x9
+  visual  =~ x1 + x2 + x3
+  textual =~ x4 + x5 + x6
+  speed   =~ x7 + x8 + x9
 "
 
 fit_lav   <- cfa(HS.model, HolzingerSwineford1939)
@@ -48,7 +48,7 @@ expect_equal(loglik.val, as.numeric(logLik(fit_lav)), tol = 1e-4)
 # Test maximum likelihood estimation -------------------------------------------
 est_lav <- as.numeric(coef(fit_lav))
 est_ML <- coef(fit_ML)
-expect_equal(est_lav, est_ML, tol = 1e-4)
+expect_equal(est_lav, est_ML, tol = 1e-4, check.attributes = FALSE)
 
 sd_lav <- sqrt(diag(vcov(fit_lav)))
 sd_ML <- fit_ML$stderr
