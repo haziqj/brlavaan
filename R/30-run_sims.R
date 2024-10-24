@@ -44,7 +44,7 @@ results <-
 save(results, file = "R/sim_results.RData")
 
 # Analysis ---------------------------------------------------------------------
-# load("R/sim_results.RData")
+load("R/sim_results.RData")
 
 # Overall plot
 results |>
@@ -52,7 +52,7 @@ results |>
   filter(abs(est - truth) / truth < 2) |>
   # filter(method %in% c("iRBM", "ML")) |>
   group_by(dist, model, rel, n, method) |>
-  summarise(bias = mean(est - truth, na.rm = TRUE)) |>
+  summarise(bias = mean(est - truth, na.rm = TRUE, trim = 0.01)) |>
   ggplot(aes(x = as.numeric(n), y = abs(bias), col = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
   geom_line(size = 0.8) +
@@ -70,9 +70,12 @@ results |>
   filter(model == "Two factor model", dist %in% c("Normal", "Non-normal")) |>
   filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
   filter(abs(est) < 5) |>
+  filter(method != "iRBMp") |>
+  filter(method != "iRBM") |>
+
   group_by(param, dist, rel, n, method) |>
   summarise(
-    bias = mean(est - truth, na.rm = TRUE),
+    bias = mean(est - truth, na.rm = TRUE, trim = 0.01),
     truth = first(truth)
   ) |>
   mutate(
