@@ -29,6 +29,10 @@ with(get_lav_stuff(fit_lav), {
   }
 })
 
+# DEBUG ------------------------------------------------------------------------
+lavInspect(fit_lav, "free")
+tmp <- fit_sem(HS.model, HolzingerSwineford1939, debug = TRUE)
+
 # Test likelihood value --------------------------------------------------------
 with(get_lav_stuff(fit_lav), {
   loglik.val <<- loglik(
