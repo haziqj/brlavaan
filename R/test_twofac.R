@@ -19,6 +19,7 @@ fit_iRBMp <- fit_sem(mod, dat, method = "iRBMp")
 tibble(
   param = names(coef(fit_lav)),
   truth = truth(dat),
+  lav = as.numeric(coef(fit_lav)),
   ML = coef(fit_ML),
   eRBM = coef(fit_eRBM),
   iRBM = coef(fit_iRBM),

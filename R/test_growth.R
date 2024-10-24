@@ -9,7 +9,7 @@ source("R/20-gen_data.R")
 # Reliability == 0.8 -----------------------------------------------------------
 dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_growth(0.8)
-fit_lav   <- sem(mod, dat)
+fit_lav   <- growth(mod, dat)
 
 # Test contraction and expansion of theta
 theta_full <- coef(fit_lav)
