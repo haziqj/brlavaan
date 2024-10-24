@@ -22,6 +22,7 @@ theme_set(theme_bw())
 # Empirical bias reducing methods for Structural Equation Models
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 Last modified: `r Sys.Date()`
@@ -30,7 +31,7 @@ Last modified: `r Sys.Date()`
 
 Consider the following two factor SEM.
 
-```{r}
+```{r truemodel}
 n <- 1000
 dat <- simulateData(
   model = "
@@ -68,8 +69,7 @@ p <- semPlot::semPaths(
 )
 ```
 
-```{r}
-#| label: sempath
+```{r sempath}
 #| echo: false
 #| message: false
 
@@ -104,10 +104,10 @@ plot(p2)
 
 Experiment: For each sample size `n` in `c(15, 20, 50, 100, 1000)`, we simulate `B = 1000` datasets and estimate the model parameters in four ways.
 
-1. Maximum likelihood
-2. Explicit RBM
-3. Implicit RBM
-4. Implicit RBM with plugin penalty
+1.  Maximum likelihood
+2.  Explicit RBM
+3.  Implicit RBM
+4.  Implicit RBM with plugin penalty
 
 Tables and graph below show results (mean bias).
 
@@ -116,7 +116,6 @@ Tables and graph below show results (mean bias).
 load("R/toysims.RData")
 tab
 ```
-
 
 ```{r}
 #| echo: false
@@ -134,10 +133,8 @@ p_growth
 
 # Two factor SEM b (D&R 2022)
 
-
 ```{r}
 #| echo: false
 #| fig-height: 7
 p_twofac
 ```
-
