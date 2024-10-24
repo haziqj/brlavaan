@@ -6,14 +6,14 @@ source("R/10-sem_rbm_functions.R")
 source("R/20-gen_data.R")
 source("R/21-sim_functions.R")
 
-ncores <- parallel::detectCores() - 1
+ncores <- parallel::detectCores() - 2
 future::plan(multisession, workers = ncores)
 nsimu <- 1000
 
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    model = c("twofac", "growth"),
+    model = c("twofac"),  # "growth"
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
   ) |>
@@ -41,10 +41,11 @@ results <-
     rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
     n = factor(n)
   )
-save(results, file = "R/sim_results.RData")
+res_growth <- results
+save(res_growth, file = "R/sim_results_growth.RData")
 
 # Analysis ---------------------------------------------------------------------
-load("R/sim_results.RData")
+# load("R/sim_results_growth.RData")
 
 # Overall plot
 results |>
@@ -66,13 +67,12 @@ results |>
   theme(legend.position = "top")
 
 # Two factor model results
-results |>
+drop_na(results) |>
   filter(model == "Two factor model", dist %in% c("Normal", "Non-normal")) |>
   filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
   filter(abs(est) < 5) |>
-  filter(method != "iRBMp") |>
-  filter(method != "iRBM") |>
-
+  # filter(method != "iRBMp") |>
+  # filter(method != "iRBM") |>
   group_by(param, dist, rel, n, method) |>
   summarise(
     bias = mean(est - truth, na.rm = TRUE, trim = 0.01),
@@ -108,4 +108,3 @@ results |>
   ) |>
   pivot_wider(names_from = n, values_from = mse, names_prefix = "n = ") |>
   print(n = 100)
-
