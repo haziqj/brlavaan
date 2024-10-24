@@ -96,7 +96,7 @@ hessian_loglik <- function(
                                           lavoptions = lavoptions)
   # rescale so we get gradient of loglik
   N <- lavsamplestats@ntotal
-  # hessian.loglik <- -1 * N * hessian.F
+  # H <- -1 * N * hessian.F
   H <- N * hessian.F
 
   # repack hessian
@@ -273,6 +273,8 @@ fit_sem <- function(
     theta_pack <- as.numeric(
       (theta_init - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
     )
+  } else {
+    theta_pack <- theta_init
   }
 
   # DEBUG ----------------------------------------------------------------------
