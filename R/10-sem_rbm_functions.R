@@ -36,6 +36,7 @@ loglik <- function(
     Sinv.method = "eigen",
     Sigma.inv   = NULL
   )
+
   loglik
 }
 
@@ -94,17 +95,9 @@ hessian_loglik <- function(
                                           lavsamplestats = lavsamplestats,
                                           lavdata = lavdata,
                                           lavoptions = lavoptions)
+
   # rescale so we get gradient of loglik
-  N <- lavsamplestats@ntotal
-  # H <- -1 * N * hessian.F
-  H <- N * hessian.F
-
-  # repack hessian
-  if (lavmodel@eq.constraints) {
-    H <- t(lavmodel@eq.constraints.K) %*% H %*% lavmodel@eq.constraints.K
-  }
-
-  H
+  lavsamplestats@ntotal * hessian.F  # FULL INFORMATION
 }
 
 # Casewise scores (score = grad of loglik for a single observation)
@@ -141,11 +134,6 @@ scores_loglik <- function(
     lavmodel = lavmodel, lavoptions = lavoptions, scaling = FALSE
   )
 
-  # repack
-  if (lavmodel@eq.constraints) {
-    score_matrix <- score_matrix %*% lavmodel@eq.constraints.K
-  }
-
   score_matrix
 }
 
@@ -177,14 +165,7 @@ first_order_unit_information_loglik <- function(
   )
 
   # this is unit information, so multiply by N
-  out <- info * lavsamplestats@ntotal
-
-  # repack
-  if (lavmodel@eq.constraints) {
-    out <- t(lavmodel@eq.constraints.K) %*% out %*% lavmodel@eq.constraints.K
-  }
-
-  out
+  lavsamplestats@ntotal * info
 }
 
 penalty <- function(
@@ -208,7 +189,14 @@ penalty <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  jinv <- try(solve(j), silent = TRUE)
+  jinv <- lavaan:::lav_model_information_augment_invert(
+    lavmodel = lavmodel,
+    information = j,
+    inverted = TRUE,
+    check.pd = FALSE,
+    use.ginv = FALSE,
+    rm.idx = integer(0L)
+  )
 
   if (inherits(jinv, "try-error")) {
     return(NA)
@@ -231,7 +219,14 @@ bias <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  jinv <- try(solve(j), silent = TRUE)
+  jinv <- lavaan:::lav_model_information_augment_invert(
+    lavmodel = lavmodel,
+    information = j,
+    inverted = TRUE,
+    check.pd = FALSE,
+    use.ginv = FALSE,
+    rm.idx = integer(0L)
+  )
   A <- numDeriv::grad(
     func = penalty,
     x = theta,
@@ -240,7 +235,19 @@ bias <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  -drop(jinv %*% A)
+
+  # unpack A
+  if (lavmodel@eq.constraints) {
+    A <- lavmodel@eq.constraints.K %*% A
+  }
+
+  out <- -drop(jinv %*% A)
+
+  # repack! (since optimiser expects packed version)
+  if (lavmodel@eq.constraints) {
+    out <- as.numeric(out %*% lavmodel@eq.constraints.K)
+  }
+  out
 }
 
 fit_sem <- function(
@@ -248,7 +255,8 @@ fit_sem <- function(
     data,
     method = "ML",
     debug = FALSE,
-    theta_init = NULL
+    theta_init = NULL,
+    trace = 0
   ) {
 
   method   <- match.arg(method, c("ML", "iRBM", "eRBM", "iRBMp"))
@@ -297,6 +305,14 @@ fit_sem <- function(
         loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
         grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
         j = hessian_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+        jinv = lavaan:::lav_model_information_augment_invert(
+          lavmodel = lavmodel,
+          information = hessian_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+          inverted = TRUE,
+          check.pd = FALSE,
+          use.ginv = FALSE,
+          rm.idx = integer(0L)
+        ),
         e = first_order_unit_information_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
         scores_loglik = scores_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
         penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
@@ -317,7 +333,8 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      control = list(trace = trace)
     )
     b <- 0
     if (is_eRBM) b <- b + bias(
@@ -342,7 +359,8 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      control = list(trace = trace)
     )
     est <- res$par
   }
@@ -356,19 +374,25 @@ fit_sem <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  vars <- try(diag(solve(j)), silent = TRUE)
-  if (inherits(vars, "try-error")) vars <- rep(NA, length(est))
+  jinv <- lavaan:::lav_model_information_augment_invert(
+    lavmodel = lavmodel,
+    information = j,
+    inverted = TRUE,
+    check.pd = FALSE,
+    use.ginv = FALSE,
+    rm.idx = integer(0L)
+  )
+  sds <- sqrt(diag(jinv))
 
-  # unpack est and se
+  # unpack est
   if (lavmodel@eq.constraints) {
     est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
       lavmodel@eq.constraints.k0
-    vars <- as.numeric(lavmodel@eq.constraints.K %*% vars)
   }
 
   list(
     coefficients = est,
-    stderr = sqrt(vars),
+    stderr = sds,
     time = end_time - start_time
   )
 }
