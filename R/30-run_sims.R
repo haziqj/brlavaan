@@ -13,7 +13,7 @@ nsimu <- 1000
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    model = c("twofac"),  # "growth"
+    model = c("twofac", "growth"),
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
   ) |>
@@ -37,9 +37,8 @@ results <-
   mutate(
     method = factor(method, levels = c("ML", "eRBM", "iRBM", "iRBMp")),
     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    # model = factor(model, labels = c("Growth model", "Two factor model")),
+    model = factor(model, labels = c("Growth model", "Two factor model")),
     rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
     n = factor(n)
   )
-res_growth <- results
-save(res_growth, file = "R/sim_results_growth.RData")
+# save(results, file = "R/sim_results.RData")
