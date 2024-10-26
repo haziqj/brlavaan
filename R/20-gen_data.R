@@ -303,7 +303,7 @@ txt_mod_twofac <- function(rel) {
   "
 }
 
-truth_twofac <- function(rel) {
+truth_twofac <- function(rel, meanstructure = FALSE) {
   if (rel == "0.8") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.1225, 0.09), 2), 1, 1)
   }
@@ -318,10 +318,17 @@ truth_twofac <- function(rel) {
     "fx~~fx", "fy~~fy"
   )
 
+  if (isTRUE(meanstructure)) {
+    truth <- c(
+      truth,
+      c("x1~1" = 0, "x2~1" = 0, "x3~1" = 0, "y1~1" = 0, "y2~1" = 0, "y3~1" = 0)
+    )
+  }
+
   truth
 }
 
-gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE) {
+gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE, meanstructure = FALSE) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) dist <- "Normal_lav"
   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
@@ -412,7 +419,7 @@ gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
     colnames(dat) <- c("x1", "x2", "x3", "y1", "y2", "y3")
   }
 
-  attr(dat, "truth") <- truth_twofac(rel)
+  attr(dat, "truth") <- truth_twofac(rel, meanstructure)
   attr(dat, "dist") <- dist
   dat
 }
