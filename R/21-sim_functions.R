@@ -1,4 +1,13 @@
-sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim = FALSE) {
+sim_fun <- function(
+    dist = "Normal",
+    model = "twofac",
+    rel = 0.8,
+    n = 100,
+    lavsim = FALSE,
+    lavfun = "sem",
+    meanstructure = FALSE,
+    bounds = "none"
+  ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
@@ -13,7 +22,7 @@ sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim
   }
   datasets <- replicate(
     nsimu,
-    gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim),
+    gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim, meanstructure = meanstructure),
     simplify = FALSE
   )
   mod <- txt_mod(rel)
@@ -24,10 +33,17 @@ sim_fun <- function(dist = "Normal", model = "twofac", rel = 0.8, n = 10, lavsim
     safely(function(j) {
       dat <- datasets[[j]]
 
-      fit_ML    <- fit_sem(model = mod, data = dat, method = "ML")
-      fit_eRBM  <- fit_sem(model = mod, data = dat, method = "eRBM")
-      fit_iRBM  <- fit_sem(model = mod, data = dat, method = "iRBM")
-      fit_iRBMp <- fit_sem(model = mod, data = dat, method = "iRBMp")
+      fitsemargs <- list(
+        model = mod,
+        data = dat,
+        lavfun = "cfa",
+        meanstructure = TRUE,
+        bounds = "standard"
+      )
+      fitsemargs$method <- "ML"   ; fit_ML    <- do.call(fit_sem, fitsemargs)
+      fitsemargs$method <- "eRBM" ; fit_eRBM  <- do.call(fit_sem, fitsemargs)
+      fitsemargs$method <- "iRBM" ; fit_iRBM  <- do.call(fit_sem, fitsemargs)
+      fitsemargs$method <- "iRBMp"; fit_iRBMp <- do.call(fit_sem, fitsemargs)
 
       data.frame(
         dist = dist,

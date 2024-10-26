@@ -256,7 +256,10 @@ fit_sem <- function(
     method = "ML",
     debug = FALSE,
     theta_init = NULL,
-    trace = 0
+    trace = 0,
+    lavfun = "sem",
+    meanstructure = FALSE,
+    bounds = "none"
   ) {
 
   method   <- match.arg(method, c("ML", "iRBM", "eRBM", "iRBMp"))
@@ -266,7 +269,14 @@ fit_sem <- function(
   is_iRBMp <- method == "iRBMp"
 
   # Initialise {lavaan} model object
-  fit0 <- sem(model = model, data = data, do.fit = FALSE)
+  lavargs <- list(
+    model = model,
+    data = data,
+    do.fit = FALSE,
+    meanstructure = meanstructure,
+    bounds = bounds
+  )
+  fit0           <- do.call(lavfun, lavargs)
   lavmodel       <- fit0@Model
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
