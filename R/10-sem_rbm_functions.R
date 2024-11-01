@@ -17,6 +17,16 @@ loglik <- function(
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
   # compute model implied mean and (co)variance matrix
   lavimplied <- lav_model_implied(this.lavmodel)
+
+  # check if lavsamplestats@cov[[1]] is PD
+  eigvals <- eigen(lavsamplestats@cov[[1]], symmetric = TRUE,
+                   only.values = TRUE)$values
+  if (any(eigvals < 1e-07)) {
+    # return huge (negative) number, to signal the nlminb() optimizer something is not
+    # quite ok with this parameter vector; this avoids the NA/NaN function evaluation warnings
+    return(-1e40)
+  }
+
   # meanstructure?
   if (lavmodel@meanstructure) {
     Mu <- lavimplied$mean[[1]]
