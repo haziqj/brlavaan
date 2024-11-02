@@ -19,7 +19,7 @@ loglik <- function(
   lavimplied <- lav_model_implied(this.lavmodel)
 
   # check if lavsamplestats@cov[[1]] is PD
-  eigvals <- eigen(lavimplied@cov[[1]], symmetric = TRUE,
+  eigvals <- eigen(lavimplied$cov[[1]], symmetric = TRUE,
                    only.values = TRUE)$values
   if (any(eigvals < 1e-07)) {
     # return huge (negative) number, to signal the nlminb() optimizer something is not
