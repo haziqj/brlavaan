@@ -1,13 +1,25 @@
+# copy of 10-sem_rbm_functions.R with the following changes:
+# not for simulation purposes, only for debugging
+#
+# 1) loglik() has RBM and plugin.penalty arguments
+# 2) we check explicitly for non-positive definite Sigma
+# 3) we check for non-convergence (and return NAs)
+# 4) we print out the loglik/rbm/plugin.penalty terms at each iteration
+# 5) for iRBM and iRBMp, we use EXPECTED information (only for numerical reasons)
+
 # Log-likelihood function
 loglik <- function(
     theta,  # packed / short version
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    RBM = FALSE,
+    plugin.penalty = FALSE
   ) {
 
   # unpack theta
+  theta.packed <- theta
   if (lavmodel@eq.constraints) {
     theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
       lavmodel@eq.constraints.k0
@@ -15,15 +27,17 @@ loglik <- function(
 
   # fill in parameters in lavaan's internal matrix representation
   this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+
   # compute model implied mean and (co)variance matrix
   lavimplied <- lav_model_implied(this.lavmodel)
 
-  # check if lavsamplestats@cov[[1]] is PD
+  # check if lavimplied$cov[[1]] is PD
   eigvals <- eigen(lavimplied$cov[[1]], symmetric = TRUE,
                    only.values = TRUE)$values
+  # cat("eigvals = ", eigvals, "\n")
   if (any(eigvals < 1e-07)) {
-    # return huge (negative) number, to signal the nlminb() optimizer something is not
-    # quite ok with this parameter vector; this avoids the NA/NaN function evaluation warnings
+    # return huge number, to signal the nlminb() optimizer something is not
+    # quite ok with this parameter vector
     return(-1e40)
   }
 
@@ -33,6 +47,7 @@ loglik <- function(
   } else {
     Mu <- lavsamplestats@mean[[1]]
   }
+
   # total loglik
   loglik <- lavaan:::lav_mvnorm_loglik_samplestats(
     sample.mean = lavsamplestats@mean[[1]],
@@ -47,7 +62,28 @@ loglik <- function(
     Sigma.inv   = NULL
   )
 
-  loglik
+  # RBM
+  rbm.term <- penalty.term <- 0
+  if (RBM) {
+    rbm.term <- penalty(theta = theta.packed,
+                        lavmodel = lavmodel,
+                        lavsamplestats = lavsamplestats,
+                        lavdata = lavdata,
+                        lavoptions = lavoptions)
+  }
+  if (plugin.penalty) {
+    penalty.term <- sum(theta.packed^2) / lavsamplestats@ntotal
+  }
+
+  return.value <- loglik + rbm.term - penalty.term
+
+  # nlminb() works better with smaller numbers
+  #return.value <- return.value / (2 * lavsamplestats@ntotal)
+
+  cat("loglik =", loglik, "rbm.term = ", rbm.term, "plugin pen = ",
+      penalty.term, "\n")
+
+  return.value
 }
 
 # Gradient function
@@ -80,6 +116,9 @@ grad_loglik <- function(
     grad.loglik <- as.numeric(grad.loglik %*% lavmodel@eq.constraints.K)
   }
 
+  # adjust gradient for rescaling
+  # grad.loglik <- grad.loglik / (2 * lavsamplestats@ntotal)
+  
   grad.loglik
 }
 
@@ -109,6 +148,67 @@ hessian_loglik <- function(
   # rescale so we get gradient of loglik
   lavsamplestats@ntotal * hessian.F  # FULL INFORMATION
 }
+
+# observed information 
+observed_information_loglik <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions,
+    simple = FALSE
+  ) {
+
+  # change to 'simplified' hessian
+  if (simple) {
+    lavoptions$observed.information <- c("h1", "h1")
+  }
+  
+  # unpack theta
+  if (lavmodel@eq.constraints) {
+    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+      lavmodel@eq.constraints.k0
+  } 
+    
+  # fill in parameters in lavaan's internal matrix representation
+  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+
+  obs.info <- lavaan:::lav_model_information_observed(lavmodel = this.lavmodel,
+                                          lavsamplestats = lavsamplestats,
+                                          lavdata = lavdata,
+                                          lavoptions = lavoptions)
+  # this is unit information, so multiply by N
+  lavsamplestats@ntotal * obs.info
+}
+
+# expected information 
+expected_information_loglik <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions
+  ) {
+  
+  # unpack theta
+  if (lavmodel@eq.constraints) {
+    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+      lavmodel@eq.constraints.k0
+  } 
+    
+  # fill in parameters in lavaan's internal matrix representation
+  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+    
+  obs.info <- lavaan:::lav_model_information_expected(lavmodel = this.lavmodel,
+                                          lavsamplestats = lavsamplestats,
+                                          lavdata = lavdata,
+                                          lavoptions = lavoptions)
+  # this is unit information, so multiply by N
+  lavsamplestats@ntotal * obs.info
+} 
+
+
+
 
 # Casewise scores (score = grad of loglik for a single observation)
 scores_loglik <- function(
@@ -192,21 +292,25 @@ penalty <- function(
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  j <- hessian_loglik(
+  j <- expected_information_loglik(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  jinv <- lavaan:::lav_model_information_augment_invert(
-    lavmodel = lavmodel,
-    information = j,
-    inverted = TRUE,
-    check.pd = FALSE,
-    use.ginv = FALSE,
-    rm.idx = integer(0L)
-  )
+  if (lavmodel@eq.constraints) {
+    jinv <- lavaan:::lav_model_information_augment_invert(
+      lavmodel = lavmodel,
+      information = j,
+      inverted = TRUE,
+      check.pd = FALSE,
+      use.ginv = FALSE,
+      rm.idx = integer(0L)
+    )
+  } else {
+    jinv <- solve(j)
+  }
 
   if (inherits(jinv, "try-error")) {
     return(NA)
@@ -356,22 +460,29 @@ fit_sem <- function(
       lavoptions = lavoptions,
       control = list(trace = trace)
     )
+    # check convergence
+    converged.flag <- TRUE
     b <- 0
-    if (is_eRBM) b <- b + bias(
-      theta = res$par,
-      lavmodel = lavmodel,
-      lavsamplestats = lavsamplestats,
-      lavdata = lavdata,
-      lavoptions = lavoptions
-    )
-    est <- res$par - b
+    if (res$convergence != 0L) {
+      converged.flag <- FALSE
+      est <- rep(as.numeric(NA), length(res$par))
+    } else {
+      if (is_eRBM) b <- b + bias(
+        theta = res$par,
+        lavmodel = lavmodel,
+        lavsamplestats = lavsamplestats,
+        lavdata = lavdata,
+        lavoptions = lavoptions
+      )
+      est <- res$par - b
+    }
   } else {
     if (is_iRBMp) {
       # Implicit RBM with plugin penalty
-      obj <- function(x, ...) -loglik(x, ...) - penalty(x, ...) + sum(x ^ 2) / n
+      obj <- function(x, ...) -loglik(x, ..., RBM = TRUE, plugin.penalty = TRUE)
     } else {
       # Implicit RBM
-      obj <- function(x, ...) -loglik(x, ...) - penalty(x, ...)
+      obj <- function(x, ...) -loglik(x, ..., RBM = TRUE)
     }
     res <- nlminb(
       start = theta_pack,
@@ -382,27 +493,33 @@ fit_sem <- function(
       lavoptions = lavoptions,
       control = list(trace = trace)
     )
-    est <- res$par
+    if (res$convergence != 0L) {
+      converged.flag <- FALSE
+      est <- rep(as.numeric(NA), length(res$par))
+    } else {
+      est <- res$par
+    }
   }
   end_time <- Sys.time()
 
   # Standard errors ------------------------------------------------------------
-  j <- hessian_loglik(
-    theta = as.numeric(est),
-    lavmodel = lavmodel,
-    lavsamplestats = lavsamplestats,
-    lavdata = lavdata,
-    lavoptions = lavoptions
-  )
-  jinv <- lavaan:::lav_model_information_augment_invert(
-    lavmodel = lavmodel,
-    information = j,
-    inverted = TRUE,
-    check.pd = FALSE,
-    use.ginv = FALSE,
-    rm.idx = integer(0L)
-  )
-  sds <- sqrt(diag(jinv))
+  # j <- hessian_loglik(
+  #   theta = as.numeric(est),
+  #   lavmodel = lavmodel,
+  #   lavsamplestats = lavsamplestats,
+  #   lavdata = lavdata,
+  #   lavoptions = lavoptions
+  # )
+  # jinv <- lavaan:::lav_model_information_augment_invert(
+  #   lavmodel = lavmodel,
+  #   information = j,
+  #   inverted = TRUE,
+  #   check.pd = FALSE,
+  #   use.ginv = FALSE,
+  #   rm.idx = integer(0L)
+  # )
+  # sds <- sqrt(diag(jinv))
+  sds <- rep(as.numeric(NA), length(est))
 
   # unpack est
   if (lavmodel@eq.constraints) {
