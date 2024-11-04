@@ -8,8 +8,7 @@ p_growth <-
   results |>
   filter(model == "Growth model", dist %in% c("Normal", "Non-normal")) |>
   filter(param %in% c("v", "i~~i", "s~~s", "i~~s")) |>
-  # filter(abs(est - truth) / truth < 1) |>
-  filter(method != "iRBMp") |>
+  # filter(method != "iRBMp") |>
   group_by(param, dist, rel, n, method) |>
   summarise(
     bias = median(est - truth, na.rm = TRUE),
@@ -24,12 +23,14 @@ p_growth <-
   geom_line(linewidth = 0.8) +
   geom_point(size = 1) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  ggsci::scale_colour_d3() +
   facet_grid(param ~ rel + dist) +
   labs(
     x = "Sample size (n)",
     y = "Relative median bias",
     col = NULL
   ) +
+  coord_cartesian(ylim = c(-0.4, 0.3)) +
   theme(legend.position = "top"); p_growth
 
 # Two factor model results -----------------------------------------------------
@@ -50,7 +51,9 @@ p_twofac <-
   ggplot(aes(x = as.numeric(n), y = rel_bias, col = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
   geom_line(linewidth = 0.8) +
+  geom_point(size = 1) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  ggsci::scale_colour_d3() +
   facet_grid(param ~ rel + dist) +
   labs(
     x = "Sample size (n)",
