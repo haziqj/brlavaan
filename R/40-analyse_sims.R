@@ -1,6 +1,7 @@
 library(tidyverse)
 theme_set(theme_bw())
 load("R/sim_results.RData")
+load("R/sim_results_twofac.RData")
 
 # Growth results ---------------------------------------------------------------
 p_growth <-
@@ -23,25 +24,23 @@ p_growth <-
   geom_line(linewidth = 0.8) +
   geom_point(size = 1) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  # scale_y_continuous(limits = c(-0.3, 0.3)) +
   facet_grid(param ~ rel + dist) +
   labs(
     x = "Sample size (n)",
     y = "Relative median bias",
     col = NULL
   ) +
-  theme(legend.position = "top")
+  theme(legend.position = "top"); p_growth
 
 # Two factor model results -----------------------------------------------------
-# p_twofac <-
-  results |>
-  filter(model == "Two factor model", dist %in% c("Normal", "Non-normal")) |>
+p_twofac <-
+  res_twofac |>
+  filter(dist %in% c("Normal", "Non-normal")) |>
   filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
-  filter(method != "iRBMp") |>
-  filter(abs(est) < 1) -> tmp
+  # filter(method != "iRBMp") |>
   group_by(param, dist, rel, n, method) |>
   summarise(
-    bias = mean(est - truth, na.rm = TRUE),
+    bias = median(est - truth, na.rm = TRUE),
     truth = first(truth)
   ) |>
   mutate(
@@ -58,11 +57,6 @@ p_growth <-
     y = "Relative median bias",
     col = NULL
   ) +
-  theme(legend.position = "top")
-
-ggplot(tmp, aes(est, col = method)) +
-  geom_density() +
-  facet_wrap(param ~ .)
-
+  theme(legend.position = "top"); p_twofac
 
 save(p_growth, p_twofac, file = "R/DR_sims.RData")
