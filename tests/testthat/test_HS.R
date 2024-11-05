@@ -1,22 +1,17 @@
 # Script to test SEM RBM functions using the HolzingerSwineford1939 dataset
 # test_results <- run_test_file("R/test_HS.R", verbose = 0)
 
-library(tidyverse)
-library(lavaan)
-library(tinytest)
-source(here::here("R", "10-sem_rbm_functions.R"))
-
 HS.model <- "
-  visual  =~ x1 + a*x2 + x3
-  textual =~ x4 + a*x5 + x6
-  speed   =~ x7 + a*x8 + x9
+  visual  =~ x1 + a*x2 + a*x3
+  # textual =~ x4 + x5 + x6
+  # speed   =~ x7 + x8 + x9
 "
 
-fit_lav   <- cfa(HS.model, HolzingerSwineford1939, information = "observed")
-fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, method = "ML")
-fit_eRBM  <- fit_sem(HS.model, HolzingerSwineford1939, method = "eRBM")
-fit_iRBM  <- fit_sem(HS.model, HolzingerSwineford1939, method = "iRBM")
-fit_iRBMp <- fit_sem(HS.model, HolzingerSwineford1939, method = "iRBMp")
+fit_lav   <- cfa(HS.model, HolzingerSwineford1939)
+fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, estimator = "ML")
+fit_eRBM  <- fit_sem(HS.model, HolzingerSwineford1939, estimator = "eBRM")
+fit_iRBM  <- fit_sem(HS.model, HolzingerSwineford1939, estimator = "iBRM")
+fit_iRBMp <- fit_sem(HS.model, HolzingerSwineford1939, estimator = "iBRMp")
 
 # Packed version of coefficients
 with(get_lav_stuff(fit_lav), {
