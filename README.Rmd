@@ -1,7 +1,5 @@
 ---
 output: github_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -9,37 +7,50 @@ editor_options:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
 )
-library(tidyverse)
-library(lavaan)
-library(semPlot)
-library(semptools)
-library(kableExtra)
-theme_set(theme_bw())
 ```
 
-# Empirical bias reducing methods for Structural Equation Models
+# brlavaan
 
 <!-- badges: start -->
-
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN status](https://www.r-pkg.org/badges/version/brlavaan)](https://CRAN.R-project.org/package=brlavaan)
 <!-- badges: end -->
 
-Last modified: `r Sys.Date()`
+The goal of brlavaan is to ...
 
-# Growth model a (D&R 2022)
+## Installation
 
-```{r}
-#| echo: false
-#| fig-height: 7
-load("R/DR_sims.RData")
-p_growth
+You can install the development version of brlavaan like so:
+
+``` r
+# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
 ```
 
-# Two factor SEM b (D&R 2022)
+## Example
 
-```{r}
-#| echo: false
-#| fig-height: 7
-p_twofac
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(brlavaan)
+## basic example code
 ```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+```{r cars}
+summary(cars)
+```
+
+You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+
+You can also embed plots, for example:
+
+```{r pressure, echo = FALSE}
+plot(pressure)
+```
+
+In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

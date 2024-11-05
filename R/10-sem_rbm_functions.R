@@ -4,36 +4,42 @@ loglik <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    bias_reduction = FALSE,
+    kind = c("observed", "expected"),
+    plugin_penalty = FALSE,
+    verbose = FALSE
   ) {
 
-  # unpack theta
+  # Unpack theta
+  theta.packed <- theta
   if (lavmodel@eq.constraints) {
     theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
       lavmodel@eq.constraints.k0
   }
 
-  # fill in parameters in lavaan's internal matrix representation
-  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # compute model implied mean and (co)variance matrix
-  lavimplied <- lav_model_implied(this.lavmodel)
+  # Fill in parameters in lavaan's internal matrix representation
+  this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
-  # check if lavsamplestats@cov[[1]] is PD
-  eigvals <- eigen(lavimplied$cov[[1]], symmetric = TRUE,
-                   only.values = TRUE)$values
+  # Compute model implied mean and (co)variance matrix
+  lavimplied <- lavaan::lav_model_implied(this_lavmodel)
+
+  # Check if lavimplied$cov[[1]] is PD
+  eigvals <- eigen(lavimplied$cov[[1]], symmetric = TRUE, only.values = TRUE)$values
   if (any(eigvals < 1e-07)) {
-    # return huge (negative) number, to signal the nlminb() optimizer something is not
-    # quite ok with this parameter vector; this avoids the NA/NaN function evaluation warnings
+    # Return huge number, to signal the nlminb() optimizer something is not
+    # quite OK with this parameter vector
     return(-1e40)
   }
 
-  # meanstructure?
+  # Mean structure?
   if (lavmodel@meanstructure) {
     Mu <- lavimplied$mean[[1]]
   } else {
     Mu <- lavsamplestats@mean[[1]]
   }
-  # total loglik
+
+  # Total log-likelihood value
   loglik <- lavaan:::lav_mvnorm_loglik_samplestats(
     sample.mean = lavsamplestats@mean[[1]],
     sample.cov  = lavsamplestats@cov[[1]],
@@ -47,7 +53,38 @@ loglik <- function(
     Sigma.inv   = NULL
   )
 
-  loglik
+  # Bias reduction
+  bias_term <- pen_term <- 0
+  if (isTRUE(bias_reduction)) {
+    bias_term <- penalty(
+      theta = theta.packed,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      kind = kind
+    )
+  }
+  if (isTRUE(plugin_penalty)) {
+    # FIXME: To add different penalty terms here
+    pen_term <- sum(theta.packed ^ 2) / lavsamplestats@ntotal
+  }
+
+  # Verbose
+  if (isTRUE(verbose)) {
+    cat(
+      "Log-lik =", loglik, "|",
+      "Bias term =", bias_term, "|",
+      "Penalty term =", pen_term, "|",
+      "\n"
+    )
+  }
+
+  out <- loglik + bias_term - pen_term
+  # nlminb() works better with smaller numbers
+  # out <- out / (2 * lavsamplestats@ntotal)
+
+  out
 }
 
 # Gradient function
@@ -59,77 +96,56 @@ grad_loglik <- function(
     lavoptions
   ) {
 
-  # unpack theta
+  # Unpack theta
   if (lavmodel@eq.constraints) {
     theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
       lavmodel@eq.constraints.k0
   }
 
-  # fill in parameters in lavaan's internal matrix representation
-  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # gradient of F_ML (not loglik yet)
-  grad.F <- lavaan:::lav_model_gradient(lavmodel = this.lavmodel,
-                                        lavsamplestats = lavsamplestats,
-                                        lavdata = lavdata)
-  # rescale so we get gradient of loglik
-  N <- lavsamplestats@ntotal
-  grad.loglik <- -1 * N * grad.F
+  # Fill in parameters in lavaan's internal matrix representation
+  this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
-  # repack gradients
+  # Gradient of fit function F_ML (not loglik yet)
+  grad_F <- lavaan:::lav_model_gradient(
+    lavmodel = this_lavmodel,
+    lavsamplestats = lavsamplestats,
+    lavdata = lavdata
+  )
+  # Rescale so we get gradient of loglik
+  out <- -1 * lavsamplestats@ntotal * grad_F
+
+  # Repack gradients
   if (lavmodel@eq.constraints) {
-    grad.loglik <- as.numeric(grad.loglik %*% lavmodel@eq.constraints.K)
+    out <- as.numeric(out %*% lavmodel@eq.constraints.K)
   }
 
-  grad.loglik
+  # Adjust gradient for rescaling
+  # out <- out / (2 * lavsamplestats@ntotal)
+  out
 }
 
-# Hessian
-hessian_loglik <- function(
-    theta,
-    lavmodel,
-    lavsamplestats,
-    lavdata,
-    lavoptions
-  ) {
-
-  # unpack theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
-
-  # fill in parameters in lavaan's internal matrix representation
-  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # gradient of F_ML (not loglik yet)
-  hessian.F <- lavaan:::lav_model_hessian(lavmodel = this.lavmodel,
-                                          lavsamplestats = lavsamplestats,
-                                          lavdata = lavdata,
-                                          lavoptions = lavoptions)
-
-  # rescale so we get gradient of loglik
-  lavsamplestats@ntotal * hessian.F  # FULL INFORMATION
-}
-
-# Casewise scores (score = grad of loglik for a single observation)
+# Casewise scores (gradient of loglik for a single observation)
 scores_loglik <- function(
     theta,
     lavmodel,
     lavsamplestats,
     lavdata,
     lavoptions
-  ) {
+) {
 
-  # unpack theta
+  # Unpack theta
   if (lavmodel@eq.constraints) {
     theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
       lavmodel@eq.constraints.k0
   }
 
-  # fill in parameters in lavaan's internal matrix representation
-  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # compute model implied mean and (co)variance matrix
-  lavimplied <- lav_model_implied(this.lavmodel)
-  # only 1 group
+  # Fill in parameters in lavaan's internal matrix representation
+  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+
+  # Compute model implied mean and (co)variance matrix
+  lavimplied <- lav_model_implied(this_lavmodel)
+
+  # Only 1 group
   moments <- list(cov = lavimplied$cov[[1]])
   if(lavmodel@meanstructure) {
     moments$mean <- lavimplied$mean[[1]]
@@ -138,17 +154,23 @@ scores_loglik <- function(
   ntab <- unlist(lavdata@norig)
   ntot <- sum(ntab)
   npar <- length(theta)
-  score_matrix <- lavaan:::lav_scores_ml(
-    ntab = ntab, ntot = ntot, npar = npar,
-    moments = moments, lavdata = lavdata, lavsamplestats = lavsamplestats,
-    lavmodel = lavmodel, lavoptions = lavoptions, scaling = FALSE
+  out <- lavaan:::lav_scores_ml(
+    ntab = ntab,
+    ntot = ntot,
+    npar = npar,
+    moments = moments,
+    lavdata = lavdata,
+    lavsamplestats = lavsamplestats,
+    lavmodel = lavmodel,
+    lavoptions = lavoptions,
+    scaling = FALSE
   )
 
-  score_matrix
+  out
 }
 
-# Outer product of casewise scores
-first_order_unit_information_loglik <- function(
+# Hessian function
+hessian_loglik <- function(
     theta,
     lavmodel,
     lavsamplestats,
@@ -156,57 +178,174 @@ first_order_unit_information_loglik <- function(
     lavoptions
   ) {
 
-  # unpack theta
+  # Unpack theta
   if (lavmodel@eq.constraints) {
     theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
       lavmodel@eq.constraints.k0
   }
 
-  # fill in parameters in lavaan's internal matrix representation
-  this.lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
-  # compute model implied mean and (co)variance matrix
-  lavimplied <- lav_model_implied(this.lavmodel)
+  # Fill in parameters in lavaan's internal matrix representation
+  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
 
-  info <- lavaan:::lav_model_information_firstorder(
-    lavmodel = this.lavmodel,
-    lavdata = lavdata,
+  # Hessian of F_ML
+  out <- lavaan:::lav_model_hessian(
+    lavmodel = this_lavmodel,
     lavsamplestats = lavsamplestats,
+    lavdata = lavdata,
     lavoptions = lavoptions
   )
 
-  # this is unit information, so multiply by N
-  lavsamplestats@ntotal * info
+  # Rescale so we get Hessian of loglik
+  -1 * lavsamplestats@ntotal * hessian.F
 }
 
-penalty <- function(
+# Full information matrix
+information_matrix <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions,
+    kind = c("observed", "expected", "firstorder")
+  ) {
+
+  kind <- match.arg(kind, c("observed", "expected", "firstorder"))
+
+  # Unpack theta
+  if (lavmodel@eq.constraints) {
+    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+      lavmodel@eq.constraints.k0
+  }
+
+  # Fill in parameters in lavaan's internal matrix representation
+  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+
+  # Get information matrix
+  if (kind == "observed") {
+    # FIXME: When is this needed?
+    # Change to 'simplified' Hessian
+    if (FALSE) lavoptions$observed.information <- c("h1", "h1")
+    out <- lavaan:::lav_model_information_observed(
+      lavmodel = this_lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+  }
+  if (kind == "expected") {
+    out <- lavaan:::lav_model_information_expected(
+      lavmodel = this_lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+  }
+  if (kind == "firstorder") {
+    out <- lavaan:::lav_model_information_firstorder(
+      lavmodel = this_lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+  }
+
+  # This is unit information, so multiply by N
+  lavsamplestats@ntotal * out
+}
+
+# Observed information
+information_observed <- function(
     theta,
     lavmodel,
     lavsamplestats,
     lavdata,
     lavoptions
   ) {
-  e <- first_order_unit_information_loglik(
+  information_matrix(
+    theta = theta,
+    lavmodel = lavmodel,
+    lavsamplestats = lavsamplestats,
+    lavdata = lavdata,
+    lavoptions = lavoptions,
+    kind = "observed"
+  )
+}
+
+# Expected information
+information_expected <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions
+  ) {
+  information_matrix(
+    theta = theta,
+    lavmodel = lavmodel,
+    lavsamplestats = lavsamplestats,
+    lavdata = lavdata,
+    lavoptions = lavoptions,
+    kind = "expected"
+  )
+}
+
+# Outer product of casewise scores
+information_firstorder <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions
+  ) {
+  information_matrix(
+    theta = theta,
+    lavmodel = lavmodel,
+    lavsamplestats = lavsamplestats,
+    lavdata = lavdata,
+    lavoptions = lavoptions,
+    kind = "firstorder"
+  )
+}
+
+# Bias reduction penalty term
+penalty <- function(
+    theta,
+    lavmodel,
+    lavsamplestats,
+    lavdata,
+    lavoptions,
+    kind = c("observed", "expected")
+  ) {
+
+  kind <- match.arg(kind, c("observed", "expected"))
+
+  e <- information_firstorder(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions
   )
-  j <- hessian_loglik(
+  j <- information_matrix(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = kind
   )
-  jinv <- lavaan:::lav_model_information_augment_invert(
-    lavmodel = lavmodel,
-    information = j,
-    inverted = TRUE,
-    check.pd = FALSE,
-    use.ginv = FALSE,
-    rm.idx = integer(0L)
-  )
+  if (lavmodel@eq.constraints) {
+    jinv <- lavaan:::lav_model_information_augment_invert(
+      lavmodel = lavmodel,
+      information = j,
+      inverted = TRUE,
+      check.pd = FALSE,
+      use.ginv = FALSE,
+      rm.idx = integer(0L)
+    )
+  } else {
+    jinv <- solve(j)
+  }
 
   if (inherits(jinv, "try-error")) {
     return(NA)
@@ -220,14 +359,19 @@ bias <- function(
     lavmodel,
     lavsamplestats,
     lavdata,
-    lavoptions
+    lavoptions,
+    kind = c("observed", "expected")
   ) {
-  j <- hessian_loglik(
+
+  kind <- match.arg(kind, c("observed", "expected"))
+
+  j <- information_matrix(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = kind
   )
   jinv <- lavaan:::lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -246,153 +390,160 @@ bias <- function(
     lavoptions = lavoptions
   )
 
-  # unpack A
+  # Unpack A
   if (lavmodel@eq.constraints) {
     A <- lavmodel@eq.constraints.K %*% A
   }
 
   out <- -drop(jinv %*% A)
 
-  # repack! (since optimiser expects packed version)
+  # Repack! (since optimiser expects packed version)
   if (lavmodel@eq.constraints) {
     out <- as.numeric(out %*% lavmodel@eq.constraints.K)
   }
+
   out
 }
 
+# The main fitting function
 fit_sem <- function(
     model,
     data,
-    method = "ML",
+    estimator = c("ML", "EBRM", "IBRM", "IBRMP"),
+    information = c("expected", "observed", "first.order"),
     debug = FALSE,
-    theta_init = NULL,
-    trace = 0,
     lavfun = "sem",
-    meanstructure = FALSE,
-    bounds = "none"
+    ...
   ) {
 
-  method   <- match.arg(method, c("ML", "iRBM", "eRBM", "iRBMp"))
-  is_ML    <- method == "ML"
-  is_iRBM  <- method == "iRBM"
-  is_eRBM  <- method == "eRBM"
-  is_iRBMp <- method == "iRBMp"
+  information <- match.arg(information, c("expected", "observed", "first.order"))
+  orig_info <- information
+  if (orig_info == "first.order") {
+    information <- "expected"
+    cli::cli_alert_info("Bias reduction methods will use expected information matrix, and standard error computation will use the outer product of the casewise scores.")
+  }
 
-  # Initialise {lavaan} model object
-  lavargs <- list(
-    model = model,
-    data = data,
-    do.fit = FALSE,
-    meanstructure = meanstructure,
-    bounds = bounds
-  )
-  fit0           <- do.call(lavfun, lavargs)
+  estimator <- match.arg(toupper(estimator), c("ML", "EBRM", "IBRM", "IBRMP"))
+  is_ML     <- estimator == "ML"
+  is_eBRM   <- estimator == "EBRM"
+  is_iBRM   <- estimator == "IBRM"
+  is_iBRMp  <- estimator == "IBRMP"
+
+  # Initialise {lavaan} model object -------------------------------------------
+  lavargs <- list(...)
+  lavargs$model <- model
+  lavargs$data <- data
+  lavargs$do.fit <- FALSE
+
+  fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   lavmodel       <- fit0@Model
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
   lavoptions     <- fit0@Options
-  pt             <- partable(fit0)
 
-  if (is.null(theta_init)) theta_init <- coef(fit0)  # starting values
+  start <- lavargs$start
+  if (is.null(start)) start <- coef(fit0)  # starting values
   n <- nobs(fit0)
 
   # Pack theta
   if (lavmodel@eq.constraints) {
     theta_pack <- as.numeric(
-      (theta_init - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
+      (start - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
     )
   } else {
-    theta_pack <- theta_init
+    theta_pack <- start
   }
 
   # DEBUG ----------------------------------------------------------------------
   if (isTRUE(debug)) {
-    out <- with(
-      list(
-        theta = theta_init,
+    out <- list(
+      # Parameters and sample size
+      theta_unpack = start,
+      theta_pack = theta_pack,
+      n = n,
+
+      # Information about constraints
+      lavmodel_eq.constraints = lavmodel@eq.constraints,
+      lavmodel_eq.constraints.k0 = lavmodel@eq.constraints.k0,
+      lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
+
+      # Information about the model
+      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = orig_info),
+      jinv = lavaan:::lav_model_information_augment_invert(
         lavmodel = lavmodel,
-        lavsamplestats = lavsamplestats,
-        lavdata = lavdata,
-        lavoptions = lavoptions
-      ),
-      list(
-        theta_unpack = theta_init,
-        theta_pack = theta_pack,
-        n = n,
-        lavmodel_eq.constraints = lavmodel@eq.constraints,
-        lavmodel_eq.constraints.k0 = lavmodel@eq.constraints.k0,
-        lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
-        loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        j = hessian_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        jinv = lavaan:::lav_model_information_augment_invert(
-          lavmodel = lavmodel,
-          information = hessian_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-          inverted = TRUE,
-          check.pd = FALSE,
-          use.ginv = FALSE,
-          rm.idx = integer(0L)
+        information = information_matrix(
+          theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, orig_info
         ),
-        e = first_order_unit_information_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        scores_loglik = scores_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-        bias = bias(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions)
-      )
+        inverted = TRUE,
+        check.pd = FALSE,
+        use.ginv = FALSE,
+        rm.idx = integer(0L)
+      ),
+      e = information_firstorder(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      scores_loglik = scores_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, information),
+      bias = bias(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, information),
+      information_penalty = information,
+      information_se = orig_info
     )
     return(out)
   }
 
+  # Verbose
+  verbose <- lavargs$verbose
+  if (is.null(verbose)) verbose <- FALSE
+
   # Start fitting process ------------------------------------------------------
   start_time <- Sys.time()
-  if (is_ML | is_eRBM) {
-    # ML or explicit RBM -- either way requires MLE
-    res <- nlminb(
-      start = theta_pack,
-      objective = function(x, ...) -loglik(x, ...),
-      gradient = function(x, ...) -grad_loglik(x, ...),
-      lavmodel = lavmodel,
-      lavsamplestats = lavsamplestats,
-      lavdata = lavdata,
-      lavoptions = lavoptions,
-      control = list(trace = trace)
+  obj_fun <- function(x, ...) {
+    -1 * loglik(
+      theta = x,
+      ...,
+      bias_reduction = isFALSE(is_ML | is_eBRM),
+      plugin_penalty = isTRUE(is_iBRMp),
+      verbose = verbose
     )
-    b <- 0
-    if (is_eRBM) b <- b + bias(
+  }
+  grad_fun <-
+    if (isTRUE(is_ML | is_eBRM))
+      function(x, ...) -1 * grad_loglik(x, ...)
+    else
+      NULL
+
+  res <- nlminb(
+    start = theta_pack,
+    objective = obj_fun,
+    gradient = grad_fun,
+    lavmodel = lavmodel,
+    lavsamplestats = lavsamplestats,
+    lavdata = lavdata,
+    lavoptions = lavoptions,
+    control = lavargs$control
+  )
+
+  b <- 0
+  if (is_eBRM)
+    b <- b + bias(
       theta = res$par,
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions
     )
-    est <- res$par - b
-  } else {
-    if (is_iRBMp) {
-      # Implicit RBM with plugin penalty
-      obj <- function(x, ...) -loglik(x, ...) - penalty(x, ...) + sum(x ^ 2) / n
-    } else {
-      # Implicit RBM
-      obj <- function(x, ...) -loglik(x, ...) - penalty(x, ...)
-    }
-    res <- nlminb(
-      start = theta_pack,
-      objective = obj,
-      lavmodel = lavmodel,
-      lavsamplestats = lavsamplestats,
-      lavdata = lavdata,
-      lavoptions = lavoptions,
-      control = list(trace = trace)
-    )
-    est <- res$par
-  }
+  est <- res$par - b
+
   end_time <- Sys.time()
 
   # Standard errors ------------------------------------------------------------
-  j <- hessian_loglik(
+  j <- information_matrix(
     theta = as.numeric(est),
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = orig_info
   )
   jinv <- lavaan:::lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -404,7 +555,7 @@ fit_sem <- function(
   )
   sds <- sqrt(diag(jinv))
 
-  # unpack est
+  # Unpack estimators
   if (lavmodel@eq.constraints) {
     est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
       lavmodel@eq.constraints.k0
@@ -413,16 +564,12 @@ fit_sem <- function(
   list(
     coefficients = est,
     stderr = sds,
-    time = end_time - start_time
-  )
-}
-
-get_lav_stuff <- function(fit) {
-  # Utility function to extract lavaan stuff
-  list(
-    lavmodel       = fit@Model,
-    lavsamplestats = fit@SampleStats,
-    lavdata        = fit@Data,
-    lavoptions     = fit@Options
+    time = end_time - start_time,
+    converged = res$convergence == 0L,
+    optim = res,
+    vcov = jinv,
+    information_penalty = information,
+    information_se = orig_info,
+    lavfun = lavfun
   )
 }
