@@ -37,7 +37,7 @@ sim_fun <- function(
         model = mod,
         data = dat,
         lavfun = "cfa",
-        meanstructure = TRUE,
+        meanstructure = meanstructure,
         bounds = "standard"
       )
       fitsemargs$method <- "ML"   ; fit_ML    <- do.call(fit_sem, fitsemargs)
