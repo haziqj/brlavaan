@@ -1,3 +1,9 @@
+#' brlavaan Class
+#'
+#' This is a class that extends the lavaan class.
+#'
+#' @importFrom lavaan lavaan
+#' @export
 setClass(
   Class = "brlavaan",
   contains = "lavaan"
