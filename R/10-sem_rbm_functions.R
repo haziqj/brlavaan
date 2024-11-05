@@ -496,7 +496,7 @@ fit_sem <- function(
   if (is.null(verbose)) verbose <- FALSE
 
   # Start fitting process ------------------------------------------------------
-  start_time <- Sys.time()
+  start_time <- proc.time()
   obj_fun <- function(x, ...) {
     -1 * loglik(
       theta = x,
@@ -534,7 +534,8 @@ fit_sem <- function(
     )
   est <- res$par - b
 
-  end_time <- Sys.time()
+  elapsed_time <- proc.time() - start_time
+  elapsed_time <- elapsed_time["elapsed"]
 
   # Standard errors ------------------------------------------------------------
   j <- information_matrix(
@@ -564,12 +565,13 @@ fit_sem <- function(
   list(
     coefficients = est,
     stderr = sds,
-    time = end_time - start_time,
+    timing = elapsed_time,
     converged = res$convergence == 0L,
     optim = res,
     vcov = jinv,
     information_penalty = information,
     information_se = orig_info,
-    lavfun = lavfun
+    lavfun = lavfun,
+    estimator = estimator
   )
 }

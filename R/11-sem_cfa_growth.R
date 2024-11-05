@@ -1,4 +1,4 @@
-brcfa <- cfa <- function(
+brcfa <- function(
     model,
     data,
     estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
@@ -9,14 +9,26 @@ brcfa <- cfa <- function(
   fit <- fit_sem(
     model = model,
     data = data,
-    estimator = match.arg(estimator),
-    information = match.arg(information),
+    estimator = estimator,
+    information = information,
     debug = FALSE,
     lavfun = "cfa",
     ...
   )
 
-  # Prepare output
+  out <- create_lav_from_fitsem(fit, model, data, ...)
+  new("brlavaan", out)
+  # out
+}
+
+create_lav_from_fitsem <- function(
+    fit,
+    model,
+    data,
+    ...
+  ) {
+
+  # Prepare output (blank lavaan object)
   x <- fit$coef
   lavargs <- list(...)
   lavargs$model <- model
@@ -25,6 +37,13 @@ brcfa <- cfa <- function(
   lavargs$information <- fit$information_se
   lavargs$start <- x
   fit0 <- do.call(get(fit$lavfun, envir = asNamespace("lavaan")), lavargs)
+
+  # Change version slot
+  fit0@version <- as.character(packageVersion("brlavaan"))
+
+  # Change timing slot
+  fit0@timing$optim <- fit0@timing$optim + fit$timing
+  fit0@timing$total <- fit0@timing$total + fit$timing
 
   # Change Model and implied slots
   fit0@Model <- lav_model_set_parameters(fit0@Model, x)
@@ -39,10 +58,11 @@ brcfa <- cfa <- function(
   fit0@pta$names <- names(pt)
 
   # Change Options slot
-  fit0@Options$estimator <- "E-BRML"
-  fit0@Options$estimator.args <- list(method = "eRBM")
+  fit0@Options$estimator <- fit$estimator
+  # fit0@Options$estimator.args <- list(method = "eRBM")
   # fit0@Options$test <- "standard"
   fit0@Options$se <- "standard"
+  fit0@Options$do.fit <- TRUE
 
   # Change Fit slot
   fit0@Fit@x <- x
@@ -60,8 +80,11 @@ brcfa <- cfa <- function(
   fit0@optim$converged <- fit$optim$convergence == 0L
 
   # Change loglik slot
-  fit0@loglik$estimator <- "E-BRML"
-
+  fit0@loglik$estimator <-
+    if (fit$estimator == "ML") "ML"
+    else if (fit$estimator == "IBRM") "IMP-BR ML"
+    else if (fit$estimator == "IBRMP") "IMP-BR ML"
+    else if (fit$estimator == "EBRM") "EXP-BR ML"
   # Change vcov slot
   fit0@vcov$se <- "standard"
   fit0@vcov$vcov <- fit$vcov
@@ -71,3 +94,4 @@ brcfa <- cfa <- function(
 
   fit0
 }
+
