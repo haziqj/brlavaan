@@ -23,7 +23,7 @@ You can install the development version of brlavaan from
 
 ``` r
 # install.packages("pak")
-pak::pak("haziqj/sem-bias")
+pak::pak("haziqj/sem-bias@package")
 ```
 
 ## Example
