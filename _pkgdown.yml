@@ -1,4 +1,22 @@
-url: http://haziqj.ml/sem-bias/
+url: https://haziqj.ml/sem-bias/
 template:
   bootstrap: 5
 
+authors:
+  Haziq Jamil:
+    href: https://haziqj.ml/
+  Yves Rosseel:
+    href: http://lavaan.ugent.be
+  Oliver Kemp:
+    href: https://warwick.ac.uk/fac/sci/statistics/staff/research_students/kemp
+  Ioannis Kosmidis:
+    href: http://ikosmidis.com
+
+navbar:
+  structure:
+    left: [intro, reference, manuscript, articles, tutorials, news]
+    right: [search, twitter, github, lightswitch]
+  components:
+    manuscript:
+      text: Manuscript
+      href: manuscript/index.html
