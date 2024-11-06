@@ -1,15 +1,26 @@
 #' Fit a structural equation model using bias-reducing methods
 #'
 #' @param model A description of the user-specified model. Typically, the model
-#'   is described using the lavaan model syntax. See [model.syntax] for
-#'   more information. Alternatively, a parameter table (eg. the output of the
+#'   is described using the lavaan model syntax. See [model.syntax] for more
+#'   information. Alternatively, a parameter table (eg. the output of the
 #'   [lavaanify()] function) is also accepted.
-#' @param data An optional data frame containing the observed variables used in the model. If some variables are declared as ordered factors, lavaan will treat them as ordinal variables.
-#' @param estimator The estimator to use. One of "iBRM", "iBRMp", "eBRM", or "ML".
-#' @param information The type of information matrix to use. One of "expected", "observed", or "first.order".
+#' @param data An optional data frame containing the observed variables used in
+#'   the model. If some variables are declared as ordered factors, lavaan will
+#'   treat them as ordinal variables.
+#' @param estimator The estimator to use. One of "iBRM", "iBRMp", "eBRM", or
+#'   "ML".
+#' @param information The type of information matrix to use for both the bias
+#'   reduction method and the calculation of standard errors. One of "expected",
+#'   "observed", or "first.order".
+#'
+#'   However, when "first.order" is specified, then this is only for the
+#'   standard error calculations. The bias reduction methods will revert to
+#'   using the expected information.
+#'
 #' @param ... Additional arguments to pass to the [lavaan] function.
 #'
-#' @return An object of class `brlavaan` which is a subclass of the [lavaan-class] class.
+#' @return An object of class `brlavaan` which is a subclass of the
+#'   [lavaan-class] class.
 #' @export
 brsem <- function(
     model,

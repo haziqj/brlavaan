@@ -14,20 +14,30 @@ brcfa(
 }
 \arguments{
 \item{model}{A description of the user-specified model. Typically, the model
-is described using the lavaan model syntax. See \link{model.syntax} for
-more information. Alternatively, a parameter table (eg. the output of the
+is described using the lavaan model syntax. See \link{model.syntax} for more
+information. Alternatively, a parameter table (eg. the output of the
 \code{\link[=lavaanify]{lavaanify()}} function) is also accepted.}
 
-\item{data}{An optional data frame containing the observed variables used in the model. If some variables are declared as ordered factors, lavaan will treat them as ordinal variables.}
+\item{data}{An optional data frame containing the observed variables used in
+the model. If some variables are declared as ordered factors, lavaan will
+treat them as ordinal variables.}
 
-\item{estimator}{The estimator to use. One of "iBRM", "iBRMp", "eBRM", or "ML".}
+\item{estimator}{The estimator to use. One of "iBRM", "iBRMp", "eBRM", or
+"ML".}
 
-\item{information}{The type of information matrix to use. One of "expected", "observed", or "first.order".}
+\item{information}{The type of information matrix to use for both the bias
+reduction method and the calculation of standard errors. One of "expected",
+"observed", or "first.order".
+
+However, when "first.order" is specified, then this is only for the
+standard error calculations. The bias reduction methods will revert to
+using the expected information.}
 
 \item{...}{Additional arguments to pass to the \link{lavaan} function.}
 }
 \value{
-An object of class \code{brlavaan} which is a subclass of the \linkS4class{lavaan} class.
+An object of class \code{brlavaan} which is a subclass of the
+\linkS4class{lavaan} class.
 }
 \description{
 Fit confirmatory factor analysis model using bias-reducing methods

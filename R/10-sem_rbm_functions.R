@@ -354,6 +354,7 @@ penalty <- function(
   }
 }
 
+# The bias term for explicit bias reduction method
 bias <- function(
     theta,
     lavmodel,
@@ -405,11 +406,20 @@ bias <- function(
   out
 }
 
-# The main fitting function
+#' Fit a structural equation model using bias-reducing methods
+#'
+#' This is the workhorse function to fit a structural equation model using
+#' bias-reducing methods which we use for our simulations. For endusers, we
+#' recommend using the [brsem()], [brcfa()], or [brfrowth()] functions which is
+#' a wrapper around this function and outputs something more user-friendly.
+#'
+#' @inherit brsem params return
+#'
+#' @export
 fit_sem <- function(
     model,
     data,
-    estimator = c("ML", "EBRM", "IBRM", "IBRMP"),
+    estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
     information = c("expected", "observed", "first.order"),
     debug = FALSE,
     lavfun = "sem",
