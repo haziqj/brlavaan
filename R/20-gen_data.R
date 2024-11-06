@@ -12,9 +12,9 @@
 #'   "Kurtosis" or "Non-normal".
 #' @param lavsim Logical. If TRUE, simulate data using lavaan's [simulateData]
 #'   function.
-#' @param meanstructure Logical. If TRUE, include the mean structure in the
-#'   estimation. Only for two-factor models (since growth models do not have a
-#'   mean structure).
+#' @param meanstructure Logical (this is almost always `FALSE`). If `TRUE`,
+#'   include the mean structure in the estimation. Only for two-factor models
+#'   (since growth models do not have a mean structure).
 #'
 #' @return A data frame with simulated data. For convenience, both the true
 #'   values (`"truth"`) and distribution (`"dist"`) are attached as attributes.

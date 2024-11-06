@@ -30,9 +30,9 @@ truth(x)
 \item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link{simulateData}
 function.}
 
-\item{meanstructure}{Logical. If TRUE, include the mean structure in the
-estimation. Only for two-factor models (since growth models do not have a
-mean structure).}
+\item{meanstructure}{Logical (this is almost always \code{FALSE}). If \code{TRUE},
+include the mean structure in the estimation. Only for two-factor models
+(since growth models do not have a mean structure).}
 }
 \value{
 A data frame with simulated data. For convenience, both the true
