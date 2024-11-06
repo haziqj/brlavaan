@@ -16,41 +16,49 @@ knitr::opts_chunk$set(
 # brlavaan
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![CRAN status](https://www.r-pkg.org/badges/version/brlavaan)](https://CRAN.R-project.org/package=brlavaan)
 <!-- badges: end -->
 
-The goal of brlavaan is to ...
+Apply empirical bias reduced methods to fit a variety of latent variable models, including confirmatory factor analysis, structural equation modelling, and latent growth curve models.
 
 ## Installation
 
-You can install the development version of brlavaan like so:
+You can install the development version of brlavaan from [GitHub](https://github.com/) with:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("pak")
+pak::pak("haziqj/sem-bias")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Here's the beloved classic example -- Bollen (1989)'s political democracy example.
+
+![](https://lavaan.ugent.be/figures/sem.png)
 
 ```{r example}
 library(brlavaan)
-## basic example code
+data("PoliticalDemocracy", package = "lavaan")
+
+mod <- "
+  # latent variables 
+  ind60 =~ x1 + x2 + x3 
+  dem60 =~ y1 + y2 + y3 + y4 
+  dem65 =~ y5 + y6 + y7 + y8 
+   
+  # regressions
+  dem60 ~ ind60 
+  dem65 ~ ind60 + dem60 
+  
+  # residual covariances 
+  y1 ~~ y5
+  y2 ~~ y4 + y6 
+  y3 ~~ y7 
+  y4 ~~ y8
+  y6 ~~ y8
+"
+
+# fit the model using explicit bias-reduced estimation
+fit <- brsem(model = mod, data = PoliticalDemocracy, estimator = "eBRM") 
+
+summary(fit)
 ```
-
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
-
-```{r cars}
-summary(cars)
-```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
