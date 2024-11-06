@@ -196,7 +196,7 @@ hessian_loglik <- function(
   )
 
   # Rescale so we get Hessian of loglik
-  -1 * lavsamplestats@ntotal * hessian.F
+  -1 * lavsamplestats@ntotal * out
 }
 
 # Full information matrix
