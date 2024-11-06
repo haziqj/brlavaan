@@ -5,3 +5,7 @@
 ^experiments$
 ^manuscript$
 ^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
