@@ -433,11 +433,11 @@ fit_sem <- function(
     cli::cli_alert_info("Bias reduction methods will use expected information matrix, and standard error computation will use the outer product of the casewise scores.")
   }
 
-  estimator <- match.arg(toupper(estimator), c("ML", "EBRM", "IBRM", "IBRMP"))
+  estimator <- match.arg(estimator, c("iBRM", "iBRMp", "eBRM", "ML"))
   is_ML     <- estimator == "ML"
-  is_eBRM   <- estimator == "EBRM"
-  is_iBRM   <- estimator == "IBRM"
-  is_iBRMp  <- estimator == "IBRMP"
+  is_eBRM   <- estimator == "eBRM"
+  is_iBRM   <- estimator == "iBRM"
+  is_iBRMp  <- estimator == "iBRMp"
 
   # Initialise {lavaan} model object -------------------------------------------
   lavargs <- list(...)

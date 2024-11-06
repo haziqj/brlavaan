@@ -13,9 +13,9 @@ truth_twofac(rel, meanstructure = FALSE)
 \arguments{
 \item{rel}{Reliability of the growth curve model. Either 0.8 or 0.5.}
 
-\item{meanstructure}{Logical. If TRUE, include the mean structure in the
-estimation. Only for two-factor models (since growth models do not have a
-mean structure).}
+\item{meanstructure}{Logical (this is almost always \code{FALSE}). If \code{TRUE},
+include the mean structure in the estimation. Only for two-factor models
+(since growth models do not have a mean structure).}
 }
 \value{
 A named numeric vector with the true values of the model.
