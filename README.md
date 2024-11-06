@@ -4,6 +4,9 @@
 # brlavaan
 
 <!-- badges: start -->
+
+[![Codecov test
+coverage](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg)](https://app.codecov.io/gh/haziqj/sem-bias)
 <!-- badges: end -->
 
 Apply empirical bias reduced methods to fit a variety of latent variable
