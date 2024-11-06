@@ -1,5 +1,5 @@
 Package: brlavaan
-Title: Bias Reduced Latent Variable Analysis
+Title: Bias-Reduced Latent Variable Analysis
 Version: 0.0.1.9002
 Authors@R: c(
     person("Haziq", "Jamil", , "haziq.jamil@gmail.com", role = c("aut", "cre"),
@@ -20,4 +20,4 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: 
     lavaan
-URL: http://haziqj.ml/sem-bias/
+URL: https://haziqj.ml/sem-bias/
