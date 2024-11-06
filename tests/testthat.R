@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(sem-bias)
+library(brlavaan)
 
-test_check("sem-bias")
+test_check("brlavaan")
