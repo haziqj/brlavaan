@@ -104,7 +104,7 @@ create_lav_from_fitsem <- function(
   ) {
 
   # Prepare output (blank lavaan object)
-  x <- fit$coef
+  x <- fit$coefficients
   lavargs <- list(...)
   lavargs$model <- model
   lavargs$data <- data
