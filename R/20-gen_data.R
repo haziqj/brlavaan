@@ -19,6 +19,13 @@
 #' @return A data frame with simulated data. For convenience, both the true
 #'   values (`"truth"`) and distribution (`"dist"`) are attached as attributes.
 #' @name gen-data
+#'
+#' @author Original code by Sara Dhaene and Yves Rosseel.
+#' @references Dhaene, S., & Rosseel, Y. (2022). Resampling Based Bias
+#'   Correction for Small Sample SEM. *Structural Equation Modeling: A
+#'   Multidisciplinary Journal, 29*(5), 755–771.
+#'   https://doi.org/10.1080/10705511.2022.2057999
+#'
 #' @examples
 #' dat <- gen_data_growth(n = 100, rel = 0.8)
 #' head(dat)
