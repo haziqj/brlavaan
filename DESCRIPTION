@@ -27,6 +27,7 @@ Imports:
     furrr,
     MASS,
     methods,
+    mvtnorm,
     numDeriv,
     purrr,
     stats,

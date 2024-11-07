@@ -4,6 +4,7 @@
 ## usethis namespace: start
 #' @importFrom methods callNextMethod
 #' @importFrom methods new
+#' @importFrom mvtnorm dmvnorm
 #' @importFrom stats nlminb
 #' @importFrom stats nobs
 #' @importFrom utils capture.output
