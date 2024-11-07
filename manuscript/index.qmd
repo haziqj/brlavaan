@@ -1,12 +1,66 @@
 ---
-title: BRM SEM
+title: Bias-Reduced Estimation of Structural Equation Models
 authors:
-  - name: Norah Jones
-    affiliation: The University
-    roles: writing
+  - name: Haziq Jamil
+    orcid: 0000-0003-3298-1010
+    email: haziq.jamil@ubd.edu.bn
+    url: "https://haziqj.ml"
+    # note: 
+    # roles: writing
     corresponding: true
-bibliography: references.bib
+    affiliations:
+      - name: Universiti Brunei Darussalam
+        id: ubd
+        department: Mathematical Sciences, Faculty of Science
+        address: Universiti Brunei Darussalam, Jalan Tungku Link
+        city: Bandar Seri Begawan
+        country: Brunei
+        postal-code: BE 1410
+      - name: London School of Economics and Political Science
+        id: lse
+        department: Department of Statistics
+        address: Columbia House, Houghton Street
+        city: London
+        country: United Kingdom
+        postal-code: WC2A 2AE
+    attributes:
+      corresponding: true
+  - name: Yves Rosseel
+    orcid: 0000-0002-4129-4477
+    email: Yves.Rosseel@UGent.be
+    affiliations:
+      - name: Ghent University
+        id: ugent
+        department: Center for Data Analysis and Statistical Science
+        address: Krijgslaan 281 - S9
+        city: Gent
+        country: Belgium
+        postal-code: 9000
+  - name: Oliver Kemp
+    # orcid: 
+    email: Oliver.Kemp@warwick.ac.uk
+    affiliations:
+      - name: University of Warwick
+        id: warwick
+        department: Department of Statistics
+        address: Zeeman Building, University of Warwick
+        city: Coventry
+        country: United Kingdom
+        postal-code: CV4 7AL
+  - name: Ioannis Kosmidis
+    email: ioannis.kosmidis@warwick.ac.uk
+    orcid: 0000-0003-1556-0302
+    affiliations:
+      - id: warwick
+bibliography: 
+  - refs-HJ.bib
+csl: apa.csl
+nocite: |
+  @*
+abstract: |
+  Abstract here.
 ---
 
-## Section
-This is a simple placeholder for the manuscript's main document [@knuth84].
+## Introduction
+
+Text here.

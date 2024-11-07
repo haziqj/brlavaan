@@ -9,11 +9,25 @@ format:
   html:
     comments:
       hypothesis: true
-  docx: default
-  jats: default
-
-  # (other formats)
-  # pdf: default
+  docx: 
+    output-file: jamil2024bias
+  # pdf: 
+  #   output-file: jamil2024bias
+  tandf-pdf:
+    link-citations: true
+    keep-tex: true
+    linenumbers: true
+    fig-width: 7
+    fig-height: 5
+    fig-pos: 'htbp'
+    header-includes:
+      # - \input{maths_shortcuts.tex}
+      - \usepackage{setspace}
+      - \onehalfspacing
+      # - \usepackage{afterpage}
+      # - \newcommand{\blscape}{\begin{landscape}}
+      # - \newcommand{\elscape}{\end{landscape}}
+    output-file: jamil2024bias
 
 execute:
   freeze: true
