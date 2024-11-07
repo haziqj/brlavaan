@@ -1,7 +1,7 @@
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    model = c("twofac"),
+    model = "growth",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
   ) |>
@@ -21,20 +21,19 @@ for (i in seq_len(nrow(simu_id))) {
     rel = rel,
     n = n,
     lavsim = FALSE,
-    lavfun = "cfa",
-    meanstructure = FALSE,
-    bounds = "standard"
+    lavfun = "growth"
   )
   cat("\n")
 }
 
-res_twofac <-
-  do.call(rbind, lapply(simu_res, \(x) x$simu_res)) |>
-  mutate(
-    method = factor(method, levels = c("ML", "eRBM", "iRBM", "iRBMp")),
-    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    # model = factor(model, labels = c("Growth model", "Two factor model")),
-    rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
-    n = factor(n)
-  )
-save(res_twofac, file = "R/sim_results_twofac.RData")
+# res_growth <-
+#   do.call(rbind, lapply(simu_res, \(x) x$simu_res)) |>
+#   mutate(
+#     method = factor(method, levels = c("ML", "eRBM", "iRBM", "iRBMp")),
+#     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
+#     model = factor(model, labels = c("Growth model", "Two factor model")),
+#     rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
+#     n = factor(n)
+#   )
+simu_res_growth <- simu_res
+save(simu_res_growth, file = "experiments/simu_res_growth.RData")
