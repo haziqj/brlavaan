@@ -450,6 +450,13 @@ fit_sem <- function(
   lavargs$data <- data
   lavargs$do.fit <- FALSE
 
+  # Catch old arguments
+  if ("method" %in% names(lavargs)) {
+    cli::cli_alert_warning("Please use argument 'estimator' instead of 'method'.")
+    lavargs$estimator <- lavargs$method
+    lavargs$method <- NULL
+  }
+
   fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   lavmodel       <- fit0@Model
   lavsamplestats <- fit0@SampleStats
