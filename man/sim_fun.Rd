@@ -28,6 +28,8 @@ sim_fun(
 
 \item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link{simulateData}
 function.}
+
+\item{lavfun}{The lavaan function to use. Default is "sem".}
 }
 \value{
 A list with two elements. The first element is a data frame with the

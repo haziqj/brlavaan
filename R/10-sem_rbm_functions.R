@@ -1,3 +1,5 @@
+# Note: lavaan unexported functions are declared in 02-lavaan_unexported.R
+
 # Log-likelihood function
 loglik <- function(
     theta,  # packed / short version
@@ -40,7 +42,7 @@ loglik <- function(
   }
 
   # Total log-likelihood value
-  loglik <- lavaan:::lav_mvnorm_loglik_samplestats(
+  loglik <- lav_mvnorm_loglik_samplestats(
     sample.mean = lavsamplestats@mean[[1]],
     sample.cov  = lavsamplestats@cov[[1]],
     sample.nobs = lavsamplestats@nobs[[1]],
@@ -106,7 +108,7 @@ grad_loglik <- function(
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Gradient of fit function F_ML (not loglik yet)
-  grad_F <- lavaan:::lav_model_gradient(
+  grad_F <- lav_model_gradient(
     lavmodel = this_lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata
@@ -154,7 +156,7 @@ scores_loglik <- function(
   ntab <- unlist(lavdata@norig)
   ntot <- sum(ntab)
   npar <- length(theta)
-  out <- lavaan:::lav_scores_ml(
+  out <- lav_scores_ml(
     ntab = ntab,
     ntot = ntot,
     npar = npar,
@@ -188,7 +190,7 @@ hessian_loglik <- function(
   this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
 
   # Hessian of F_ML
-  out <- lavaan:::lav_model_hessian(
+  out <- lav_model_hessian(
     lavmodel = this_lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
@@ -225,7 +227,7 @@ information_matrix <- function(
     # FIXME: When is this needed?
     # Change to 'simplified' Hessian
     if (FALSE) lavoptions$observed.information <- c("h1", "h1")
-    out <- lavaan:::lav_model_information_observed(
+    out <- lav_model_information_observed(
       lavmodel = this_lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -233,7 +235,7 @@ information_matrix <- function(
     )
   }
   if (kind == "expected") {
-    out <- lavaan:::lav_model_information_expected(
+    out <- lav_model_information_expected(
       lavmodel = this_lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -241,7 +243,7 @@ information_matrix <- function(
     )
   }
   if (kind == "firstorder") {
-    out <- lavaan:::lav_model_information_firstorder(
+    out <- lav_model_information_firstorder(
       lavmodel = this_lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -335,7 +337,7 @@ penalty <- function(
     kind = kind
   )
   if (lavmodel@eq.constraints) {
-    jinv <- lavaan:::lav_model_information_augment_invert(
+    jinv <- lav_model_information_augment_invert(
       lavmodel = lavmodel,
       information = j,
       inverted = TRUE,
@@ -374,7 +376,7 @@ bias <- function(
     lavoptions = lavoptions,
     kind = kind
   )
-  jinv <- lavaan:::lav_model_information_augment_invert(
+  jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
     information = j,
     inverted = TRUE,
@@ -410,10 +412,13 @@ bias <- function(
 #'
 #' This is the workhorse function to fit a structural equation model using
 #' bias-reducing methods which we use for our simulations. For endusers, we
-#' recommend using the [brsem()], [brcfa()], or [brfrowth()] functions which is
+#' recommend using the [brsem()], [brcfa()], or [brgrowth()] functions which is
 #' a wrapper around this function and outputs something more user-friendly.
 #'
 #' @inherit brsem params return
+#' @param debug If TRUE, the function will return a list of intermediate
+#'   results for debugging purposes.
+#' @param lavfun The lavaan function to use. Default is "sem".
 #'
 #' @export
 fit_sem <- function(
@@ -481,7 +486,7 @@ fit_sem <- function(
       loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
       grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
       j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = orig_info),
-      jinv = lavaan:::lav_model_information_augment_invert(
+      jinv = lav_model_information_augment_invert(
         lavmodel = lavmodel,
         information = information_matrix(
           theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, orig_info
@@ -556,7 +561,7 @@ fit_sem <- function(
     lavoptions = lavoptions,
     kind = orig_info
   )
-  jinv <- lavaan:::lav_model_information_augment_invert(
+  jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
     information = j,
     inverted = TRUE,
