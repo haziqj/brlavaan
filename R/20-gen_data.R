@@ -240,7 +240,11 @@ truth_growth <- function(rel) {
 #' @export
 gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
-  if (isTRUE(lavsim)) dist <- "Normal_lav"
+  if (isTRUE(lavsim)) {
+    if (dist != "Normal")
+      cli::cli_alert_warning("Forcing normal distribution with lavsim = TRUE.")
+    dist <- "Normal_lav"
+  }
   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
   nobs <- n
   n.factors <- 2
@@ -405,7 +409,11 @@ truth_twofac <- function(rel, meanstructure = FALSE) {
 #' @export
 gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE, meanstructure = FALSE) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
-  if (isTRUE(lavsim)) dist <- "Normal_lav"
+  if (isTRUE(lavsim)) {
+    if (dist != "Normal")
+      cli::cli_alert_warning("Forcing normal distribution with lavsim = TRUE.")
+    dist <- "Normal_lav"
+  }
   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
   nobs <- n
   n.factors <- 2
