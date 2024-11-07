@@ -121,11 +121,11 @@ create_lav_from_fitsem <- function(
   fit0@timing$total <- fit0@timing$total + fit$timing
 
   # Change Model and implied slots
-  fit0@Model <- lav_model_set_parameters(fit0@Model, x)
-  fit0@implied <- lav_model_implied(fit0@Model)
+  fit0@Model <- lavaan::lav_model_set_parameters(fit0@Model, x)
+  fit0@implied <- lavaan::lav_model_implied(fit0@Model)
 
   # Change ParTable and pta slots
-  pt <- partable(fit0)
+  pt <- lavaan::partable(fit0)
   pt$est[pt$free > 0] <- x
   pt$se <- 0
   pt$se[pt$free > 0] <- fit$stderr
