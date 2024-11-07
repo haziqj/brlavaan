@@ -35,6 +35,11 @@ However, when "first.order" is specified, then this is only for the
 standard error calculations. The bias reduction methods will revert to
 using the expected information.}
 
+\item{debug}{If TRUE, the function will return a list of intermediate
+results for debugging purposes.}
+
+\item{lavfun}{The lavaan function to use. Default is "sem".}
+
 \item{...}{Additional arguments to pass to the \link{lavaan} function.}
 }
 \value{
@@ -44,6 +49,6 @@ An object of class \code{brlavaan} which is a subclass of the
 \description{
 This is the workhorse function to fit a structural equation model using
 bias-reducing methods which we use for our simulations. For endusers, we
-recommend using the \code{\link[=brsem]{brsem()}}, \code{\link[=brcfa]{brcfa()}}, or \code{\link[=brfrowth]{brfrowth()}} functions which is
+recommend using the \code{\link[=brsem]{brsem()}}, \code{\link[=brcfa]{brcfa()}}, or \code{\link[=brgrowth]{brgrowth()}} functions which is
 a wrapper around this function and outputs something more user-friendly.
 }

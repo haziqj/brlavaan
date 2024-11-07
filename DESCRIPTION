@@ -21,3 +21,12 @@ RoxygenNote: 7.3.2
 Depends: 
     lavaan
 URL: https://haziqj.ml/sem-bias/
+Imports: 
+    cli,
+    covsim,
+    furrr,
+    MASS,
+    methods,
+    numDeriv,
+    purrr,
+    tibble

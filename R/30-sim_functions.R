@@ -16,6 +16,7 @@
 #' terms of bias, standard error, and computation time.
 #'
 #' @inheritParams gen-data
+#' @inheritParams fit_sem
 #' @param model The model to simulate. Either `growth` or `twofac`.
 #' @param nsimu The number of replications to run.
 #'
