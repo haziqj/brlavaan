@@ -8,8 +8,7 @@
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
-[![Codecov test
-coverage](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg)](https://app.codecov.io/gh/haziqj/sem-bias)
+[![codecov](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg?token=00UGXV3BMK)](https://codecov.io/gh/haziqj/sem-bias)
 <!-- badges: end -->
 
 Apply empirical bias reduced methods to fit a variety of latent variable
