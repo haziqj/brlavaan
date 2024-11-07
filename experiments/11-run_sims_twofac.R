@@ -21,7 +21,8 @@ for (i in seq_len(nrow(simu_id))) {
     rel = rel,
     n = n,
     lavsim = FALSE,
-    lavfun = "sem"
+    lavfun = "sem",
+    nsimu = B
   )
   cat("\n")
 }
