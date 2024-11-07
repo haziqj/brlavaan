@@ -2,10 +2,9 @@ test_that("brsem works", {
   mod <- txt_mod_twofac(0.8)
   dat <- gen_data_twofac(n = 50, rel = 0.8)
   fit <- brsem(mod, dat, estimator = "eBRM")
-  tmp <- capture.output(print(fit))
-  tmp <- capture.output(summary(fit))
   expect_true(is(fit, "brlavaan"))
   expect_true(is(coef(fit), "lavaan.vector"))
+  expect_snapshot(summary(fit))
 })
 
 test_that("brcfa works", {
