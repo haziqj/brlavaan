@@ -142,10 +142,10 @@ scores_loglik <- function(
   }
 
   # Fill in parameters in lavaan's internal matrix representation
-  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+  this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Compute model implied mean and (co)variance matrix
-  lavimplied <- lav_model_implied(this_lavmodel)
+  lavimplied <- lavaan::lav_model_implied(this_lavmodel)
 
   # Only 1 group
   moments <- list(cov = lavimplied$cov[[1]])
@@ -187,7 +187,7 @@ hessian_loglik <- function(
   }
 
   # Fill in parameters in lavaan's internal matrix representation
-  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+  this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Hessian of F_ML
   out <- lav_model_hessian(
@@ -220,7 +220,7 @@ information_matrix <- function(
   }
 
   # Fill in parameters in lavaan's internal matrix representation
-  this_lavmodel <- lav_model_set_parameters(lavmodel, x = theta)
+  this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Get information matrix
   if (kind == "observed") {
@@ -457,8 +457,8 @@ fit_sem <- function(
   lavoptions     <- fit0@Options
 
   start <- lavargs$start
-  if (is.null(start)) start <- coef(fit0)  # starting values
-  n <- nobs(fit0)
+  if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
+  n <- lavaan::nobs(fit0)
 
   # Pack theta
   if (lavmodel@eq.constraints) {
