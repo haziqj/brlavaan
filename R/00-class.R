@@ -30,3 +30,8 @@ setMethod("summary", "brlavaan", function(object, ...) {
   cat(out, sep = "\n")
 
 })
+
+setMethod("coef", "brlavaan", function(object, ...) {
+  class(object) <- "lavaan"
+  callNextMethod()
+})
