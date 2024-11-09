@@ -7,7 +7,7 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check.yaml](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg?branch=package)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg?token=00UGXV3BMK)](https://codecov.io/gh/haziqj/sem-bias)
 <!-- badges: end -->
 
@@ -61,7 +61,7 @@ mod <- "
 fit <- brsem(model = mod, data = PoliticalDemocracy, estimator = "eBRM") 
 
 summary(fit)
-#> brlavaan 0.0.1.9002 ended normally after 69 iterations
+#> brlavaan 0.0.1.9004 ended normally after 69 iterations
 #> 
 #>   Estimator                                       EBRM
 #>   Penalty                                        FALSE
