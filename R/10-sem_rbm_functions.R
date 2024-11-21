@@ -7,10 +7,10 @@ loglik <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    bias_reduction = FALSE,
-    kind = c("observed", "expected"),
-    plugin_penalty = FALSE,
-    verbose = FALSE
+    bias_reduction,
+    kind,
+    plugin_penalty,
+    verbose
   ) {
 
   # Unpack theta
@@ -542,6 +542,7 @@ fit_sem <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
+    kind = information,
     control = lavargs$control
   )
 
