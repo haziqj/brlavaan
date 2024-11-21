@@ -525,6 +525,7 @@ fit_sem <- function(
       ...,
       bias_reduction = isFALSE(is_ML | is_eBRM),
       plugin_penalty = isTRUE(is_iBRMp),
+      kind = information,
       verbose = verbose
     )
   }
@@ -542,7 +543,6 @@ fit_sem <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = information,
     control = lavargs$control
   )
 
