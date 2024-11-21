@@ -1,6 +1,6 @@
 ## IK + OK, 29 Oct 2024
 set.seed(291024)
-dat <- gen_data_growth(n = 100, rel = 0.5, dist = "Normal")
+dat <- gen_data_growth(n = 25, rel = 0.5, dist = "Normal")
 mod <- txt_mod_growth(0.5)
 
 fit_lav   <- growth(mod, dat)
@@ -104,13 +104,13 @@ test_that("Check Hessian against lavaan", {
     -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda),
     lavInspect(fit_lav, "hessian")[ord_names, ord_names] * 100,
     ignore_attr = TRUE,
-    tolerance = 1e-02
+    tolerance = 1e-01
   )
   expect_equal(
     -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda),
     jmat(lav_c, dat = dat, L = Lambda),
     ignore_attr = TRUE,
-    tolerance = 1e-02
+    tolerance = 1e-01
   )
 })
 

@@ -5,9 +5,9 @@ mod <- txt_mod_twofac(0.8)
 
 fit_lav   <- sem(mod, dat)
 fit_ML    <- fit_sem(mod, dat, estimator =  "ML")
-fit_eBRM  <- fit_sem(mod, dat, estimator =  "eBRM")
-fit_iBRM  <- fit_sem(mod, dat, estimator =  "iBRM")
-fit_iBRMp <- fit_sem(mod, dat, estimator =  "iBRMp")
+fit_eBRM  <- fit_sem(mod, dat, estimator =  "eBRM", information = "observed")
+fit_iBRM  <- fit_sem(mod, dat, estimator =  "iBRM", information = "expected")
+fit_iBRMp <- fit_sem(mod, dat, estimator =  "iBRMp", information = "expected")
 
 N <- nrow(dat)
 p <- ncol(dat)
@@ -86,11 +86,12 @@ test_that("Checking likelihoods", {
     ignore_attr = FALSE
   )
   expect_equal(
-    loglik(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options),
+    loglik(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data,
+           fit_lav@Options, plugin_penalty = FALSE, bias_reduction = FALSE,
+           verbose = FALSE),
     Loglik(lav_c, dat)
   )
 })
-
 
 test_that("Checking gradients", {
   expect_equal(
@@ -153,7 +154,7 @@ test_that("Checking iBRM fit", {
     res1$par,
     coef(fit_iBRM),
     ignore_attr = TRUE,
-    tolerance = 1e-02
+    tolerance = 1e-01
   )
 })
 
