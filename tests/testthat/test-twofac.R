@@ -1,6 +1,6 @@
 # Written by Ollie Kemp
 set.seed(123)
-dat <- gen_data_twofac(n = 50, rel = 0.8, dist = "Normal")
+dat <- gen_data_twofac(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_twofac(0.8)
 
 fit_lav   <- sem(mod, dat)
