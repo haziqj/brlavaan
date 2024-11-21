@@ -5,6 +5,14 @@ library(latex2exp)
 load("experiments/simu_res_growth.RData")
 load("experiments/simu_res_twofac.RData")
 
+## ----- Download D&R sims -----------------------------------------------------
+dr_file1 <- "experiments/GCM_est_combined_final.RData"
+dr_file2 <- "experiments/2FSEM_est_combined_final.RData"
+if (!file.exists(dr_file1))
+  download.file("https://osf.io/vjq5m/download", destfile = dr_file1)
+if (!file.exists(dr_file2))
+  download.file("https://osf.io/cw5b7/download", destfile = dr_file2)
+
 # Any errors?
 # which(sapply(simu_res_growth, \(x) length(x$errors) != 0))
 # x <- which(sapply(simu_res_twofac, \(x) length(x$errors) != 0))
