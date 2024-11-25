@@ -9,8 +9,8 @@ format:
   html:
     comments:
       hypothesis: true
-  # docx: 
-  #   output-file: jamil2024bias
+  docx:
+    output-file: jamil2024bias
   tandf-pdf:
     link-citations: true
     keep-tex: true

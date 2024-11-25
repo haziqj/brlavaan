@@ -68,21 +68,22 @@ library(tidyverse)
 theme_set(theme_bw())
 library(gt)
 load(here::here("tables_figures.RData"))
+
+my_render_tab <- function(x) {
+  if (knitr::is_html_output()) {
+    x
+  } else if (knitr::is_latex_output()) {
+    as_latex(x)
+  } else {
+    NULL
+  }     
+}
 ```
 
 ```{r}
 #| label: tbl-tab1
 #| tbl-cap: 'Convergence failure counts for the ML and Bias-reduced estimators (maximum = 1000).'
-if (exists("quarto_context")) {
-  if (quarto_context$metadata$format == "html") {
-    tab1
-  } else if (quarto_context$metadata$format == "docx") {
-    library(flextable)
-    as_flextable(tab1)
-  } else if (quarto_context$metadata$format == "pdf") {
-    as_latex(tab1)
-  }
-}
+my_render_tab(tab1)
 ```
 
 ## Growth Curve Model
@@ -90,13 +91,13 @@ if (exists("quarto_context")) {
 ```{r}
 #| label: tbl-tab2
 #| tbl-cap: 'Results (trimmed) growth curve model reliability .80.'
-tab2 
+my_render_tab(tab2)
 ```
 
 ```{r}
 #| label: tbl-tab3
 #| tbl-cap: 'Results (trimmed) growth curve model reliability .50.'
-tab3
+my_render_tab(tab3)
 ```
 
 ```{r}
@@ -121,7 +122,7 @@ fig5
 ```{r}
 #| label: tbl-tab4
 #| tbl-cap: 'Coverage rates 95% confidence intervals (model a).'
-tab4
+my_render_tab(tab4)
 ```
 
 ## Two-factor Model
@@ -129,13 +130,13 @@ tab4
 ```{r}
 #| label: tbl-tab5
 #| tbl-cap: 'Results (trimmed) two-factor model reliability .80.'
-tab5
+my_render_tab(tab5)
 ```
 
 ```{r}
 #| label: tbl-tab6
 #| tbl-cap: 'Results (trimmed) two-factor model reliability .50.'
-tab6
+my_render_tab(tab6)
 ```
 
 ```{r}
@@ -159,7 +160,7 @@ fig8
 ```{r}
 #| label: tbl-tab7
 #| tbl-cap: 'Coverage rates 95% confidence intervals (model b).'
-tab7
+my_render_tab(tab7)
 ```
 
 ## References
