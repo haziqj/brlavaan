@@ -67,7 +67,7 @@ abstract: |
 library(tidyverse)
 theme_set(theme_bw())
 library(gt)
-load(here::here("../experiments/tables_figures.RData"))
+load(here::here("tables_figures.RData"))
 ```
 
 ```{r}
@@ -152,7 +152,6 @@ fig8
 #| tbl-cap: 'Coverage rates 95% confidence intervals (model b).'
 tab7
 ```
-
 
 ## References
 
