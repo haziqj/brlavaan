@@ -32,5 +32,6 @@ format:
 execute:
   freeze: true
 
+notebook-links: false
 
 
