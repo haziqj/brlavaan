@@ -1,4 +1,5 @@
 # source("experiments/20-analyse_sims.R")
+
 # From D&R
 load("experiments/2FSEM_est_combined_final.RData")
 x <-
@@ -72,7 +73,6 @@ res_dr <-
   ) |>
   select(-se)
 
-
 ## ----- Table 5 ---------------------------------------------------------------
 # Results (trimmed) two-factor model reliability .80.
 
@@ -83,7 +83,7 @@ tab_twofac <-
   filter(model == "Two factor model") |>
   filter(param %in% twofacpars) |>
   select(simu, param, estimator, dist, n, rel, est, truth, covered) |>
-  # bind_rows(res_dr) |>
+  bind_rows(res_dr) |>
   mutate(param = factor(param, levels = twofacpars)) |>
   summarise(
     mean_bias = mean(est - truth, na.rm = TRUE, trim = 0.05),
@@ -100,8 +100,8 @@ tab_twofac <-
   select(param:n, rel_mean_bias, rel_median_bias, rmse, coverage) |>
   arrange(param, estimator)
 
-# gt table
-tab_twofac |>
+tab5 <-
+  tab_twofac |>
   mutate(param = factor(param, labels = c(
     "$\\theta$",
     "$\\Psi_{1,1}$",
@@ -155,7 +155,8 @@ tab_twofac |>
   tab_caption("Reliability = 0.8")
 
 ## ----- Table 6 ---------------------------------------------------------------
-tab_twofac |>
+tab6 <-
+  tab_twofac |>
   mutate(param = factor(param, labels = c(
     "$\\theta$",
     "$\\Psi_{1,1}$",
@@ -208,8 +209,9 @@ tab_twofac |>
   cols_align(align = "center") |>
   tab_caption("Reliability = 0.5")
 
-## ----- Figure 3 --------------------------------------------------------------
-tab_twofac |>
+## ----- Figure 6 --------------------------------------------------------------
+fig6 <-
+  tab_twofac |>
   mutate(
     param = factor(
       param,
@@ -235,19 +237,20 @@ tab_twofac |>
     y = "Relative median bias",
     col = NULL
   ) +
-  # coord_cartesian(ylim = c(-0.4, 0.3)) +
   theme(legend.position = "top")
 
-## ----- Figure 4 --------------------------------------------------------------
-tab_growth |>
+## ----- Figure 7 --------------------------------------------------------------
+fig7 <-
+  tab_twofac |>
   mutate(
     param = factor(
       param,
       labels = c(
-        expression(theta["1,1"]),
+        expression(theta),
         expression(Psi["1,1"]),
         expression(Psi["2,2"]),
-        expression(Psi["1,2"])
+        expression(beta),
+        expression(Lambda["2,1"])
       )
     )
   ) |>
@@ -267,22 +270,24 @@ tab_growth |>
   coord_cartesian(ylim = c(-0.4, 0.3)) +
   theme(legend.position = "top")
 
-## ----- Figure 5 --------------------------------------------------------------
-left_join(
-  tab_growth,
-  tab_growth |>
-    filter(estimator == "ML") |>
-    select(param, rel, dist, n, rmse_ML = rmse)
-) |>
+## ----- Figure 8 --------------------------------------------------------------
+fig8 <-
+  left_join(
+    tab_twofac,
+    tab_twofac |>
+      filter(estimator == "ML") |>
+      select(param, rel, dist, n, rmse_ML = rmse)
+  ) |>
   mutate(
     rel_rmse = rmse / rmse_ML,
     param = factor(
       param,
       labels = c(
-        expression(theta["1,1"]),
+        expression(theta),
         expression(Psi["1,1"]),
         expression(Psi["2,2"]),
-        expression(Psi["1,2"])
+        expression(beta),
+        expression(Lambda["2,1"])
       )
     )
   ) |>
@@ -299,15 +304,18 @@ left_join(
     y = "Relative RMSE (with respect to ML)",
     col = NULL
   ) +
-  coord_cartesian(ylim = c(0, 1.1)) +
   theme(legend.position = "top")
 
-
-## table
-tab_growth |>
-  mutate(
-    param = factor(param, labels = c("$\\theta_{1,1}$", "$\\Psi_{1,1}$", "$\\Psi_{2,2}$", "$\\Psi_{1,2}$"))
-  ) |>
+## ----- Table 7 ---------------------------------------------------------------
+tab7 <-
+  tab_twofac |>
+  mutate(param = factor(param, labels = c(
+    "$\\theta$",
+    "$\\Psi_{1,1}$",
+    "$\\Psi_{2,2}$",
+    "$\\beta$",
+    "$\\Lambda_{2,1}$"
+  ))) |>
   filter(dist != "Kurtosis") |>
   pivot_wider(
     id_cols = c(param, estimator),
@@ -345,51 +353,3 @@ tab_growth |>
   fmt_number(decimals = 2) |>
   fmt_markdown(columns = 1) |>
   cols_align(align = "center")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Two factor model results -----------------------------------------------------
-p_twofac <-
-  res_twofac |>
-  filter(dist %in% c("Normal", "Non-normal")) |>
-  filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
-  # filter(method != "iRBMp") |>
-  group_by(param, dist, rel, n, method) |>
-  summarise(
-    bias = median(est - truth, na.rm = TRUE),
-    truth = first(truth)
-  ) |>
-  mutate(
-    rel_bias = bias / truth,
-    param = factor(param, levels = c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")),
-  ) |>
-  ggplot(aes(x = as.numeric(n), y = rel_bias, col = method)) +
-  geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 1) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  ggsci::scale_colour_d3() +
-  facet_grid(param ~ rel + dist) +
-  labs(
-    x = "Sample size (n)",
-    y = "Relative median bias",
-    col = NULL
-  ) +
-  theme(legend.position = "top"); p_twofac
-
-save(p_growth, p_twofac, file = "R/DR_sims.RData")
