@@ -1,74 +1,4 @@
-library(tidyverse)
-theme_set(theme_bw())
-library(gt)
-library(latex2exp)
-load("experiments/simu_res_growth.RData")
-load("experiments/simu_res_twofac.RData")
-
-# Any errors?
-# which(sapply(simu_res_growth, \(x) length(x$errors) != 0))
-# x <- which(sapply(simu_res_twofac, \(x) length(x$errors) != 0))
-# sapply(simu_res_twofac, \(x) nrow(x$simu_res))
-# lapply(simu_res_twofac[x], \(x) length(x$errors))
-
-res <-
-  do.call(
-    rbind,
-    lapply(c(simu_res_growth, simu_res_twofac), \(x) x$simu_res)
-  ) |>
-  drop_na() |>
-  mutate(
-    model = factor(model, labels = c("Growth model", "Two factor model")),
-    estimator = factor(estimator, levels = c("ML", "eBRM", "iBRM", "iBRMp")),
-    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
-    n = factor(n),
-    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
-  )
-
-# res |>
-#   group_by(dist, model, n, rel, estimator) |>
-#   summarise(count = n()) |>
-#   view()
-
-## ----- Table 1 ---------------------------------------------------------------
-# Convergence failures Bootstrap resamples: Mean, median, min and max number of
-# failed Bootstrap resamples for a single simulation (max = total number of
-# resamples = 500).
-
-res |>
-  summarise(
-    fail = any(!converged),
-    .by = c(simu, dist, model, n, rel, estimator)
-  ) |>
-  summarise(
-    count = sum(fail),
-    .by = c(model, rel, n, estimator, dist)
-  ) |>
-  pivot_wider(names_from = c(dist, estimator), values_from = count) |>
-  gt(
-    rowname_col = "n",
-    groupname_col = c("model", "rel")
-  ) |>
-  tab_spanner(
-    label = "Normal",
-    columns = starts_with("Normal")
-  ) |>
-  tab_spanner(
-    label = "Kurtosis",
-    columns = starts_with("Kurtosis")
-  ) |>
-  tab_spanner(
-    label = "Non-normal",
-    columns = starts_with("Non-normal")
-  ) |>
-  cols_label(
-    ends_with("ML") ~ "ML",
-    ends_with("eBRM") ~ "eBRM",
-    ends_with("iBRM") ~ "iBRM",
-    ends_with("iBRMp") ~ "iBRMp"
-  ) |>
-  tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)"))
+# source("experiments/20-analyse_sims.R")
 
 ## ----- Table 2 ---------------------------------------------------------------
 # Results (trimmed) growth curve model reliability .80.
@@ -164,8 +94,8 @@ tab_growth <-
   select(param:n, rel_mean_bias, rel_median_bias, rmse, coverage) |>
   arrange(param, estimator)
 
-# gt table
-tab_growth |>
+tab2 <-
+  tab_growth |>
   mutate(
     param = factor(param, labels = c("$\\theta_{1,1}$", "$\\Psi_{1,1}$", "$\\Psi_{2,2}$", "$\\Psi_{1,2}$"))
   ) |>
@@ -215,7 +145,8 @@ tab_growth |>
   tab_caption("Reliability = 0.8")
 
 ## ----- Table 3 ---------------------------------------------------------------
-tab_growth |>
+tab3 <-
+  tab_growth |>
   mutate(
     param = factor(param, labels = c("$\\theta_{1,1}$", "$\\Psi_{1,1}$", "$\\Psi_{2,2}$", "$\\Psi_{1,2}$"))
   ) |>
@@ -265,7 +196,8 @@ tab_growth |>
   tab_caption("Reliability = 0.5")
 
 ## ----- Figure 3 --------------------------------------------------------------
-tab_growth |>
+fig3 <-
+  tab_growth |>
   mutate(
     param = factor(
       param,
@@ -294,7 +226,8 @@ tab_growth |>
   theme(legend.position = "top")
 
 ## ----- Figure 4 --------------------------------------------------------------
-tab_growth |>
+fig4 <-
+  tab_growth |>
   mutate(
     param = factor(
       param,
@@ -323,7 +256,8 @@ tab_growth |>
   theme(legend.position = "top")
 
 ## ----- Figure 5 --------------------------------------------------------------
-left_join(
+fig5 <-
+  left_join(
   tab_growth,
   tab_growth |>
     filter(estimator == "ML") |>
@@ -354,12 +288,12 @@ left_join(
     y = "Relative RMSE (with respect to ML)",
     col = NULL
   ) +
-  coord_cartesian(ylim = c(0, 1.1)) +
+  coord_cartesian(ylim = c(0.9, 1.3)) +
   theme(legend.position = "top")
 
-
-## table
-tab_growth |>
+## ----- Table 4 ---------------------------------------------------------------
+tab4 <-
+  tab_growth |>
   mutate(
     param = factor(param, labels = c("$\\theta_{1,1}$", "$\\Psi_{1,1}$", "$\\Psi_{2,2}$", "$\\Psi_{1,2}$"))
   ) |>
@@ -400,51 +334,3 @@ tab_growth |>
   fmt_number(decimals = 2) |>
   fmt_markdown(columns = 1) |>
   cols_align(align = "center")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Two factor model results -----------------------------------------------------
-p_twofac <-
-  res_twofac |>
-  filter(dist %in% c("Normal", "Non-normal")) |>
-  filter(param %in% c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")) |>
-  # filter(method != "iRBMp") |>
-  group_by(param, dist, rel, n, method) |>
-  summarise(
-    bias = median(est - truth, na.rm = TRUE),
-    truth = first(truth)
-  ) |>
-  mutate(
-    rel_bias = bias / truth,
-    param = factor(param, levels = c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")),
-  ) |>
-  ggplot(aes(x = as.numeric(n), y = rel_bias, col = method)) +
-  geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 1) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  ggsci::scale_colour_d3() +
-  facet_grid(param ~ rel + dist) +
-  labs(
-    x = "Sample size (n)",
-    y = "Relative median bias",
-    col = NULL
-  ) +
-  theme(legend.position = "top"); p_twofac
-
-save(p_growth, p_twofac, file = "R/DR_sims.RData")

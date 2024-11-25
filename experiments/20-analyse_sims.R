@@ -2,12 +2,12 @@ library(tidyverse)
 theme_set(theme_bw())
 library(gt)
 library(latex2exp)
-load("experiments/simu_res_growth.RData")
-load("experiments/simu_res_twofac.RData")
+load(here::here("experiments/simu_res_growth.RData"))
+load(here::here("experiments/simu_res_twofac.RData"))
 
 ## ----- Download D&R sims -----------------------------------------------------
-dr_file1 <- "experiments/GCM_est_combined_final.RData"
-dr_file2 <- "experiments/2FSEM_est_combined_final.RData"
+dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
+dr_file2 <- here::here("experiments/2FSEM_est_combined_final.RData")
 if (!file.exists(dr_file1))
   download.file("https://osf.io/vjq5m/download", destfile = dr_file1)
 if (!file.exists(dr_file2))
@@ -39,7 +39,8 @@ res <-
 # failed Bootstrap resamples for a single simulation (max = total number of
 # resamples = 500).
 
-res |>
+tab1 <-
+  res |>
   summarise(
     fail = any(!converged),
     .by = c(simu, dist, model, n, rel, estimator)
@@ -72,3 +73,14 @@ res |>
     ends_with("iBRMp") ~ "iBRMp"
   ) |>
   tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)"))
+
+## ----- Growth & Two-factor results -------------------------------------------
+source(here::here("experiments/21-analysis_growth.R"))
+source(here::here("experiments/22-analysis_twofac.R"))
+
+## ----- Save ------------------------------------------------------------------
+save(
+  tab1, tab2, tab3, tab4, tab5, tab6, tab7,
+  fig3, fig4, fig5, fig6, fig7, fig8,
+  file = here::here("experiments/tables_figures.RData")
+)
