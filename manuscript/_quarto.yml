@@ -6,9 +6,9 @@ manuscript:
   article: index.qmd
 
 format:
-  html:
-    comments:
-      hypothesis: true
+  # html:
+  #   comments:
+  #     hypothesis: true
   # docx: 
   #   output-file: jamil2024bias
   pdf:
