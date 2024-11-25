@@ -73,7 +73,16 @@ load(here::here("tables_figures.RData"))
 ```{r}
 #| label: tbl-tab1
 #| tbl-cap: 'Convergence failure counts for the ML and Bias-reduced estimators (maximum = 1000).'
-tab1
+if (exists("quarto_context")) {
+  if (quarto_context$metadata$format == "html") {
+    tab1
+  } else if (quarto_context$metadata$format == "docx") {
+    library(flextable)
+    as_flextable(tab1)
+  } else if (quarto_context$metadata$format == "pdf") {
+    as_latex(tab1)
+  }
+}
 ```
 
 ## Growth Curve Model
