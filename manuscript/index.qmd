@@ -61,6 +61,98 @@ abstract: |
   Abstract here.
 ---
 
-## Introduction
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+theme_set(theme_bw())
+library(gt)
+load(here::here("../experiments/tables_figures.RData"))
+```
 
-Text here.
+```{r}
+#| label: tbl-tab1
+#| tbl-cap: 'Convergence failure counts for the ML and Bias-reduced estimators (maximum = 1000).'
+tab1
+```
+
+## Growth Curve Model
+
+```{r}
+#| label: tbl-tab2
+#| tbl-cap: 'Results (trimmed) growth curve model reliability .80.'
+tab2 
+```
+
+```{r}
+#| label: tbl-tab3
+#| tbl-cap: 'Results (trimmed) growth curve model reliability .50.'
+tab3
+```
+
+```{r}
+#| label: fig-fig3
+#| fig-cap: 'Relative median bias (model a).'
+fig3
+```
+
+```{r}
+#| label: fig-fig4
+#| fig-cap: 'Relative mean bias (model a).'
+fig4
+```
+
+
+```{r}
+#| label: fig-fig5
+#| fig-cap: 'Root mean square error (RMSE) of bias-corrected estimators relative to the Maximum Likelihood baseline (model a).'
+fig5
+```
+
+```{r}
+#| label: tbl-tab4
+#| tbl-cap: 'Coverage rates 95% confidence intervals (model a).'
+tab4
+```
+
+## Two-factor Model
+
+```{r}
+#| label: tbl-tab5
+#| tbl-cap: 'Results (trimmed) two-factor model reliability .80.'
+tab5
+```
+
+```{r}
+#| label: tbl-tab6
+#| tbl-cap: 'Results (trimmed) two-factor model reliability .50.'
+tab6
+```
+
+```{r}
+#| label: fig-fig6
+#| fig-cap: 'Relative median bias (model b).'
+fig6
+```
+
+```{r}
+#| label: fig-fig7
+#| fig-cap: 'Relative mean bias (model b).'
+fig7
+```
+
+```{r}
+#| label: fig-fig8
+#| fig-cap: 'Root mean square error (RMSE) of bias-corrected estimators relative to the Maximum Likelihood baseline (model b).'
+fig8
+```
+
+```{r}
+#| label: tbl-tab7
+#| tbl-cap: 'Coverage rates 95% confidence intervals (model b).'
+tab7
+```
+
+
+## References
+
