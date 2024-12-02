@@ -46,6 +46,7 @@ jobs:
             any::tidyverse
             any::gt
             any::here
+            any::flextable
           needs: website
 
       - name: Build site
