@@ -32,3 +32,24 @@ test_that("brgrowth works", {
   expect_true(is(coef(fit), "lavaan.vector"))
 })
 
+test_that("brsem works", {
+  HS.model <- "
+    visual  =~ x1 + x2 + x3
+    # textual =~ x4 + x5 + x6
+    # speed   =~ x7 + x8 + x9
+  "
+  ML <- list(rbm = FALSE)
+  eRBM  <- list(rbm = "eRBM")
+  iRBM  <- list(rbm = "iRBM")
+  iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge")
+
+  fit_ML <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = ML)
+  fit_eRBM <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = eRBM)
+  fit_iRBM <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = iRBM)
+  fit_iRBMp <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = iRBMp)
+
+  expect_true(is_ML(fit_ML))
+  expect_true(is_eRBM(fit_eRBM))
+  expect_true(is_iRBM(fit_iRBM))
+  expect_true(is_iRBMp(fit_iRBMp, quietly = TRUE))
+})
