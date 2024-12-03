@@ -8,6 +8,7 @@
 #' @importFrom mvtnorm dmvnorm
 #' @importFrom stats nlminb
 #' @importFrom stats nobs
+#' @importFrom stringr str_pad
 #' @importFrom utils capture.output
 #' @importFrom utils packageVersion
 ## usethis namespace: end

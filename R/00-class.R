@@ -28,10 +28,13 @@ rbmpen_report <- function(object) {
   } else {
     tmp <- is_iRBMp(object, quietly = TRUE)
     plugin_penalty <- attr(tmp, "plugin_penalty")
+
     rbm_report <-
       "  Bias reduction method                       IMPLICIT"
     penalty_report <-
-      str_pad(plugin_penalty, 54 - nchar("  Plugin penalty "), side = "left")
+      stringr::str_pad(
+        plugin_penalty, 54 - nchar("  Plugin penalty "), side = "left"
+      )
     penalty_report <- sprintf("  Plugin penalty %s", penalty_report)
   }
 
