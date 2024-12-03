@@ -450,7 +450,6 @@ fit_sem <- function(
   lavargs <- list(...)
   lavargs$model <- model
   lavargs$data <- data
-  lavargs$bounds <- TRUE  # bounds are always used
   lavargs$do.fit <- FALSE
 
   if (estimator != "ML") {
@@ -496,7 +495,10 @@ fit_sem <- function(
   if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
   n <- lavaan::nobs(fit0)
 
-  # Bounds
+  # Bounds NOTE: Since lavaan 0.6-19, settings bounds = TRUE will remove the
+  # simple equality constraints. So, have to redo.
+  lavargs$bounds <- TRUE  # bounds are always used
+  fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   pt <- lavaan::partable(fit0)
   lb <- pt$lower[pt$free > 0]
   ub <- pt$upper[pt$free > 0]
@@ -525,7 +527,7 @@ fit_sem <- function(
       lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
 
       # Information about the model
-      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_penalty = plugin_penalty, kind = information, bounds = bounds, verbose = FALSE),
       grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
       j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = orig_info),
       jinv = lav_model_information_augment_invert(
