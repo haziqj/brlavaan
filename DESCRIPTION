@@ -1,6 +1,6 @@
 Package: brlavaan
 Title: Bias-Reduced Latent Variable Analysis
-Version: 0.0.2.9000
+Version: 0.0.2.9001
 Authors@R: c(
     person("Haziq", "Jamil", , "haziq.jamil@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-3298-1010")),
@@ -32,5 +32,6 @@ Imports:
     numDeriv,
     purrr,
     stats,
+    stringr,
     tibble,
     utils
