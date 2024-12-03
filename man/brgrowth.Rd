@@ -7,7 +7,8 @@
 brgrowth(
   model,
   data,
-  estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
+  estimator = "ML",
+  estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
   information = c("expected", "observed", "first.order"),
   ...
 )
@@ -22,8 +23,13 @@ information. Alternatively, a parameter table (eg. the output of the
 the model. If some variables are declared as ordered factors, lavaan will
 treat them as ordinal variables.}
 
-\item{estimator}{The estimator to use. One of "iBRM", "iBRMp", "eBRM", or
-"ML".}
+\item{estimator}{The estimator to use. \strong{Currently only "ML" is supported.}}
+
+\item{estimator.args}{A list containing RBM arguments. Possible arguments are
+\itemize{
+\item \code{rbm}: The type of RBM method to use. One of \code{FALSE}, \code{"eRBM"}, or \code{"iRBM"}.
+\item \code{plugin_penalty}: The type of penalty to use. One of \code{NULL}, \code{"pen_ridge"}, or \code{"pen_ridge_bound"}.
+}}
 
 \item{information}{The type of information matrix to use for both the bias
 reduction method and the calculation of standard errors. One of "expected",
