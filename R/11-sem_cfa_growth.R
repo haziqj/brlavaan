@@ -128,6 +128,10 @@ create_lav_from_fitsem <- function(
   lavargs$method <- NULL  # if using old ways of specifying RBM method
   lavargs$information <- fit$information_se
   lavargs$start <- x
+  lavargs$estimator.args <- list(
+    rbm = fit$rbm,
+    plugin_penalty = fit$plugin_penalty
+  )
   fit0 <- do.call(get(fit$lavfun, envir = asNamespace("lavaan")), lavargs)
 
   # Change version slot
@@ -172,11 +176,11 @@ create_lav_from_fitsem <- function(
   fit0@optim$converged <- fit$optim$convergence == 0L
 
   # Change loglik slot
-  fit0@loglik$estimator <-
-    if (fit$estimator == "ML") "ML"
-    else if (fit$estimator == "IBRM") "IMP-BR ML"
-    else if (fit$estimator == "IBRMP") "IMP-BR ML"
-    else if (fit$estimator == "EBRM") "EXP-BR ML"
+  # fit0@loglik$estimator <-
+  #   if (fit$estimator == "ML") "ML"
+  #   else if (fit$estimator == "IBRM") "IMP-BR ML"
+  #   else if (fit$estimator == "IBRMP") "IMP-BR ML"
+  #   else if (fit$estimator == "EBRM") "EXP-BR ML"
   # Change vcov slot
   fit0@vcov$se <- "standard"
   fit0@vcov$vcov <- fit$vcov
