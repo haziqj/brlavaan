@@ -35,10 +35,9 @@ example.
 ``` r
 library(brlavaan)
 #> Loading required package: lavaan
-#> This is lavaan 0.6-18
+#> This is lavaan 0.6-19
 #> lavaan is FREE software! Please report any bugs.
 data("PoliticalDemocracy", package = "lavaan")
-
 mod <- "
   # latent variables 
   ind60 =~ x1 + x2 + x3 
@@ -56,15 +55,13 @@ mod <- "
   y4 ~~ y8
   y6 ~~ y8
 "
-
-# fit the model using explicit bias-reduced estimation
-fit <- brsem(model = mod, data = PoliticalDemocracy, estimator = "eBRM") 
-
+fit <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit)
-#> brlavaan 0.0.1.9004 ended normally after 69 iterations
+#> brlavaan 0.0.2.9001 ended normally after 65 iterations
 #> 
-#>   Estimator                                       EBRM
-#>   Penalty                                        FALSE
+#>   Estimator                                         ML
+#>   Bias reduction method                       IMPLICIT
+#>   Plugin penalty                             pen_ridge
 #>   Optimization method                           NLMINB
 #>   Number of model parameters                        31
 #> 
@@ -81,55 +78,82 @@ summary(fit)
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   ind60 =~                                            
 #>     x1                1.000                           
-#>     x2                2.175    0.140   15.526    0.000
-#>     x3                1.813    0.153   11.835    0.000
+#>     x2                2.181    0.136   16.050    0.000
+#>     x3                1.814    0.149   12.191    0.000
 #>   dem60 =~                                            
 #>     y1                1.000                           
-#>     y2                1.253    0.182    6.893    0.000
-#>     y3                1.049    0.151    6.922    0.000
-#>     y4                1.252    0.145    8.657    0.000
+#>     y2                1.271    0.179    7.104    0.000
+#>     y3                1.064    0.149    7.123    0.000
+#>     y4                1.275    0.144    8.871    0.000
 #>   dem65 =~                                            
 #>     y5                1.000                           
-#>     y6                1.184    0.169    6.994    0.000
-#>     y7                1.266    0.160    7.887    0.000
-#>     y8                1.255    0.159    7.911    0.000
+#>     y6                1.202    0.168    7.171    0.000
+#>     y7                1.297    0.160    8.117    0.000
+#>     y8                1.279    0.158    8.097    0.000
 #> 
 #> Regressions:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   dem60 ~                                             
-#>     ind60             1.484    0.403    3.682    0.000
+#>     ind60             1.518    0.395    3.846    0.000
 #>   dem65 ~                                             
-#>     ind60             0.570    0.225    2.537    0.011
-#>     dem60             0.832    0.099    8.441    0.000
+#>     ind60             0.564    0.222    2.542    0.011
+#>     dem60             0.833    0.098    8.496    0.000
 #> 
 #> Covariances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>  .y1 ~~                                               
-#>    .y5                0.648    0.366    1.771    0.077
+#>    .y5                0.686    0.378    1.813    0.070
 #>  .y2 ~~                                               
-#>    .y4                1.291    0.706    1.828    0.067
-#>    .y6                2.140    0.737    2.902    0.004
+#>    .y4                1.305    0.736    1.773    0.076
+#>    .y6                2.045    0.751    2.724    0.006
 #>  .y3 ~~                                               
-#>    .y7                0.815    0.617    1.321    0.186
+#>    .y7                0.814    0.636    1.279    0.201
 #>  .y4 ~~                                               
-#>    .y8                0.409    0.450    0.908    0.364
+#>    .y8                0.410    0.468    0.876    0.381
 #>  .y6 ~~                                               
-#>    .y8                1.312    0.569    2.306    0.021
+#>    .y8                1.375    0.600    2.293    0.022
 #> 
 #> Variances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
-#>    .x1                0.083    0.020    4.179    0.000
-#>    .x2                0.122    0.071    1.728    0.084
-#>    .x3                0.472    0.091    5.173    0.000
-#>    .y1                1.898    0.452    4.200    0.000
-#>    .y2                7.363    1.379    5.338    0.000
-#>    .y3                5.169    0.970    5.328    0.000
-#>    .y4                3.200    0.749    4.271    0.000
-#>    .y5                2.409    0.494    4.879    0.000
-#>    .y6                4.919    0.915    5.374    0.000
-#>    .y7                3.477    0.723    4.810    0.000
-#>    .y8                3.273    0.701    4.670    0.000
-#>     ind60             0.447    0.087    5.156    0.000
-#>    .dem60             4.022    0.936    4.298    0.000
-#>    .dem65             0.207    0.221    0.934    0.350
+#>    .x1                0.085    0.020    4.180    0.000
+#>    .x2                0.127    0.073    1.735    0.083
+#>    .x3                0.485    0.094    5.171    0.000
+#>    .y1                1.989    0.466    4.270    0.000
+#>    .y2                7.474    1.412    5.295    0.000
+#>    .y3                5.290    0.996    5.310    0.000
+#>    .y4                3.314    0.782    4.239    0.000
+#>    .y5                2.541    0.515    4.932    0.000
+#>    .y6                5.093    0.953    5.344    0.000
+#>    .y7                3.569    0.751    4.753    0.000
+#>    .y8                3.419    0.735    4.650    0.000
+#>     ind60             0.486    0.093    5.200    0.000
+#>    .dem60             4.191    0.971    4.318    0.000
+#>    .dem65             0.232    0.229    1.015    0.310
+```
+
+By default, the implicit reduced bias ML estimator (`iRBM`) is used. To
+switch to the *explicit* RBM, or to add a plugin penalty term, specify
+these as a list to the `estimator.args` argument.
+
+``` r
+# for explicit RBM
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "eRBM"))  
+# for implicit RBM with plugin penalty
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"))
+```
+
+To switch off the bias reduction, set `rbm = FALSE`:
+
+``` r
+fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = FALSE))
+fit_lav <-   sem(mod, PoliticalDemocracy)
+tinytest::expect_equal(
+   coef(fit_ML),
+   coef(fit_lav),
+   tolerance = 1e-4
+)
+#> ----- PASSED      : <-->
+#>  call| tinytest::expect_equal(coef(fit_ML), coef(fit_lav), tolerance = 0.0001)
 ```

@@ -38,10 +38,10 @@ Here's the beloved classic example -- Bollen (1989)'s political democracy exampl
 
 ![](https://lavaan.ugent.be/figures/sem.png)
 
+
 ```{r example}
 library(brlavaan)
 data("PoliticalDemocracy", package = "lavaan")
-
 mod <- "
   # latent variables 
   ind60 =~ x1 + x2 + x3 
@@ -59,9 +59,30 @@ mod <- "
   y4 ~~ y8
   y6 ~~ y8
 "
-
-# fit the model using explicit bias-reduced estimation
-fit <- brsem(model = mod, data = PoliticalDemocracy, estimator = "eBRM") 
-
+fit <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit)
+```
+
+By default, the implicit reduced bias ML estimator (`iRBM`) is used. 
+To switch to the *explicit* RBM, or to add a plugin penalty term, specify these as a list to the `estimator.args` argument.
+
+```r
+# for explicit RBM
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "eRBM"))  
+# for implicit RBM with plugin penalty
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"))
+```
+
+To switch off the bias reduction, set `rbm = FALSE`:
+
+```{r}
+fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = FALSE))
+fit_lav <-   sem(mod, PoliticalDemocracy)
+tinytest::expect_equal(
+   coef(fit_ML),
+   coef(fit_lav),
+   tolerance = 1e-4
+)
 ```
