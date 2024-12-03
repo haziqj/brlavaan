@@ -1,5 +1,13 @@
 #' Fit a structural equation model using bias-reducing methods
 #'
+#' Fit a structural equation model using bias-reducing methods
+#'
+#' The `pen_ridge()` function applies a ridge regression style penalty
+#' $f(x) = || x ||^2$ that shrinks the parameters to zero. The
+#' `pen_ridge_bound()` function applies a penalty that shrinks the parameters to
+#' the bounds of the parameter space. The bounds are calculated by `{lavaan}` --
+#' see the paper for more details.
+#'
 #' @param model A description of the user-specified model. Typically, the model
 #'   is described using the lavaan model syntax. See [model.syntax] for more
 #'   information. Alternatively, a parameter table (eg. the output of the
@@ -7,8 +15,10 @@
 #' @param data An optional data frame containing the observed variables used in
 #'   the model. If some variables are declared as ordered factors, lavaan will
 #'   treat them as ordinal variables.
-#' @param estimator The estimator to use. One of "iBRM", "iBRMp", "eBRM", or
-#'   "ML".
+#' @param estimator The estimator to use. **Currently only "ML" is supported.**
+#' @param estimator.args A list containing RBM arguments. Possible arguments are
+#'   - `rbm`: The type of RBM method to use. One of `FALSE`, `"eRBM"`, or `"iRBM"`.
+#'   - `plugin_penalty`: The type of penalty to use. One of `NULL`, `"pen_ridge"`, or `"pen_ridge_bound"`.
 #' @param information The type of information matrix to use for both the bias
 #'   reduction method and the calculation of standard errors. One of "expected",
 #'   "observed", or "first.order".
@@ -25,7 +35,8 @@
 brsem <- function(
     model,
     data,
-    estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
+    estimator = "ML",
+    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -34,6 +45,7 @@ brsem <- function(
     model = model,
     data = data,
     estimator = estimator,
+    estimator.args = estimator.args,
     information = information,
     debug = FALSE,
     lavfun = "sem",
@@ -51,7 +63,8 @@ brsem <- function(
 brcfa <- function(
     model,
     data,
-    estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
+    estimator = "ML",
+    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -60,6 +73,7 @@ brcfa <- function(
     model = model,
     data = data,
     estimator = estimator,
+    estimator.args = estimator.args,
     information = information,
     debug = FALSE,
     lavfun = "cfa",
@@ -77,7 +91,8 @@ brcfa <- function(
 brgrowth <- function(
     model,
     data,
-    estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
+    estimator = "ML",
+    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
     information = c("expected", "observed", "first.order"),
     ...
   ) {
@@ -86,6 +101,7 @@ brgrowth <- function(
     model = model,
     data = data,
     estimator = estimator,
+    estimator.args = estimator.args,
     information = information,
     debug = FALSE,
     lavfun = "growth",
@@ -109,6 +125,7 @@ create_lav_from_fitsem <- function(
   lavargs$model <- model
   lavargs$data <- data
   lavargs$do.fit <- FALSE
+  lavargs$method <- NULL  # if using old ways of specifying RBM method
   lavargs$information <- fit$information_se
   lavargs$start <- x
   fit0 <- do.call(get(fit$lavfun, envir = asNamespace("lavaan")), lavargs)

@@ -9,7 +9,8 @@ loglik <- function(
     lavoptions,
     bias_reduction,
     kind,
-    plugin_penalty,
+    plugin_penalty = NULL,
+    bounds,
     verbose
   ) {
 
@@ -55,7 +56,7 @@ loglik <- function(
     Sigma.inv   = NULL
   )
 
-  # Bias reduction
+  # Bias reduction and plugin penalty term
   bias_term <- pen_term <- 0
   if (isTRUE(bias_reduction)) {
     bias_term <- penalty(
@@ -67,10 +68,16 @@ loglik <- function(
       kind = kind
     )
   }
-  if (isTRUE(plugin_penalty)) {
-    # FIXME: To add different penalty terms here
-    pen_term <- sum(theta.packed ^ 2) / lavsamplestats@ntotal
+
+  if (!is.null(plugin_penalty)) {
+    if (plugin_penalty == "pen_ridge") {
+      pen_term <- pen_ridge(theta.packed)
+    }
+    if (plugin_penalty == "pen_ridge_bound") {
+      pen_term <- pen_ridge_bound(theta, bounds$lb, bounds$ub)
+    }
   }
+  pen_term <- pen_term / lavsamplestats@ntotal
 
   # Verbose
   if (isTRUE(verbose)) {
@@ -424,7 +431,8 @@ bias <- function(
 fit_sem <- function(
     model,
     data,
-    estimator = c("iBRM", "iBRMp", "eBRM", "ML"),
+    estimator = "ML",
+    estimator.args = list(rbm = FALSE, plugin_penalty = NULL),
     information = c("expected", "observed", "first.order"),
     debug = FALSE,
     lavfun = "sem",
@@ -438,24 +446,45 @@ fit_sem <- function(
     cli::cli_alert_info("Bias reduction methods will use expected information matrix, and standard error computation will use the outer product of the casewise scores.")
   }
 
-  estimator <- match.arg(estimator, c("iBRM", "iBRMp", "eBRM", "ML"))
-  is_ML     <- estimator == "ML"
-  is_eBRM   <- estimator == "eBRM"
-  is_iBRM   <- estimator == "iBRM"
-  is_iBRMp  <- estimator == "iBRMp"
-
   # Initialise {lavaan} model object -------------------------------------------
   lavargs <- list(...)
   lavargs$model <- model
   lavargs$data <- data
+  lavargs$bounds <- TRUE  # bounds are always used
   lavargs$do.fit <- FALSE
+
+  if (estimator != "ML") {
+    cli::cli_abort("Bias reduction methods are currently only available for ML estimation.")
+  }
 
   # Catch old arguments
   if ("method" %in% names(lavargs)) {
-    cli::cli_alert_warning("Please use argument 'estimator' instead of 'method'.")
-    lavargs$estimator <- lavargs$method
+    # cli::cli_alert_warning("RBM options are now specified in 'estimator.args' list  instead of 'method' argument.")
+    lifecycle::deprecate_warn(
+      when = "0.0.1",
+      what = I("The `method` argument"),
+      details = "Use `estimator.args` list to specify RBM options instead."
+    )
+
+    rbm <- lavargs$method
+    plugin_penalty <- NULL
+    if (rbm == "ML") rbm <- FALSE
+    if (rbm == "iRBMp") {
+      rbm <- "iRBM"
+      plugin_penalty <- "pen_ridge"
+      cli::cli_alert_warning("Using the ridge penalty for iRBM.")
+    }
     lavargs$method <- NULL
+  } else {
+    rbm <- estimator.args$rbm
+    plugin_penalty <- estimator.args$plugin_penalty
   }
+  if (!isFALSE(rbm)) rbm <- match.arg(rbm, c("eRBM", "iRBM"))
+
+  # Which method?
+  is_ML     <- isFALSE(rbm)
+  is_eRBM   <- rbm == "eRBM"
+  is_iRBM   <- rbm == "iRBM"
 
   fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   lavmodel       <- fit0@Model
@@ -467,11 +496,17 @@ fit_sem <- function(
   if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
   n <- lavaan::nobs(fit0)
 
-  # Pack theta
+  # Bounds
+  pt <- lavaan::partable(fit0)
+  lb <- pt$lower[pt$free > 0]
+  ub <- pt$upper[pt$free > 0]
+  bounds <- list(lb = lb, ub = ub)
+
+  # Pack theta and bounds
   if (lavmodel@eq.constraints) {
     theta_pack <- as.numeric(
-      (start - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
-    )
+        (start - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
+      )
   } else {
     theta_pack <- start
   }
@@ -523,14 +558,15 @@ fit_sem <- function(
     -1 * loglik(
       theta = x,
       ...,
-      bias_reduction = isFALSE(is_ML | is_eBRM),
-      plugin_penalty = isTRUE(is_iBRMp),
+      bias_reduction = isFALSE(is_ML | is_eRBM),
+      plugin_penalty = plugin_penalty,
       kind = information,
+      bounds = bounds,
       verbose = verbose
     )
   }
   grad_fun <-
-    if (isTRUE(is_ML | is_eBRM))
+    if (isTRUE(is_ML | is_eRBM))
       function(x, ...) -1 * grad_loglik(x, ...)
     else
       NULL
@@ -547,7 +583,7 @@ fit_sem <- function(
   )
 
   b <- 0
-  if (is_eBRM)
+  if (is_eRBM)
     b <- b + bias(
       theta = res$par,
       lavmodel = lavmodel,
@@ -595,6 +631,8 @@ fit_sem <- function(
     information_penalty = information,
     information_se = orig_info,
     lavfun = lavfun,
-    estimator = estimator
+    estimator = estimator,
+    rbm = rbm,
+    plugin_penalty = plugin_penalty
   )
 }

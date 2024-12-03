@@ -2,6 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom lifecycle deprecate_warn
 #' @importFrom methods callNextMethod
 #' @importFrom methods new
 #' @importFrom mvtnorm dmvnorm
