@@ -3,11 +3,15 @@ set.seed(123)
 dat <- gen_data_twofac(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_twofac(0.8)
 
+eRBM  <- list(rbm = "eRBM")
+iRBM  <- list(rbm = "iRBM")
+iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge")
+
 fit_lav   <- sem(mod, dat)
-fit_ML    <- fit_sem(mod, dat, estimator =  "ML")
-fit_eBRM  <- fit_sem(mod, dat, estimator =  "eBRM", information = "observed")
-fit_iBRM  <- fit_sem(mod, dat, estimator =  "iBRM", information = "expected")
-fit_iBRMp <- fit_sem(mod, dat, estimator =  "iBRMp", information = "expected")
+fit_ML    <- fit_sem(mod, dat)
+fit_eRBM  <- fit_sem(mod, dat, estimator.args = eRBM, information = "observed")
+fit_iRBM  <- fit_sem(mod, dat, estimator.args = iRBM, information = "expected")
+fit_iRBMp <- fit_sem(mod, dat,  estimator.args = iRBMp, information = "expected")
 
 N <- nrow(dat)
 p <- ncol(dat)
@@ -143,16 +147,16 @@ test_that("Checking penalty", {
   )
 })
 
-# Checking the iBRM fit against the same using our implementation
+# Checking the iRBM fit against the same using our implementation
 res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat)
 res2 <- optim(coef(fit_lav), pen_Loglik, dat = dat, method = "BFGS",
               control = list(fnscale = -1))
 
-test_that("Checking iBRM fit", {
+test_that("Checking iRBM fit", {
   expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
   expect_equal(
     res1$par,
-    coef(fit_iBRM),
+    coef(fit_iRBM),
     ignore_attr = TRUE,
     tolerance = 1e-01
   )
@@ -160,12 +164,12 @@ test_that("Checking iBRM fit", {
 
 # # Check gradients zero at optima
 # expect_equal(
-#   numDeriv::grad(pen_Loglik, coef(fit_iBRM)[coef_pos], dat = dat),
+#   numDeriv::grad(pen_Loglik, coef(fit_iRBM)[coef_pos], dat = dat),
 #   rep(0, 13),
 #   tolerance = 1e-03
 # )
 # expect_equal(
-#   numDeriv::grad(loglik, coef(fit_iBRM), lavmodel = fit_lav@Model, lavsamplestats = fit_lav@SampleStats, lavdata = fit_lav@Data, lavoptions = fit_lav@Options, BRM = TRUE),
+#   numDeriv::grad(loglik, coef(fit_iRBM), lavmodel = fit_lav@Model, lavsamplestats = fit_lav@SampleStats, lavdata = fit_lav@Data, lavoptions = fit_lav@Options, RBM = TRUE),
 #   rep(0, 13),
 #   tolerance = 1e-03
 # )

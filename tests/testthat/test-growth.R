@@ -3,11 +3,15 @@ set.seed(291024)
 dat <- gen_data_growth(n = 25, rel = 0.5, dist = "Normal")
 mod <- txt_mod_growth(0.5)
 
+eRBM  <- list(rbm = "eRBM")
+iRBM  <- list(rbm = "iRBM")
+iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge_bound")
+
 fit_lav   <- growth(mod, dat)
-fit_ML    <- fit_sem(mod, dat, estimator = "ML", lavfun = "growth")
-fit_eBRM  <- fit_sem(mod, dat, estimator = "eBRM", lavfun = "growth")
-fit_iBRM  <- fit_sem(mod, dat, estimator = "iBRM", lavfun = "growth")
-fit_iBRMp <- fit_sem(mod, dat, estimator = "iBRMp", lavfun = "growth")
+fit_ML    <- fit_sem(mod, dat, lavfun = "growth")
+fit_eRBM  <- fit_sem(mod, dat, estimator.args = eRBM, lavfun = "growth")
+fit_iRBM  <- fit_sem(mod, dat, estimator.args = iRBM, lavfun = "growth")
+fit_iRBMp <- fit_sem(mod, dat, estimator.args = iRBMp, lavfun = "growth")
 
 test_that("ML estimator matches lavaan", {
   expect_equal(
@@ -22,9 +26,9 @@ test_that("ML estimator matches lavaan", {
 #   param = names(coef(fit_lav)),
 #   truth = truth(dat),
 #   ML = coef(fit_ML),
-#   eBRM = coef(fit_eBRM),
-#   iBRM = coef(fit_iBRM),
-#   iBRMp = coef(fit_iBRMp),
+#   eRBM = coef(fit_eRBM),
+#   iRBM = coef(fit_iRBM),
+#   iRBMp = coef(fit_iRBMp),
 # )
 
 N <- nrow(dat)
@@ -117,20 +121,20 @@ test_that("Check Hessian against lavaan", {
 # neg_pen_Loglik <- function(pars, dat, L) -pen_Loglik(pars, dat, L)
 # res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat, L = Lambda)
 #
-# test_that("Checking iBRM fit", {
+# test_that("Checking iRBM fit", {
 #   expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
 #   expect_equal(
 #     res1$par,
-#     coef(fit_iBRM),
+#     coef(fit_iRBM),
 #     ignore_attr = TRUE,
 #     tolerance = 1e-02
 #   )
 # })
 
-test_that("Check iBRM fit", {
+test_that("Check iRBM fit", {
   coef_pos <- c(2, 4, 6, 1, 5, 3)
   expect_equal(
-    numDeriv::grad(pen_Loglik, coef(fit_iBRM)[coef_pos], dat = dat, L = Lambda),
+    numDeriv::grad(pen_Loglik, coef(fit_iRBM)[coef_pos], dat = dat, L = Lambda),
     rep(0, 6),
     tolerance = 1e-02)
 })
