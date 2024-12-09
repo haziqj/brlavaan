@@ -5,13 +5,16 @@ mod <- txt_mod_growth(0.5)
 
 eRBM  <- list(rbm = "eRBM")
 iRBM  <- list(rbm = "iRBM")
-iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge_bound)
+iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
+huber <- list(rbm = "iRBM", plugin_penalty = pen_huber)
 
 fit_lav   <- growth(mod, dat)
 fit_ML    <- fit_sem(mod, dat, lavfun = "growth")
 fit_eRBM  <- fit_sem(mod, dat, estimator.args = eRBM, lavfun = "growth")
 fit_iRBM  <- fit_sem(mod, dat, estimator.args = iRBM, lavfun = "growth")
 fit_iRBMp <- fit_sem(mod, dat, estimator.args = iRBMp, lavfun = "growth")
+fit_huber <- fit_sem(mod, dat, estimator.args = huber, lavfun = "growth")
+
 
 test_that("ML estimator matches lavaan", {
   expect_equal(
@@ -29,6 +32,7 @@ test_that("ML estimator matches lavaan", {
 #   eRBM = coef(fit_eRBM),
 #   iRBM = coef(fit_iRBM),
 #   iRBMp = coef(fit_iRBMp),
+#   huber = coef(fit_huber)
 # )
 
 N <- nrow(dat)

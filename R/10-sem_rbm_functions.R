@@ -94,6 +94,7 @@ loglik <- function(
     )
   }
 
+  # NOTE: bias_term is already negative
   out <- loglik + bias_term - pen_term
   # nlminb() works better with smaller numbers
   # out <- out / (2 * lavsamplestats@ntotal)
