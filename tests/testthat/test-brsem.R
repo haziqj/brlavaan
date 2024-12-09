@@ -15,9 +15,10 @@ test_that("brcfa works", {
   "
 
   fit <- brcfa(HS.model, data = HolzingerSwineford1939,
-               estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"))
+               estimator.args = list(rbm = "iRBM", plugin_penalty = pen_ridge))
   tmp <- capture.output(print(fit))
   tmp <- capture.output(summary(fit))
+  expect_true(is_iRBMp(fit, quietly = TRUE))
   expect_true(is(fit, "brlavaan"))
   expect_true(is(coef(fit), "lavaan.vector"))
 })
@@ -41,7 +42,7 @@ test_that("brsem works", {
   ML <- list(rbm = FALSE)
   eRBM  <- list(rbm = "eRBM")
   iRBM  <- list(rbm = "iRBM")
-  iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge")
+  iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
 
   fit_ML <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = ML)
   fit_eRBM <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = eRBM)

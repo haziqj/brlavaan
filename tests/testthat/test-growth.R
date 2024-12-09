@@ -5,7 +5,7 @@ mod <- txt_mod_growth(0.5)
 
 eRBM  <- list(rbm = "eRBM")
 iRBM  <- list(rbm = "iRBM")
-iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge_bound")
+iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge_bound)
 
 fit_lav   <- growth(mod, dat)
 fit_ML    <- fit_sem(mod, dat, lavfun = "growth")

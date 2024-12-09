@@ -5,7 +5,7 @@ mod <- txt_mod_twofac(0.8)
 
 eRBM  <- list(rbm = "eRBM")
 iRBM  <- list(rbm = "iRBM")
-iRBMp <- list(rbm = "iRBM", plugin_penalty = "pen_ridge")
+iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
 
 fit_lav   <- sem(mod, dat)
 fit_ML    <- fit_sem(mod, dat)
@@ -91,7 +91,7 @@ test_that("Checking likelihoods", {
   )
   expect_equal(
     loglik(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data,
-           fit_lav@Options, plugin_penalty = FALSE, bias_reduction = FALSE,
+           fit_lav@Options, plugin_penalty = NULL, bias_reduction = FALSE,
            verbose = FALSE),
     Loglik(lav_c, dat)
   )

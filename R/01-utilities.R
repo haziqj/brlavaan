@@ -57,6 +57,8 @@ is_iRBM <- function(x) {
 #' @export
 is_iRBMp <- function(x, quietly = FALSE) {
   list2env(get_estimator.args(x), environment())
+  plugin_penalty <- plugin_penalty(call = TRUE)
+
   if (isFALSE(quietly))
     cli::cli_alert_info("is_iRBMp: rbm = {rbm}, plugin_penalty = {plugin_penalty}")
   out <- rbm == "iRBM" & !is.null(plugin_penalty)
