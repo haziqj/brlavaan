@@ -70,12 +70,17 @@ loglik <- function(
   }
 
   if (!is.null(plugin_penalty)) {
-    if (plugin_penalty == "pen_ridge") {
-      pen_term <- pen_ridge(theta.packed)
+    if (!is.function(plugin_penalty)) {
+      cli::cli_abort("`plugin_penalty` must be a function.")
     }
-    if (plugin_penalty == "pen_ridge_bound") {
-      pen_term <- pen_ridge_bound(theta, bounds$lb, bounds$ub)
-    }
+
+    pen_args <- list(
+      x = theta,
+      x.packed = theta.packed,
+      lb = bounds$lb,
+      ub = bounds$ub
+    )
+    pen_term <- do.call(plugin_penalty, pen_args)
   }
   pen_term <- pen_term / lavsamplestats@ntotal
 
@@ -470,8 +475,8 @@ fit_sem <- function(
     if (rbm == "ML") rbm <- FALSE
     if (rbm == "iRBMp") {
       rbm <- "iRBM"
-      plugin_penalty <- "pen_ridge"
-      cli::cli_alert_warning("Using the ridge penalty for iRBM.")
+      plugin_penalty <- pen_huber
+      cli::cli_alert_warning("Using the Huber penalty for iRBM.")
     }
     lavargs$method <- NULL
   } else {
@@ -635,6 +640,6 @@ fit_sem <- function(
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,
-    plugin_penalty = plugin_penalty
+    plugin_penalty_fn = plugin_penalty
   )
 }
