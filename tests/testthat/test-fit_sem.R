@@ -39,7 +39,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = FALSE,
+      plugin_penalty = NULL,
       verbose = FALSE
     )
     expect_equal(loglik_val, as.numeric(logLik(fit_lav)), tolerance = 1e-4)
@@ -81,7 +81,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = FALSE,
+      plugin_penalty = NULL,
       verbose = FALSE
     )
     expect_equal(grad.lav, rep(0, length(grad.lav)), tolerance = 1e-4)
@@ -114,7 +114,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = FALSE,
+      plugin_penalty = NULL,
       verbose = FALSE
     )
     hessian.num2 <- numDeriv::jacobian(

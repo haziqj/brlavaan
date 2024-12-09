@@ -640,6 +640,6 @@ fit_sem <- function(
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,
-    plugin_penalty_fn = plugin_penalty
+    plugin_penalty = plugin_penalty
   )
 }
