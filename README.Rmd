@@ -72,7 +72,8 @@ fit <- brsem(model = mod, data = PoliticalDemocracy,
              estimator.args = list(rbm = "eRBM"))  
 # for implicit RBM with plugin penalty
 fit <- brsem(model = mod, data = PoliticalDemocracy, 
-             estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"))
+             estimator.args = list(rbm = "iRBM", 
+                                   plugin_penalty = brlavaan:::pen_huber))
 ```
 
 To switch off the bias reduction, set `rbm = FALSE`:
