@@ -57,11 +57,11 @@ mod <- "
 "
 fit <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit)
-#> brlavaan 0.0.2.9001 ended normally after 65 iterations
+#> brlavaan 0.0.2.9004 ended normally after 71 iterations
 #> 
 #>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT
-#>   Plugin penalty                             pen_ridge
+#>   Plugin penalty                         Huber penalty
 #>   Optimization method                           NLMINB
 #>   Number of model parameters                        31
 #> 
@@ -78,57 +78,57 @@ summary(fit)
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   ind60 =~                                            
 #>     x1                1.000                           
-#>     x2                2.181    0.136   16.050    0.000
-#>     x3                1.814    0.149   12.191    0.000
+#>     x2                2.183    0.136   16.019    0.000
+#>     x3                1.816    0.149   12.174    0.000
 #>   dem60 =~                                            
 #>     y1                1.000                           
-#>     y2                1.271    0.179    7.104    0.000
-#>     y3                1.064    0.149    7.123    0.000
-#>     y4                1.275    0.144    8.871    0.000
+#>     y2                1.255    0.179    7.001    0.000
+#>     y3                1.058    0.149    7.121    0.000
+#>     y4                1.263    0.142    8.876    0.000
 #>   dem65 =~                                            
 #>     y5                1.000                           
-#>     y6                1.202    0.168    7.171    0.000
-#>     y7                1.297    0.160    8.117    0.000
-#>     y8                1.279    0.158    8.097    0.000
+#>     y6                1.197    0.168    7.129    0.000
+#>     y7                1.292    0.159    8.111    0.000
+#>     y8                1.273    0.158    8.085    0.000
 #> 
 #> Regressions:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   dem60 ~                                             
-#>     ind60             1.518    0.395    3.846    0.000
+#>     ind60             1.530    0.400    3.828    0.000
 #>   dem65 ~                                             
-#>     ind60             0.564    0.222    2.542    0.011
-#>     dem60             0.833    0.098    8.496    0.000
+#>     ind60             0.571    0.223    2.561    0.010
+#>     dem60             0.830    0.097    8.547    0.000
 #> 
 #> Covariances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>  .y1 ~~                                               
-#>    .y5                0.686    0.378    1.813    0.070
+#>    .y5                0.678    0.382    1.777    0.076
 #>  .y2 ~~                                               
-#>    .y4                1.305    0.736    1.773    0.076
-#>    .y6                2.045    0.751    2.724    0.006
+#>    .y4                1.429    0.758    1.886    0.059
+#>    .y6                2.191    0.778    2.816    0.005
 #>  .y3 ~~                                               
-#>    .y7                0.814    0.636    1.279    0.201
+#>    .y7                0.838    0.647    1.294    0.196
 #>  .y4 ~~                                               
-#>    .y8                0.410    0.468    0.876    0.381
+#>    .y8                0.416    0.475    0.877    0.381
 #>  .y6 ~~                                               
-#>    .y8                1.375    0.600    2.293    0.022
+#>    .y8                1.436    0.612    2.347    0.019
 #> 
 #> Variances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
-#>    .x1                0.085    0.020    4.180    0.000
-#>    .x2                0.127    0.073    1.735    0.083
-#>    .x3                0.485    0.094    5.171    0.000
-#>    .y1                1.989    0.466    4.270    0.000
-#>    .y2                7.474    1.412    5.295    0.000
-#>    .y3                5.290    0.996    5.310    0.000
-#>    .y4                3.314    0.782    4.239    0.000
-#>    .y5                2.541    0.515    4.932    0.000
-#>    .y6                5.093    0.953    5.344    0.000
-#>    .y7                3.569    0.751    4.753    0.000
-#>    .y8                3.419    0.735    4.650    0.000
-#>     ind60             0.486    0.093    5.200    0.000
-#>    .dem60             4.191    0.971    4.318    0.000
-#>    .dem65             0.232    0.229    1.015    0.310
+#>    .x1                0.085    0.020    4.186    0.000
+#>    .x2                0.127    0.073    1.730    0.084
+#>    .x3                0.485    0.094    5.170    0.000
+#>    .y1                1.977    0.470    4.204    0.000
+#>    .y2                7.888    1.473    5.356    0.000
+#>    .y3                5.393    1.015    5.314    0.000
+#>    .y4                3.400    0.794    4.281    0.000
+#>    .y5                2.544    0.519    4.906    0.000
+#>    .y6                5.251    0.977    5.377    0.000
+#>    .y7                3.629    0.762    4.764    0.000
+#>    .y8                3.488    0.747    4.672    0.000
+#>     ind60             0.484    0.093    5.196    0.000
+#>    .dem60             4.297    0.990    4.340    0.000
+#>    .dem65             0.222    0.231    0.961    0.336
 ```
 
 By default, the implicit reduced bias ML estimator (`iRBM`) is used. To
@@ -141,7 +141,8 @@ fit <- brsem(model = mod, data = PoliticalDemocracy,
              estimator.args = list(rbm = "eRBM"))  
 # for implicit RBM with plugin penalty
 fit <- brsem(model = mod, data = PoliticalDemocracy, 
-             estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"))
+             estimator.args = list(rbm = "iRBM", 
+                                   plugin_penalty = brlavaan:::pen_huber))
 ```
 
 To switch off the bias reduction, set `rbm = FALSE`:

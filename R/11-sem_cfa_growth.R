@@ -36,7 +36,7 @@ brsem <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
+    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -64,7 +64,7 @@ brcfa <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
+    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -92,7 +92,7 @@ brgrowth <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
+    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
   ) {
