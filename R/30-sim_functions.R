@@ -10,9 +10,9 @@
 #' each of the two models a) growth curve model and b) two-factor model, we
 #' generate a sample size of `n` observations from a distribution `dist` with
 #' reliability `rel`. We then fit the model using the maximum likelihood (`ML`)
-#' estimator, the explicit BR ML estimator (`eBRM`), the implicit BR ML
-#' estimator (`iBRM`), and the implicit BR ML estimator with a plug-in penalty
-#' (`iBRMp`). We repeat this process `nsimu` times and report the results in
+#' estimator, the explicit BR ML estimator (`eRBM`), the implicit BR ML
+#' estimator (`iRBM`), and the implicit BR ML estimator with a plug-in penalty
+#' (`iRBMp`). We repeat this process `nsimu` times and report the results in
 #' terms of bias, standard error, and computation time.
 #'
 #' @inheritParams gen-data
@@ -65,12 +65,35 @@ sim_fun <- function(
       fitsemargs <- list(
         model = mod,
         data = dat,
+        estimator = "ML",
+        information = "expected",
+        debug = FALSE,
         lavfun = lavfun
       )
-      fitsemargs$estimator <- "ML"   ; fit_ML    <- do.call(fit_sem, fitsemargs)
-      fitsemargs$estimator <- "eBRM" ; fit_eBRM  <- do.call(fit_sem, fitsemargs)
-      fitsemargs$estimator <- "iBRM" ; fit_iBRM  <- do.call(fit_sem, fitsemargs)
-      fitsemargs$estimator <- "iBRMp"; fit_iBRMp <- do.call(fit_sem, fitsemargs)
+
+      # ML
+      fitsemargs$estimator.args <- list(rbm = FALSE, plugin_penalty = NULL)
+      fit_ML    <- do.call(fit_sem, fitsemargs)
+
+      # eRBM
+      fitsemargs$estimator.args <- list(rbm = "eRBM", plugin_penalty = NULL)
+      fit_eRBM  <- do.call(fit_sem, fitsemargs)
+
+      # iRBM
+      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = NULL)
+      fit_iRBM  <- do.call(fit_sem, fitsemargs)
+
+      # iRBMp ridge
+      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
+      fit_iRBMpridge <- do.call(fit_sem, fitsemargs)
+
+      # iRBMp ridge bounded
+      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_ridge_bound)
+      fit_iRBMpridgeb <- do.call(fit_sem, fitsemargs)
+
+      # iRBMp Huber
+      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_huber)
+      fit_iRBMphuber <- do.call(fit_sem, fitsemargs)
 
       tibble::tibble(
         simu = j,
@@ -78,31 +101,35 @@ sim_fun <- function(
         model = model,
         rel = rel,
         n = n,
-        param = rep(names(true_vals), 4),
+        param = rep(names(true_vals), 6),
         est = c(
           fit_ML$coefficients,
-          fit_eBRM$coefficients,
-          fit_iBRM$coefficients,
-          fit_iBRMp$coefficients
+          fit_eRBM$coefficients,
+          fit_iRBM$coefficients,
+          fit_iRBMpridge$coefficients,
+          fit_iRBMpridgeb$coefficients,
+          fit_iRBMphuber$coefficients
         ),
         se = c(
           fit_ML$stderr,
-          fit_eBRM$stderr,
-          fit_iBRM$stderr,
-          fit_iBRMp$stderr
+          fit_eRBM$stderr,
+          fit_iRBM$stderr,
+          fit_iRBMpridge$stderr,
+          fit_iRBMpridgeb$stderr,
+          fit_iRBMphuber$stderr
         ),
-        truth = rep(true_vals, 4),
+        truth = rep(true_vals, 6),
         estimator = rep(
-          c("ML", "eBRM", "iBRM", "iBRMp"),
+          c("ML", "eRBM", "iRBM", "iRBMp_ridge", "iRBMp_ridgebound", "iRBMp_huber"),
           each = length(true_vals)
         ),
         timing = rep(
-          c(fit_ML$timing, fit_eBRM$timing, fit_iBRM$timing, fit_iBRMp$timing),
+          c(fit_ML$timing, fit_eRBM$timing, fit_iRBM$timing, fit_iRBMpridge$timing,
+            fit_iRBMpridgeb$timing, fit_iRBMphuber$timing),
           each = length(true_vals)
         ),
         converged = rep(
-          c(fit_ML$converged, fit_eBRM$converged, fit_iBRM$converged,
-            fit_iBRMp$converged),
+          c(fit_ML$converged, fit_eRBM$converged, fit_iRBM$converged, fit_iRBMpridge$converged, fit_iRBMpridgeb$converged, fit_iRBMphuber$converged),
           each = length(true_vals)
         )
       )

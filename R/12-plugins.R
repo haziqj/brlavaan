@@ -36,8 +36,8 @@ pen_huber <- function(x, lb, ub, thres = 1, call = FALSE, ...) {
   if (isTRUE(call)) return("Huber penalty")
 
   # A bit arbitrary but force values of x outside bounds to be equal to bounds
-  x[x > ub] <- ub
-  x[x < lb] <- lb
+  x[x > ub] <- ub[x > ub]
+  x[x < lb] <- lb[x < lb]
 
   y <-
     ifelse(
@@ -49,7 +49,7 @@ pen_huber <- function(x, lb, ub, thres = 1, call = FALSE, ...) {
       ),
       0  # both lb and ub infinite, no penalty
     )
-
+  # return(data.frame(x = x, lb = lb, ub = ub, y = y))
   # y <- y[is.finite(y)]
   sum(ifelse(abs(y) < thres, 0.5 * y ^ 2, -thres * (thres / 2 - abs(y))))
 }
