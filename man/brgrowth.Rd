@@ -8,7 +8,7 @@ brgrowth(
   model,
   data,
   estimator = "ML",
-  estimator.args = list(rbm = "iRBM", plugin_penalty = "pen_ridge"),
+  estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
   information = c("expected", "observed", "first.order"),
   ...
 )
