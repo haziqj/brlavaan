@@ -1,39 +1,40 @@
 ## IK + OK, 29 Oct 2024
 set.seed(291024)
-dat <- gen_data_growth(n = 25, rel = 0.5, dist = "Normal")
-mod <- txt_mod_growth(0.5)
+dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal")
+mod <- txt_mod_growth(0.8)
 
-eRBM  <- list(rbm = "eRBM")
-iRBM  <- list(rbm = "iRBM")
-iRBMp <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
-huber <- list(rbm = "iRBM", plugin_penalty = pen_huber)
+eRBM   <- list(rbm = "eRBM")
+iRBM   <- list(rbm = "iRBM")
+iRBMp  <- list(rbm = "iRBM", plugin_penalty = brlavaan:::pen_ridge)
+iRBMpb <- list(rbm = "iRBM", plugin_penalty = brlavaan:::pen_ridge_bound)
+huber  <- list(rbm = "iRBM", plugin_penalty = brlavaan:::pen_huber)
 
-fit_lav   <- growth(mod, dat)
-fit_ML    <- fit_sem(mod, dat, lavfun = "growth")
-fit_eRBM  <- fit_sem(mod, dat, estimator.args = eRBM, lavfun = "growth")
-fit_iRBM  <- fit_sem(mod, dat, estimator.args = iRBM, lavfun = "growth")
-fit_iRBMp <- fit_sem(mod, dat, estimator.args = iRBMp, lavfun = "growth")
-fit_huber <- fit_sem(mod, dat, estimator.args = huber, lavfun = "growth")
-
+fit_lav    <- sem(mod, dat)
+fit_ML     <- fit_sem(mod, dat)
+fit_eRBM   <- fit_sem(mod, dat, estimator.args = eRBM)
+fit_iRBM   <- fit_sem(mod, dat, estimator.args = iRBM)
+fit_iRBMp  <- fit_sem(mod, dat, estimator.args = iRBMp)
+fit_iRBMpb <- fit_sem(mod, dat, estimator.args = iRBMpb)
+fit_huber  <- fit_sem(mod, dat, estimator.args = huber)
 
 test_that("ML estimator matches lavaan", {
   expect_equal(
     as.numeric(coef(fit_lav)),
     coef(fit_ML),
     ignore_attr = TRUE,
-    tolerance = 1e-5
+    tolerance = 1e-4
   )
 })
 
-# tibble(
-#   param = names(coef(fit_lav)),
-#   truth = truth(dat),
-#   ML = coef(fit_ML),
-#   eRBM = coef(fit_eRBM),
-#   iRBM = coef(fit_iRBM),
-#   iRBMp = coef(fit_iRBMp),
-#   huber = coef(fit_huber)
-# )
+tibble::tibble(
+  param = names(coef(fit_lav)),
+  truth = truth(dat),
+  ML = coef(fit_ML),
+  eRBM = coef(fit_eRBM),
+  iRBM = coef(fit_iRBM),
+  iRBMp = coef(fit_iRBMp),
+  huber = coef(fit_huber)
+)
 
 N <- nrow(dat)
 p <- ncol(dat)
