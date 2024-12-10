@@ -28,8 +28,12 @@ loglik <- function(
   lavimplied <- lavaan::lav_model_implied(this_lavmodel)
 
   # Check if lavimplied$cov[[1]] is PD
-  eigvals <- eigen(lavimplied$cov[[1]], symmetric = TRUE, only.values = TRUE)$values
-  if (any(eigvals < 1e-07)) {
+  eigvals <- try(
+    eigen(lavimplied$cov[[1]], symmetric = TRUE, only.values = TRUE)$values,
+    silent = TRUE
+  )
+
+  if (any(eigvals < 1e-07) | inherits(eigvals, "try-error")) {
     # Return huge number, to signal the nlminb() optimizer something is not
     # quite OK with this parameter vector
     return(-1e40)
@@ -496,9 +500,6 @@ fit_sem <- function(
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
   lavoptions     <- fit0@Options
-
-  start <- lavargs$start
-  if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
   n <- lavaan::nobs(fit0)
 
   # Bounds NOTE: Since lavaan 0.6-19, settings bounds = TRUE will remove the
@@ -509,6 +510,13 @@ fit_sem <- function(
   lb <- pt$lower[pt$free > 0]
   ub <- pt$upper[pt$free > 0]
   bounds <- list(lb = lb, ub = ub)
+
+  # Starting values
+  start <- lavargs$start
+  if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
+  # Fix starting values
+  fixidx <- which(start >= ub | start <= lb)
+  start[fixidx] <- ((ub + lb) / 2)[fixidx]
 
   # Pack theta and bounds
   if (lavmodel@eq.constraints) {
@@ -525,6 +533,7 @@ fit_sem <- function(
       # Parameters and sample size
       theta_unpack = start,
       theta_pack = theta_pack,
+      bounds = bounds,
       n = n,
 
       # Information about constraints
