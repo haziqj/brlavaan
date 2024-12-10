@@ -48,8 +48,8 @@ In our paper, we report on the results of the following simulation study. For
 each of the two models a) growth curve model and b) two-factor model, we
 generate a sample size of \code{n} observations from a distribution \code{dist} with
 reliability \code{rel}. We then fit the model using the maximum likelihood (\code{ML})
-estimator, the explicit BR ML estimator (\code{eBRM}), the implicit BR ML
-estimator (\code{iBRM}), and the implicit BR ML estimator with a plug-in penalty
-(\code{iBRMp}). We repeat this process \code{nsimu} times and report the results in
+estimator, the explicit RBM estimator (\code{eRBM}), the implicit RBM
+estimator (\code{iRBM}), and the implicit RBM estimator with plug-in penalties
+(\code{iRBMp_x}). We repeat this process \code{nsimu} times and report the results in
 terms of bias, standard error, and computation time.
 }
