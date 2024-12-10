@@ -10,9 +10,9 @@
 #' each of the two models a) growth curve model and b) two-factor model, we
 #' generate a sample size of `n` observations from a distribution `dist` with
 #' reliability `rel`. We then fit the model using the maximum likelihood (`ML`)
-#' estimator, the explicit BR ML estimator (`eRBM`), the implicit BR ML
-#' estimator (`iRBM`), and the implicit BR ML estimator with a plug-in penalty
-#' (`iRBMp`). We repeat this process `nsimu` times and report the results in
+#' estimator, the explicit RBM estimator (`eRBM`), the implicit RBM
+#' estimator (`iRBM`), and the implicit RBM estimator with plug-in penalties
+#' (`iRBMp_x`). We repeat this process `nsimu` times and report the results in
 #' terms of bias, standard error, and computation time.
 #'
 #' @inheritParams gen-data
@@ -119,7 +119,7 @@ sim_fun <- function(
           fit_iRBMphuber$stderr
         ),
         truth = rep(true_vals, 6),
-        estimator = rep(
+        method = rep(
           c("ML", "eRBM", "iRBM", "iRBMp_ridge", "iRBMp_ridgebound", "iRBMp_huber"),
           each = length(true_vals)
         ),
