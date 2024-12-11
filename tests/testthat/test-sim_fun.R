@@ -1,7 +1,6 @@
-future::plan(future::sequential)
-
 test_that("Two-factor simulation function works", {
   expect_no_error({
+    future::plan(future::sequential)
     res <- sim_fun(
       dist = "Normal",
       model = "twofac",
@@ -16,6 +15,7 @@ test_that("Two-factor simulation function works", {
 
 test_that("Growth simulation function works", {
   expect_no_error({
+    future::plan(future::sequential)
     res <- sim_fun(
       dist = "Kurtosis",
       model = "growth",
