@@ -7,29 +7,39 @@ manuscript:
 
 format:
   html:
+    number-sections: true
     comments:
       hypothesis: true
-  # docx:
-  #   output-file: jamil2024bias
-  # tandf-pdf:
-  #   link-citations: true
-  #   keep-tex: true
-  #   linenumbers: true
-  #   fig-width: 7
-  #   fig-height: 5
-  #   fig-pos: 'htbp'
-  #   header-includes:
-  #     # - \input{maths_shortcuts.tex}
-  #     - \usepackage{setspace}
-  #     - \onehalfspacing
-  #     # - \usepackage{afterpage}
-  #     # - \newcommand{\blscape}{\begin{landscape}}
-  #     # - \newcommand{\elscape}{\end{landscape}}
-  #   output-file: jamil2024bias
+  docx:
+    output-file: jamil2025bias
+  tandf-pdf:
+    link-citations: true
+    keep-tex: true
+    linenumbers: true
+    fig-width: 7
+    fig-height: 5
+    fig-pos: 'htbp'
+    header-includes:
+      # - \input{maths_shortcuts.tex}
+      - \usepackage{setspace}
+      - \onehalfspacing
+      # - \usepackage{afterpage}
+      # - \newcommand{\blscape}{\begin{landscape}}
+      # - \newcommand{\elscape}{\end{landscape}}
+    output-file: jamil2025bias
 
 execute:
-  freeze: true
+  freeze: auto
 
 # notebook-links: false
 
+bibliography:
+  - refs-HJ.bib
+csl: apa.csl
 
+citation:
+  type: article-journal
+  # container-title: "Journal of Data Science Software"
+  # doi: "10.23915/reprodocs.00010"
+  # url: https://example.com/summarizing-output
+google-scholar: true
