@@ -17,12 +17,12 @@ modelling, and latent growth curve models.
 
 ## Installation
 
-You can install the development version of brlavaan from
+You can install the development version of `{brlavaan}` from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("haziqj/sem-bias@package")
+pak::pak("haziqj/sem-bias")
 ```
 
 ## Example
@@ -57,7 +57,7 @@ mod <- "
 "
 fit <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit)
-#> brlavaan 0.0.2.9006 ended normally after 71 iterations
+#> brlavaan 0.0.2.9007 ended normally after 71 iterations
 #> 
 #>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT

@@ -25,11 +25,11 @@ Apply empirical bias reduced methods to fit a variety of latent variable models,
 
 ## Installation
 
-You can install the development version of brlavaan from [GitHub](https://github.com/) with:
+You can install the development version of `{brlavaan}` from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("haziqj/sem-bias@package")
+pak::pak("haziqj/sem-bias")
 ```
 
 ## Example

@@ -4,14 +4,16 @@ Version: 0.0.2.9007
 Authors@R: c(
     person("Haziq", "Jamil", , "haziq.jamil@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-3298-1010")),
-    person("Yves", "Rosseel", role = "aut",
+    person("Yves", "Rosseel", role = "ctb",
            comment = c(ORCID = "0000-0002-4129-4477")),           
-    person("Oliver", "Kemp", role = "aut"),
-    person("Ioannis", "Kosmidis", role = "aut",
+    person("Oliver", "Kemp", role = "ctb"),
+    person("Ioannis", "Kosmidis", role = "ctb",
            comment = c(ORCID = "0000-0003-1556-0302"))
   )
 Description: Apply empirical bias reduced methods to fit a variety of latent variable models, including confirmatory factor analysis, structural equation modelling, and latent growth curve models.
 License: GPL (>= 3)
+URL: https://github.com/haziqj/sem-bias, https://haziqj.ml/sem-bias/
+BugReports: https://github.com/haziqj/sem-bias/issues
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
@@ -20,7 +22,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: 
     lavaan
-URL: https://haziqj.ml/sem-bias/
 Imports: 
     cli,
     covsim,
@@ -35,3 +36,4 @@ Imports:
     stringr,
     tibble,
     utils
+Config/Needs/website: rmarkdown

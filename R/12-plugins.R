@@ -1,8 +1,24 @@
+#' Functions for plugin penalty
+#'
+#' @param x A numeric vector.
+#' @param lb The lower bounds for components of `x`.
+#' @param ub The upper bounds for components of `x`.
+#' @param call Logical. If `TRUE`, return the name of the penalty function.
+#' @param ... Additional arguments which may be called. See Details.
+#'
+#' @return A single numeric value, which is the penalty value.
+#' @name plugin-penalties
+NULL
+
+#' @rdname plugin-penalties
+#' @export
 pen_ridge <- function(x, call = FALSE, ...) {
   if (isTRUE(call)) return("Ridge penalty")
   sum(x ^ 2)
 }
 
+#' @rdname plugin-penalties
+#' @export
 pen_ridge_bound <- function(x, lb, ub, call = FALSE, ...) {
 
   if (isTRUE(call)) return("Bounded ridge penalty")
@@ -31,6 +47,8 @@ pen_ridge_bound <- function(x, lb, ub, call = FALSE, ...) {
 #   huber(x, thres = thres)
 # }
 
+#' @rdname plugin-penalties
+#' @export
 pen_huber <- function(x, lb, ub, thres = 1, call = FALSE, ...) {
 
   if (isTRUE(call)) return("Huber penalty")

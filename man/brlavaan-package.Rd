@@ -18,11 +18,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Haziq Jamil \email{haziq.jamil@gmail.com} (\href{https://orcid.org/0000-0003-3298-1010}{ORCID})
 
-Authors:
+Other contributors:
 \itemize{
-  \item Yves Rosseel (\href{https://orcid.org/0000-0002-4129-4477}{ORCID})
-  \item Oliver Kemp
-  \item Ioannis Kosmidis (\href{https://orcid.org/0000-0003-1556-0302}{ORCID})
+  \item Yves Rosseel (\href{https://orcid.org/0000-0002-4129-4477}{ORCID}) [contributor]
+  \item Oliver Kemp [contributor]
+  \item Ioannis Kosmidis (\href{https://orcid.org/0000-0003-1556-0302}{ORCID}) [contributor]
 }
 
 }
