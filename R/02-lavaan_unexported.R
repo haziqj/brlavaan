@@ -1,0 +1,16 @@
+lav_model_gradient <-
+  utils::getFromNamespace("lav_model_gradient", "lavaan")
+lav_model_hessian <-
+  utils::getFromNamespace("lav_model_hessian", "lavaan")
+lav_model_information_augment_invert <-
+  utils::getFromNamespace("lav_model_information_augment_invert", "lavaan")
+lav_model_information_expected <-
+  utils::getFromNamespace("lav_model_information_expected", "lavaan")
+lav_model_information_firstorder <-
+  utils::getFromNamespace("lav_model_information_firstorder", "lavaan")
+lav_model_information_observed <-
+  utils::getFromNamespace("lav_model_information_observed", "lavaan")
+lav_mvnorm_loglik_samplestats <-
+  utils::getFromNamespace("lav_mvnorm_loglik_samplestats", "lavaan")
+lav_scores_ml <-
+  utils::getFromNamespace("lav_scores_ml", "lavaan")
