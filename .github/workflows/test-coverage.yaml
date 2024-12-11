@@ -1,6 +1,5 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
-name: 'Code coverage'
 on:
   # push:
   #   branches: [main, master]
@@ -8,7 +7,7 @@ on:
   #   branches: [main, master]
   workflow_dispatch:
 
-name: test-coverage.yaml
+name: 'Code coverage'
 
 permissions: read-all
 
