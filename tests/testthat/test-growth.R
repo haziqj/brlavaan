@@ -32,8 +32,9 @@ tibble::tibble(
   ML = coef(fit_ML),
   eRBM = coef(fit_eRBM),
   iRBM = coef(fit_iRBM),
-  iRBMp = coef(fit_iRBMp),
-  huber = coef(fit_huber)
+  iRBMp_ridge = coef(fit_iRBMp),
+  iRBMp_ridgeb = coef(fit_iRBMpb),
+  iRBMp_huber = coef(fit_huber)
 )
 
 N <- nrow(dat)
