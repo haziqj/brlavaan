@@ -17,7 +17,7 @@
 #'   treat them as ordinal variables.
 #' @param estimator The estimator to use. **Currently only "ML" is supported.**
 #' @param estimator.args A list containing RBM arguments. Possible arguments are
-#'   - `rbm`: The type of RBM method to use. One of `FALSE`, `"eRBM"`, or `"iRBM"`.
+#'   - `rbm`: The type of RBM method to use. One of `"none"`, `"explicit"`, or `"implicit"`.
 #'   - `plugin_penalty`: The type of penalty to use. One of `NULL`, `"pen_ridge"`, or `"pen_ridge_bound"`.
 #' @param information The type of information matrix to use for both the bias
 #'   reduction method and the calculation of standard errors. One of "expected",
@@ -36,7 +36,7 @@ brsem <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
+    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -64,7 +64,7 @@ brcfa <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
+    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
 ) {
@@ -92,7 +92,7 @@ brgrowth <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "iRBM", plugin_penalty = pen_huber),
+    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
     information = c("expected", "observed", "first.order"),
     ...
   ) {
