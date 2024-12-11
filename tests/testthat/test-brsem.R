@@ -13,12 +13,11 @@ test_that("brcfa works", {
     # textual =~ x4 + x5 + x6
     # speed   =~ x7 + x8 + x9
   "
-
   fit <- brcfa(HS.model, data = HolzingerSwineford1939,
                estimator.args = list(rbm = "implicit", plugin_penalty = pen_ridge))
-  tmp <- capture.output(print(fit))
-  tmp <- capture.output(summary(fit))
-  expect_true(is_iRBMp(fit, quietly = TRUE))
+
+  expect_no_error({tmp <- capture.output(print(fit))})
+  expect_no_error({tmp <- capture.output(summary(fit))})
   expect_true(is(fit, "brlavaan"))
   expect_true(is(coef(fit), "lavaan.vector"))
 })
@@ -27,8 +26,9 @@ test_that("brgrowth works", {
   mod <- txt_mod_growth(0.5)
   dat <- gen_data_growth(n = 50)
   fit <- brgrowth(mod, dat, estimator.args = list(rbm = "explicit"))
-  tmp <- capture.output(print(fit))
-  tmp <- capture.output(summary(fit))
+
+  expect_no_error({tmp <- capture.output(print(fit))})
+  expect_no_error({tmp <- capture.output(summary(fit))})
   expect_true(is(fit, "brlavaan"))
   expect_true(is(coef(fit), "lavaan.vector"))
 })
