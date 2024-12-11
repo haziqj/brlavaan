@@ -1,5 +1,5 @@
 ## IK + OK, 29 Oct 2024
-set.seed(291024)
+set.seed(111224)
 dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_growth(0.8)
 
