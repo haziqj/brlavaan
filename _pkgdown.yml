@@ -12,6 +12,10 @@ authors:
   Ioannis Kosmidis:
     href: http://ikosmidis.com
 
+home:
+  sidebar:
+    structure: [links, license, authors, dev]
+
 navbar:
   structure:
     left: [intro, reference, manuscript, articles, tutorials, news]
