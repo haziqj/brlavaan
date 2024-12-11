@@ -23,6 +23,8 @@ pen_huber(x, lb, ub, thres = 1, call = FALSE, ...)
 \item{lb}{The lower bounds for components of \code{x}.}
 
 \item{ub}{The upper bounds for components of \code{x}.}
+
+\item{thres}{The threshold for the Huber penalty.}
 }
 \value{
 A single numeric value, which is the penalty value.
