@@ -15,6 +15,7 @@ permissions: read-all
 
 jobs:
   pkgdown:
+    timeout-minutes: 10    
     runs-on: macos-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
