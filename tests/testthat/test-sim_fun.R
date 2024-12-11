@@ -1,3 +1,5 @@
+future::plan(future::sequential)
+
 test_that("Two-factor simulation function works", {
   expect_no_error({
     res <- sim_fun(
