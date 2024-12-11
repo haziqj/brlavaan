@@ -57,7 +57,7 @@ mod <- "
 "
 fit <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit)
-#> brlavaan 0.0.2.9004 ended normally after 71 iterations
+#> brlavaan 0.0.2.9006 ended normally after 71 iterations
 #> 
 #>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT
@@ -131,24 +131,24 @@ summary(fit)
 #>    .dem65             0.222    0.231    0.961    0.336
 ```
 
-By default, the implicit reduced bias ML estimator (`iRBM`) is used. To
-switch to the *explicit* RBM, or to add a plugin penalty term, specify
-these as a list to the `estimator.args` argument.
+By default, the implicit reduced bias ML estimator is used. To switch to
+the *explicit* RBM, or to add a plugin penalty term, specify these as a
+list to the `estimator.args` argument.
 
 ``` r
 # for explicit RBM
 fit <- brsem(model = mod, data = PoliticalDemocracy, 
-             estimator.args = list(rbm = "eRBM"))  
+             estimator.args = list(rbm = "explicit"))  
 # for implicit RBM with plugin penalty
 fit <- brsem(model = mod, data = PoliticalDemocracy, 
-             estimator.args = list(rbm = "iRBM", 
+             estimator.args = list(rbm = "implicit", 
                                    plugin_penalty = brlavaan:::pen_huber))
 ```
 
-To switch off the bias reduction, set `rbm = FALSE`:
+To switch off the bias reduction, set `rbm = "none"`:
 
 ``` r
-fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = FALSE))
+fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = "none"))
 fit_lav <-   sem(mod, PoliticalDemocracy)
 tinytest::expect_equal(
    coef(fit_ML),
