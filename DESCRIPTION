@@ -26,6 +26,7 @@ Imports:
     cli,
     covsim,
     furrr,
+    future,
     lifecycle,
     MASS,
     methods,

@@ -9,5 +9,7 @@
 library(testthat)
 library(brlavaan)
 library(purrr)
+library(furrr)
+future::plan(future::sequential)
 
 test_check("brlavaan")
