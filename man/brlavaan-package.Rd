@@ -11,7 +11,9 @@ Apply empirical bias reduced methods to fit a variety of latent variable models,
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://github.com/haziqj/sem-bias}
   \item \url{https://haziqj.ml/sem-bias/}
+  \item Report bugs at \url{https://github.com/haziqj/sem-bias/issues}
 }
 
 }
