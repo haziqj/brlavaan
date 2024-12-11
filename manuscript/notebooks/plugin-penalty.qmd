@@ -1,7 +1,8 @@
 ---
 title: Plugin penalties
 author: Haziq Jamil
-page-layout: full
+grid:
+  sidebar-width: 0px
 ---
 
 ```{r}
@@ -10,7 +11,6 @@ library(tidyverse)
 library(brlavaan)
 theme_set(theme_bw())
 ```
-
 
 ## Introduction
 
@@ -26,7 +26,7 @@ Here are the penalty functions:
 $$
 f(x) = \Vert x - x^* \Vert^2
 $$
-
+   Here, $x^*$ could be ideal parameter values, or could be used in conjunction with bounds where $x^*$ is the midpoint of the bounds.
 
 2. **Ridge penalty with bounds $l \leq x \leq u$**
 $$
