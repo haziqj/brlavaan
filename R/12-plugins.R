@@ -4,6 +4,7 @@
 #' @param lb The lower bounds for components of `x`.
 #' @param ub The upper bounds for components of `x`.
 #' @param call Logical. If `TRUE`, return the name of the penalty function.
+#' @param thres The threshold for the Huber penalty.
 #' @param ... Additional arguments which may be called. See Details.
 #'
 #' @return A single numeric value, which is the penalty value.
