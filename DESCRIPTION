@@ -1,0 +1,37 @@
+Package: brlavaan
+Title: Bias-Reduced Latent Variable Analysis
+Version: 0.0.2.9006
+Authors@R: c(
+    person("Haziq", "Jamil", , "haziq.jamil@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-3298-1010")),
+    person("Yves", "Rosseel", role = "aut",
+           comment = c(ORCID = "0000-0002-4129-4477")),           
+    person("Oliver", "Kemp", role = "aut"),
+    person("Ioannis", "Kosmidis", role = "aut",
+           comment = c(ORCID = "0000-0003-1556-0302"))
+  )
+Description: Apply empirical bias reduced methods to fit a variety of latent variable models, including confirmatory factor analysis, structural equation modelling, and latent growth curve models.
+License: GPL (>= 3)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: 
+    lavaan
+URL: https://haziqj.ml/sem-bias/
+Imports: 
+    cli,
+    covsim,
+    furrr,
+    lifecycle,
+    MASS,
+    methods,
+    mvtnorm,
+    numDeriv,
+    purrr,
+    stats,
+    stringr,
+    tibble,
+    utils

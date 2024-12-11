@@ -1,7 +1,5 @@
 ---
 output: github_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -9,37 +7,83 @@ editor_options:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
 )
-library(tidyverse)
-library(lavaan)
-library(semPlot)
-library(semptools)
-library(kableExtra)
-theme_set(theme_bw())
 ```
 
-# Empirical bias reducing methods for Structural Equation Models
+# brlavaan
 
 <!-- badges: start -->
-
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![R-CMD-check.yaml](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg?branch=package)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
+[![codecov](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg?token=00UGXV3BMK)](https://codecov.io/gh/haziqj/sem-bias)
 <!-- badges: end -->
 
-Last modified: `r Sys.Date()`
+Apply empirical bias reduced methods to fit a variety of latent variable models, including confirmatory factor analysis, structural equation modelling, and latent growth curve models.
 
-# Growth model a (D&R 2022)
+## Installation
 
-```{r}
-#| echo: false
-#| fig-height: 7
-load("R/DR_sims.RData")
-p_growth
+You can install the development version of brlavaan from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("haziqj/sem-bias@package")
 ```
 
-# Two factor SEM b (D&R 2022)
+## Example
+
+Here's the beloved classic example -- Bollen (1989)'s political democracy example.
+
+![](https://lavaan.ugent.be/figures/sem.png)
+
+
+```{r example}
+library(brlavaan)
+data("PoliticalDemocracy", package = "lavaan")
+mod <- "
+  # latent variables 
+  ind60 =~ x1 + x2 + x3 
+  dem60 =~ y1 + y2 + y3 + y4 
+  dem65 =~ y5 + y6 + y7 + y8 
+   
+  # regressions
+  dem60 ~ ind60 
+  dem65 ~ ind60 + dem60 
+  
+  # residual covariances 
+  y1 ~~ y5
+  y2 ~~ y4 + y6 
+  y3 ~~ y7 
+  y4 ~~ y8
+  y6 ~~ y8
+"
+fit <- brsem(model = mod, data = PoliticalDemocracy) 
+summary(fit)
+```
+
+By default, the implicit reduced bias ML estimator (`iRBM`) is used. 
+To switch to the *explicit* RBM, or to add a plugin penalty term, specify these as a list to the `estimator.args` argument.
+
+```r
+# for explicit RBM
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "eRBM"))  
+# for implicit RBM with plugin penalty
+fit <- brsem(model = mod, data = PoliticalDemocracy, 
+             estimator.args = list(rbm = "iRBM", 
+                                   plugin_penalty = brlavaan:::pen_huber))
+```
+
+To switch off the bias reduction, set `rbm = FALSE`:
 
 ```{r}
-#| echo: false
-#| fig-height: 7
-p_twofac
+fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = FALSE))
+fit_lav <-   sem(mod, PoliticalDemocracy)
+tinytest::expect_equal(
+   coef(fit_ML),
+   coef(fit_lav),
+   tolerance = 1e-4
+)
 ```
