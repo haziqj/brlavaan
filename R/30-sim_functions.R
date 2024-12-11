@@ -72,27 +72,27 @@ sim_fun <- function(
       )
 
       # ML
-      fitsemargs$estimator.args <- list(rbm = FALSE, plugin_penalty = NULL)
+      fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
       fit_ML    <- do.call(fit_sem, fitsemargs)
 
       # eRBM
-      fitsemargs$estimator.args <- list(rbm = "eRBM", plugin_penalty = NULL)
+      fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_eRBM  <- do.call(fit_sem, fitsemargs)
 
       # iRBM
-      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = NULL)
+      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
       fit_iRBM  <- do.call(fit_sem, fitsemargs)
 
       # iRBMp ridge
-      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_ridge)
+      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = pen_ridge)
       fit_iRBMpridge <- do.call(fit_sem, fitsemargs)
 
       # iRBMp ridge bounded
-      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_ridge_bound)
+      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = pen_ridge_bound)
       fit_iRBMpridgeb <- do.call(fit_sem, fitsemargs)
 
       # iRBMp Huber
-      fitsemargs$estimator.args <- list(rbm = "iRBM", plugin_penalty = pen_huber)
+      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = pen_huber)
       fit_iRBMphuber <- do.call(fit_sem, fitsemargs)
 
       tibble::tibble(

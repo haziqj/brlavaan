@@ -8,5 +8,6 @@
 
 library(testthat)
 library(brlavaan)
+library(purrr)
 
 test_check("brlavaan")
