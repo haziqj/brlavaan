@@ -443,7 +443,7 @@ fit_sem <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = FALSE, plugin_penalty = NULL),
+    estimator.args = list(rbm = "none", plugin_penalty = NULL),
     information = c("expected", "observed", "first.order"),
     debug = FALSE,
     lavfun = "sem",
@@ -469,7 +469,6 @@ fit_sem <- function(
 
   # Catch old arguments
   if ("method" %in% names(lavargs)) {
-    # cli::cli_alert_warning("RBM options are now specified in 'estimator.args' list  instead of 'method' argument.")
     lifecycle::deprecate_warn(
       when = "0.0.1",
       what = I("The `method` argument"),
@@ -478,9 +477,11 @@ fit_sem <- function(
 
     rbm <- lavargs$method
     plugin_penalty <- NULL
-    if (rbm == "ML") rbm <- FALSE
-    if (rbm == "iRBMp") {
-      rbm <- "iRBM"
+    if (rbm == "ML") rbm <- "none"
+    if (rbm == "eRBM" | rbm == "eBRM") rbm <- "explicit"
+    if (rbm == "iRBM" | rbm == "iBRM") rbm <- "implicit"
+    if (rbm == "iRBMp" | rbm == "iBRMp") {
+      rbm <- "implicit"
       plugin_penalty <- pen_huber
       cli::cli_alert_warning("Using the Huber penalty for iRBM.")
     }
@@ -489,12 +490,13 @@ fit_sem <- function(
     rbm <- estimator.args$rbm
     plugin_penalty <- estimator.args$plugin_penalty
   }
-  if (!isFALSE(rbm)) rbm <- match.arg(rbm, c("eRBM", "iRBM"))
+  if (is.null(rbm) | isFALSE(rbm)) rbm <- "none"
+  rbm <- match.arg(rbm, c("none", "explicit", "implicit"))
 
   # Which method?
-  is_ML     <- isFALSE(rbm)
-  is_eRBM   <- rbm == "eRBM"
-  is_iRBM   <- rbm == "iRBM"
+  is_ML     <- rbm == "none"
+  is_eRBM   <- rbm == "explicit"
+  is_iRBM   <- rbm == "implicit"
 
   fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   lavmodel       <- fit0@Model

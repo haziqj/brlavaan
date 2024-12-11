@@ -36,32 +36,39 @@ NULL
 #' @export
 is_ML <- function(x) {
   list2env(get_estimator.args(x), environment())
-  isFALSE(rbm)
+  rbm == "none"
 }
 
 #' @rdname predicates
 #' @export
 is_eRBM <- function(x) {
   list2env(get_estimator.args(x), environment())
-  rbm == "eRBM"
+  rbm == "explicit"
 }
 
 #' @rdname predicates
 #' @export
 is_iRBM <- function(x) {
   list2env(get_estimator.args(x), environment())
-  rbm == "iRBM" & is.null(plugin_penalty)
+  rbm == "implicit" & is.null(plugin_penalty)
 }
 
 #' @rdname predicates
 #' @export
 is_iRBMp <- function(x, quietly = FALSE) {
   list2env(get_estimator.args(x), environment())
+
+  out <- rbm == "implicit" & !is.null(plugin_penalty)
+
+  rbm <- paste0(
+    toupper(substr(rbm, 1, 1)),
+    tolower(substr(rbm, 2, nchar(rbm)))
+  )
   plugin_penalty <- plugin_penalty(call = TRUE)
 
   if (isFALSE(quietly))
-    cli::cli_alert_info("is_iRBMp: rbm = {rbm}, plugin_penalty = {plugin_penalty}")
-  out <- rbm == "iRBM" & !is.null(plugin_penalty)
+    cli::cli_alert_info("is_iRBMp: RBM = {rbm}, Plugin penalty = {plugin_penalty}")
+
   attr(out, "plugin_penalty") <- plugin_penalty
   out
 }
