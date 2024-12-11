@@ -32,6 +32,7 @@ loglik <- function(
     eigen(lavimplied$cov[[1]], symmetric = TRUE, only.values = TRUE)$values,
     silent = TRUE
   )
+  # Sigma <- lavimplied$cov[[1]]  # THIS IS THE "current" Sigma
 
   if (any(eigvals < 1e-07) | inherits(eigvals, "try-error")) {
     # Return huge number, to signal the nlminb() optimizer something is not
