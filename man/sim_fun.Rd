@@ -11,7 +11,8 @@ sim_fun(
   n = 25,
   nsimu = 4,
   lavsim = FALSE,
-  lavfun = "sem"
+  lavfun = "sem",
+  whichsims = c("ML", "eRBM", "iRBM")
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ sim_fun(
 function.}
 
 \item{lavfun}{The lavaan function to use. Default is "sem".}
+
+\item{whichsims}{A character vector with the estimators to use. Possible
+values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
 }
 \value{
 A list with two elements. The first element is a data frame with the
@@ -48,8 +52,8 @@ In our paper, we report on the results of the following simulation study. For
 each of the two models a) growth curve model and b) two-factor model, we
 generate a sample size of \code{n} observations from a distribution \code{dist} with
 reliability \code{rel}. We then fit the model using the maximum likelihood (\code{ML})
-estimator, the explicit RBM estimator (\code{eRBM}), the implicit RBM
-estimator (\code{iRBM}), and the implicit RBM estimator with plug-in penalties
-(\code{iRBMp_x}). We repeat this process \code{nsimu} times and report the results in
-terms of bias, standard error, and computation time.
+estimator, the explicit RBM estimator (\code{eRBM}), the implicit RBM estimator
+(\code{iRBM}), and the implicit RBM estimator with plug-in penalties (\code{iRBMp_x}).
+We repeat this process \code{nsimu} times and report the results in terms of bias,
+standard error, and computation time.
 }
