@@ -1,9 +1,13 @@
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    model = c("twofac"),
+    model = "twofac",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
+    # dist = "Non-normal",
+    # model = "twofac",
+    # rel = 0.5,
+    # n = 20
   ) |>
   rownames_to_column(var = "simid")
 
@@ -27,13 +31,5 @@ for (i in seq_len(nrow(simu_id))) {
   cat("\n")
 }
 
-# res_twofac <-
-#   do.call(rbind, lapply(simu_res, \(x) x$simu_res)) |>
-#   mutate(
-#     method = factor(method, levels = c("ML", "eBRM", "iBRM", "iBRMp")),
-#     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-#     rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
-#     n = factor(n)
-#   )
 simu_res_twofac <- simu_res
 save(simu_res_twofac, file = "experiments/simu_res_twofac.RData")
