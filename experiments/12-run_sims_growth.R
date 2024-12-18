@@ -4,6 +4,10 @@ simu_id <-
     model = "growth",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000),
+    # dist = "Normal",
+    # model = "growth",
+    # rel = 0.8,
+    # n = 15
   ) |>
   rownames_to_column(var = "simid")
 
@@ -27,14 +31,5 @@ for (i in seq_len(nrow(simu_id))) {
   cat("\n")
 }
 
-# res_growth <-
-#   do.call(rbind, lapply(simu_res, \(x) x$simu_res)) |>
-#   mutate(
-#     method = factor(method, levels = c("ML", "eRBM", "iRBM", "iRBMp")),
-#     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-#     model = factor(model, labels = c("Growth model", "Two factor model")),
-#     rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
-#     n = factor(n)
-#   )
 simu_res_growth <- simu_res
 save(simu_res_growth, file = "experiments/simu_res_growth.RData")
