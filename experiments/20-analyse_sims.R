@@ -27,9 +27,10 @@ res <-
   drop_na() |>
   mutate(
     model = factor(model, labels = c("Growth model", "Two factor model")),
-    estimator = factor(estimator, levels = c("ML", "eBRM", "iBRM", "iBRMp")),
+    method = factor(method, levels = c("ML", "eRBM", "iRBM")),
     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    rel = factor(rel, levels = c(0.8, 0.5), labels = c("Rel = 0.8", "Rel = 0.5")),
+    # rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
+    rel = factor(rel),
     n = factor(n),
     covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
   )
@@ -43,13 +44,13 @@ tab1 <-
   res |>
   summarise(
     fail = any(!converged),
-    .by = c(simu, dist, model, n, rel, estimator)
+    .by = c(simu, dist, model, n, rel, method)
   ) |>
   summarise(
     count = sum(fail),
-    .by = c(model, rel, n, estimator, dist)
+    .by = c(model, rel, n, method, dist)
   ) |>
-  pivot_wider(names_from = c(dist, estimator), values_from = count) |>
+  pivot_wider(names_from = c(dist, method), values_from = count) |>
   gt(
     rowname_col = "n",
     groupname_col = c("model", "rel")
@@ -68,11 +69,10 @@ tab1 <-
   ) |>
   cols_label(
     ends_with("ML") ~ "ML",
-    ends_with("eBRM") ~ "eBRM",
-    ends_with("iBRM") ~ "iBRM",
-    ends_with("iBRMp") ~ "iBRMp"
+    ends_with("eRBM") ~ "eBR",
+    ends_with("iRBM") ~ "iBR"
   ) |>
-  tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)"))
+  tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)")); tab1
 
 ## ----- Growth & Two-factor results -------------------------------------------
 source(here::here("experiments/21-analysis_growth.R"))
