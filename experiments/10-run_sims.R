@@ -3,7 +3,7 @@ library(tidyverse)
 library(furrr)
 theme_set(theme_bw())
 
-ncores <- future::availableCores() - 1
+ncores <- future::availableCores() - 2
 future::plan(multisession, workers = ncores)
 B <- 1000  # Number of simulations
 
