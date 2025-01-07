@@ -1,1 +1,75 @@
-{{< lipsum 1 >}}
+---
+execute:
+  echo: false
+  message: false
+  warning: false
+html-table-processing: none
+lightbox: true
+---
+
+
+```{r}
+library(tidyverse)
+library(gt)
+theme_set(theme_bw())
+
+here::i_am("manuscript/_simulation.qmd")
+load(here::here("experiments/tables_figures.RData"))
+```
+
+- Comment on convergence issues.
+- Timing for ibr/ebr methods--big selling point compared to resampling methods.
+- Trim outliers (upper and lower 2.5%)
+
+### Growth Curve Model
+
+::: {.callout-note}
+#### Highlights
+
+- iRBM finding it tough to correctly estimate the latent variances. Positive bias seen, but negative bias on the covariance parameter.
+- In contrast, eRBM performs quite well, offering significant improvement over ML especially in low reliability settings.
+- 
+:::
+
+Under normal data conditions with Rel = 0.8, both explicit and implicit bias reduction methods (eRBM and iRBM, respectively) demonstrate reduced bias relative to maximum likelihood (ML) estimation, particularly for small sample sizes ($n < 50$). The implicit method (iRBM) exhibits slightly higher bias than explicit methods in some cases, especially under non-normal conditions and for parameters $\Psi_{22}$ and $\Psi_{12}$, indicating sensitivity to deviations from normality. In contrast, the bootstrap and REML methods show consistent performance across all scenarios but with negligible improvement over ML in most cases.
+
+The relative mean bias results in Figure 2 reveal similar patterns to the median bias. Explicit bias reduction (eRBM) outperforms implicit methods (iRBM) across all sample sizes, especially under non-normal conditions with Rel = 0.5. The jackknife method demonstrates moderate improvements for smaller sample sizes but remains less effective than eRBM. Notably, the explicit method maintains superior performance even as sample size increases, suggesting its robustness to varying data conditions.
+
+As shown in Figure 3, the relative RMSE results highlight the efficiency trade-offs between methods. Explicit bias reduction (eRBM) achieves the lowest RMSE for smaller sample sizes, particularly for parameters with high variability ($\Psi_{22}$ and $\Psi_{12}$). The implicit method (iRBM), while reducing bias, incurs slightly higher RMSE compared to eRBM for $n < 50$. For larger sample sizes ($n \geq 100$), all methods converge towards similar RMSE values, with ML showing minimal relative inefficiency. Bootstrap methods provide marginal improvements in RMSE but fail to outperform explicit bias reduction techniques.
+
+
+```{r}
+#| tbl-cap: 'Results (trimmed) for the growth curve model simulations (Reliability = 0.80)'
+tab2
+```
+
+```{r}
+#| tbl-cap: 'Results (trimmed) for the growth curve model simulations (Reliability = 0.50)'
+tab3
+```
+
+```{r}
+#| label: fig-growth-medbias
+#| fig-cap: Median bias 
+fig3
+```
+
+```{r}
+#| label: fig-growth-meanbias
+#| fig-cap: Mean bias
+fig4
+```
+
+
+```{r}
+#| label: fig-growth-rmse
+#| fig-cap: RMSE relative to ML
+fig5
+```
+
+```{r}
+#| tbl-cap: 'Coverage'
+tab4
+```
+
+### Two-Factor Model

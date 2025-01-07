@@ -58,3 +58,5 @@ experiments/GCM_est_combined_final.RData
 experiments/2FSEM_est_combined_final.RData
 */_freeze/*
 */site_libs/*
+manuscript/*_files*
+manuscript/_*.html

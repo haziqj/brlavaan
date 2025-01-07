@@ -2,6 +2,7 @@ library(tidyverse)
 theme_set(theme_bw())
 library(gt)
 library(latex2exp)
+here::i_am("experiments/20-analyse_sims.R")
 load(here::here("experiments/simu_res_growth.RData"))
 load(here::here("experiments/simu_res_twofac.RData"))
 
@@ -29,8 +30,7 @@ res <-
     model = factor(model, labels = c("Growth model", "Two factor model")),
     method = factor(method, levels = c("ML", "eRBM", "iRBM")),
     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    # rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
-    rel = factor(rel),
+    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
     n = factor(n),
     covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
   )
@@ -72,7 +72,15 @@ tab1 <-
     ends_with("eRBM") ~ "eBR",
     ends_with("iRBM") ~ "iBR"
   ) |>
-  tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)")); tab1
+  tab_caption(md("`nlminb` non-convergence counts (maximum = 1000)"))
+
+timing <-
+  res |>
+  summarise(
+    timing = mean(timing),
+    .by = c(model, n, method)
+  ) |>
+  pivot_wider(names_from = method, values_from = timing)
 
 ## ----- Growth & Two-factor results -------------------------------------------
 source(here::here("experiments/21-analysis_growth.R"))
@@ -82,5 +90,6 @@ source(here::here("experiments/22-analysis_twofac.R"))
 save(
   tab1, tab2, tab3, tab4, tab5, tab6, tab7,
   fig3, fig4, fig5, fig6, fig7, fig8,
+  timing,
   file = here::here("experiments/tables_figures.RData")
 )

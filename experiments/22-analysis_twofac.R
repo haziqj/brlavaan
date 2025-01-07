@@ -2,11 +2,11 @@
 
 # From D&R
 load("experiments/2FSEM_est_combined_final.RData")
-x <-
+res_dr <-
   as_tibble(Results) |>
   select(
     simu = iteration,
-    estimator = method,
+    method = method,
     dist,
     n = nobs,
     rel,
@@ -14,50 +14,32 @@ x <-
     `est_fx~~fx`,
     `est_fy~~fy`,
     `est_fy~fx`,
-    `est_fx=~x2`
-  ) |>
-  mutate(id = row_number()) |>
-  pivot_longer(
-    cols = starts_with("est_"),
-    names_to = "param",
-    values_to = "est"
-  ) |>
-  mutate(param = gsub("est_", "", param)) |>
-  filter(estimator %in% c("JB", "BB", "Ozenne", "REML"))
-y <-
-  as_tibble(Results) |>
-  select(
-    simu = iteration,
-    estimator = method,
-    dist,
-    n = nobs,
-    rel,
+    `est_fx=~x2`,
     `se_y1~~y1`,
     `se_fx~~fx`,
     `se_fy~~fy`,
     `se_fy~fx`,
     `se_fx=~x2`
   ) |>
-  mutate(id = row_number()) |>
   pivot_longer(
-    cols = starts_with("se_"),
-    names_to = "param",
-    values_to = "se"
+    cols = c(starts_with("est_"), starts_with("se_")),
+    names_to = c(".value", "param"),
+    names_sep = "_"
   ) |>
-  mutate(param = gsub("se_", "", param)) |>
-  filter(estimator %in% c("JB", "BB", "Ozenne", "REML"))
-res_dr <- left_join(x, y) |> select(-id)
-rm(x)
-rm(y)
+  filter(method %in% c("JB", "BB", "Ozenne"))
 
 levels(res_dr$dist) <- c("Kurtosis", "Non-normal", "Normal")
 res_dr$dist <- factor(res_dr$dist, levels = c("Normal", "Kurtosis", "Non-normal"))
 res_dr$param <- gsub("est_", "", res_dr$param)
 levels(res_dr$rel) <- c("Rel = 0.5", "Rel = 0.8")
 res_dr$rel <- factor(res_dr$rel, levels = c("Rel = 0.8", "Rel = 0.5"))
-levels(res_dr$estimator)[c(2, 3, 4, 8)] <- c(
-  "Jackknife", "Bootstrap", "Ozenne et al.", "REML"
-)
+
+tmp_lev <- levels(res_dr$method)
+tmp_lev <- gsub("JB", "Jackknife", tmp_lev)
+tmp_lev <- gsub("BB", "Bootstrap", tmp_lev)
+tmp_lev <- gsub("Ozenne", "Ozenne et al.", tmp_lev)
+tmp_lev <- gsub("REML", "REML", tmp_lev)
+levels(res_dr$method) <- tmp_lev
 
 res_dr <-
   left_join(
@@ -82,7 +64,7 @@ tab_twofac <-
   res |>
   filter(model == "Two factor model") |>
   filter(param %in% twofacpars) |>
-  select(simu, param, estimator, dist, n, rel, est, truth, covered) |>
+  select(simu, param, method, dist, n, rel, est, truth, covered) |>
   bind_rows(res_dr) |>
   mutate(param = factor(param, levels = twofacpars)) |>
   summarise(
@@ -91,14 +73,14 @@ tab_twofac <-
     rmse = sqrt(mean((est - truth) ^ 2, na.rm = TRUE, trim = 0.05)),
     truth = first(truth),
     coverage = mean(covered, na.rm = TRUE, trim = 0.05),
-    .by = c(param, rel, estimator, dist, n)
+    .by = c(param, rel, method, dist, n)
   ) |>
   mutate(
     rel_mean_bias = mean_bias / truth,
     rel_median_bias = median_bias / truth
   ) |>
   select(param:n, rel_mean_bias, rel_median_bias, rmse, coverage) |>
-  arrange(param, estimator)
+  arrange(param, method)
 
 tab5 <-
   tab_twofac |>
@@ -147,7 +129,7 @@ tab5 <-
     ends_with("50") ~ "50",
     ends_with("100") ~ "100",
     ends_with("1000") ~ "1000",
-    "estimator" ~ "Estimator"
+    "method" ~ "Estimator"
   ) |>
   fmt_number(decimals = 2) |>
   fmt_markdown(columns = 1) |>
@@ -202,7 +184,7 @@ tab6 <-
     ends_with("50") ~ "50",
     ends_with("100") ~ "100",
     ends_with("1000") ~ "1000",
-    "estimator" ~ "Estimator"
+    "method" ~ "Estimator"
   ) |>
   fmt_number(decimals = 2) |>
   fmt_markdown(columns = 1) |>
@@ -225,13 +207,14 @@ fig6 <-
     )
   ) |>
   filter(dist != "Kurtosis") |>
-  ggplot(aes(x = as.numeric(n), y = rel_median_bias, col = estimator)) +
+  ggplot(aes(x = as.numeric(n), y = rel_median_bias, col = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
-  geom_line(linewidth = 0.8) +
+  geom_line() +
   geom_point(size = 1) +
   facet_grid(param ~ rel * dist, labeller = labeller(param = label_parsed)) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  ggsci::scale_colour_d3() +
+  scale_colour_brewer(palette = "Dark2") +
+  guides(colour = guide_legend(nrow = 1)) +
   labs(
     x = "Sample size (n)",
     y = "Relative median bias",
@@ -255,13 +238,14 @@ fig7 <-
     )
   ) |>
   filter(dist != "Kurtosis") |>
-  ggplot(aes(x = as.numeric(n), y = rel_mean_bias, col = estimator)) +
+  ggplot(aes(x = as.numeric(n), y = rel_mean_bias, col = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
-  geom_line(linewidth = 0.8) +
+  geom_line() +
   geom_point(size = 1) +
   facet_grid(param ~ rel * dist, labeller = labeller(param = label_parsed)) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  ggsci::scale_colour_d3() +
+  scale_colour_brewer(palette = "Dark2") +
+  guides(colour = guide_legend(nrow = 1)) +
   labs(
     x = "Sample size (n)",
     y = "Relative mean bias",
@@ -275,7 +259,7 @@ fig8 <-
   left_join(
     tab_twofac,
     tab_twofac |>
-      filter(estimator == "ML") |>
+      filter(method == "ML") |>
       select(param, rel, dist, n, rmse_ML = rmse)
   ) |>
   mutate(
@@ -292,13 +276,14 @@ fig8 <-
     )
   ) |>
   filter(dist != "Kurtosis") |>
-  ggplot(aes(x = as.numeric(n), y = rel_rmse, col = estimator)) +
+  ggplot(aes(x = as.numeric(n), y = rel_rmse, col = method)) +
   geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
-  geom_line(linewidth = 0.8) +
+  geom_line() +
   geom_point(size = 1) +
   facet_grid(param ~ rel * dist, labeller = labeller(param = label_parsed)) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  ggsci::scale_colour_d3() +
+  scale_colour_brewer(palette = "Dark2") +
+  guides(colour = guide_legend(nrow = 1)) +
   labs(
     x = "Sample size (n)",
     y = "Relative RMSE (with respect to ML)",
@@ -318,7 +303,7 @@ tab7 <-
   ))) |>
   filter(dist != "Kurtosis") |>
   pivot_wider(
-    id_cols = c(param, estimator),
+    id_cols = c(param, method),
     names_from = c(dist, rel, n),
     values_from = c(coverage)
   ) |>
@@ -348,7 +333,7 @@ tab7 <-
     ends_with("50") ~ "50",
     ends_with("100") ~ "100",
     ends_with("1000") ~ "1000",
-    "estimator" ~ "Estimator"
+    "method" ~ "Estimator"
   ) |>
   fmt_number(decimals = 2) |>
   fmt_markdown(columns = 1) |>
