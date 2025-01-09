@@ -48,6 +48,7 @@ jobs:
             any::gt
             any::here
             any::flextable
+            any::ggh4x
           needs: website
 
       - name: Build site
