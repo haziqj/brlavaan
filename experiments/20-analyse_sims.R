@@ -5,6 +5,15 @@ library(latex2exp)
 here::i_am("experiments/20-analyse_sims.R")
 load(here::here("experiments/simu_res_growth.RData"))
 load(here::here("experiments/simu_res_twofac.RData"))
+mycols <- c(
+  ML = "#E31A1C",
+  eRBM = "#A6CEE3",
+  iRBM = "#1F78B4",
+  Jackknife = "#B2DF8A",
+  Bootstrap = "#33A02C",
+  `Ozenne et al.` = "#FDBF6F",
+  REML = "#FF7F00"
+)
 
 ## ----- Download D&R sims -----------------------------------------------------
 dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
@@ -47,7 +56,7 @@ tab1 <-
     .by = c(simu, dist, model, n, rel, method)
   ) |>
   summarise(
-    count = sum(fail),
+    count = sum(!fail),
     .by = c(model, rel, n, method, dist)
   ) |>
   pivot_wider(names_from = c(dist, method), values_from = count) |>
@@ -91,5 +100,7 @@ save(
   tab1, tab2, tab3, tab4, tab5, tab6, tab7,
   fig3, fig4, fig5, fig6, fig7, fig8,
   timing,
+  fig_growth_dis, fig_growth_perf,
+  fig_twofac_dis, fig_twofac_perf,
   file = here::here("experiments/tables_figures.RData")
 )
