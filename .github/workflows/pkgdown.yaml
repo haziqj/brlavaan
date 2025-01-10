@@ -49,6 +49,7 @@ jobs:
             any::here
             any::flextable
             any::ggh4x
+            any::pkgdepR
           needs: website
 
       - name: Build site
