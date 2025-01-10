@@ -59,6 +59,7 @@ res |>
     count = sum(!fail),
     .by = c(dist:info_se)
   ) |>
+  mutate(count = count / B * 100) |>
   pivot_wider(names_from = c(method), values_from = count)
 
 # Check bias
@@ -74,3 +75,18 @@ res |>
   ) |>
   print(n = 1000)
 
+# Plot
+res |>
+  mutate(
+    bias = est - truth,
+    across(starts_with("info"), \(x) substr(x, 1, 3)),
+    n = factor(n),
+  ) |>
+  # unite("method", method, starts_with("info"), sep = "-") |>
+  summarise(
+    mean_bias = mean(bias, na.rm = TRUE, trim = 0.1),
+    .by = c(dist, model, rel, n, method, starts_with("info"))
+  ) |>
+  ggplot(aes(as.numeric(n), mean_bias, col = method)) +
+  geom_line() +
+  facet_grid(info_bias * info_se ~ info_penalty)
