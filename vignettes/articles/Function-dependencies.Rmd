@@ -1,0 +1,22 @@
+---
+title: "Function dependencies"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+A useful graph to visualize the dependencies of the `{brlavaan}` package.
+
+```{r}
+library(brlavaan)
+library(pkgdepR)
+v <- deps("brlavaan")
+print(v)
+plot(v)
+```
+
+
