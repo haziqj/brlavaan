@@ -31,7 +31,7 @@ sim_fun <- function(
     model = "twofac",
     rel = 0.8,
     n = 25,
-    nsimu = 4,
+    nsimu = 1,
     lavsim = FALSE,
     lavfun = "sem",
     whichsims = c("ML", "eRBM", "iRBM"),
@@ -91,44 +91,29 @@ sim_fun <- function(
     if ("eRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
-      fitsemargs$start <- coef(fit_list$eRBM)  # use ML as starting values
+      # fitsemargs$start <- coef(fit_list$eRBM)  # using eRBM starting values can lead to false convergence in nlminb!
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
       fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
-    # if ("iRBMp_ridge" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_ridge)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
-    # if ("iRBMp_ridge_bound" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_ridge_bound)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
-    # if ("iRBMp_huber" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_huber)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
 
     tibble::tibble(
-      simu = j,
+      sim = j,
       dist = dist,
       model = model,
       rel = rel,
       n = n,
-      info_penalty = info_penalty,
-      info_bias = info_bias,
-      info_se = info_se,
-      param = rep(names(true_vals), length(whichsims)),
-      est = unlist(lapply(fit_list, \(x) x$coefficients)),
-      se = unlist(lapply(fit_list, \(x) x$stderr)),
-      truth = rep(true_vals, nsimtypes),
-      method = rep(names(fit_list), each = length(true_vals)),
-      timing = rep(sapply(fit_list, \(x) x$timing), each = length(true_vals)),
-      converged = rep(sapply(fit_list, \(x) x$converged), each = length(true_vals))
+      info_pen = substr(info_penalty, 1, 3),
+      info_bias = substr(info_bias, 1, 3),
+      info_se = substr(info_se, 1, 3),
+      method = names(fit_list),
+      est = lapply(fit_list, \(x) x$coefficients),
+      se = lapply(fit_list, \(x) x$stderr),
+      truth = rep(list(true_vals), nsimtypes),
+      timing = sapply(fit_list, \(x) x$timing),
+      converged = sapply(fit_list, \(x) x$converged),
+      optim_message = sapply(fit_list, \(x) x$optim$message)
     )
   }
 
