@@ -5,17 +5,27 @@ mod <- txt_mod_twofac(0.8)
 
 eRBM   <- list(rbm = "explicit")
 iRBM   <- list(rbm = "implicit")
-iRBMp  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge)
-iRBMpb <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge_bound)
-huber  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_huber)
+# iRBMp  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge)
+# iRBMpb <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge_bound)
+# huber  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_huber)
 
 fit_lav    <- sem(mod, dat)
 fit_ML     <- fit_sem(mod, dat)
-fit_eRBM   <- fit_sem(mod, dat, estimator.args = eRBM, information = "observed")
-fit_iRBM   <- fit_sem(mod, dat, estimator.args = iRBM, information = "expected")
-fit_iRBMp  <- fit_sem(mod, dat, estimator.args = iRBMp, information = "expected")
-fit_iRBMpb <- fit_sem(mod, dat, estimator.args = iRBMpb, information = "expected")
-fit_huber  <- fit_sem(mod, dat, estimator.args = huber, information = "expected")
+fit_eRBM   <- fit_sem(mod, dat, estimator.args = eRBM, verbose = TRUE,
+                      info_penalty = "observed",
+                      info_bias = "observed",
+                      info_se = "observed")
+fit_iRBM   <- fit_sem(mod, dat, estimator.args = iRBM, verbose = TRUE,
+                      info_penalty = "observed",
+                      info_bias = "observed",
+                      info_se = "expected",
+                      start = coef(fit_eRBM))
+
+
+
+# fit_iRBMp  <- fit_sem(mod, dat, estimator.args = iRBMp, information = "expected")
+# fit_iRBMpb <- fit_sem(mod, dat, estimator.args = iRBMpb, information = "expected")
+# fit_huber  <- fit_sem(mod, dat, estimator.args = huber, information = "expected")
 
 N <- nrow(dat)
 p <- ncol(dat)

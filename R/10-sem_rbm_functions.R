@@ -95,6 +95,7 @@ loglik <- function(
       "Log-lik =", loglik, "|",
       "Bias term =", bias_term, "|",
       "Penalty term =", pen_term, "|",
+      "TOTAL =", loglik + bias_term - pen_term,
       "\n"
     )
   }
@@ -226,10 +227,10 @@ information_matrix <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected", "firstorder")
+    kind = c("observed", "expected", "first.order")
   ) {
 
-  kind <- match.arg(kind, c("observed", "expected", "firstorder"))
+  kind <- match.arg(kind, c("observed", "expected", "first.order"))
 
   # Unpack theta
   if (lavmodel@eq.constraints) {
@@ -260,7 +261,7 @@ information_matrix <- function(
       lavoptions = lavoptions
     )
   }
-  if (kind == "firstorder") {
+  if (kind == "first.order") {
     out <- lav_model_information_firstorder(
       lavmodel = this_lavmodel,
       lavsamplestats = lavsamplestats,
@@ -323,7 +324,7 @@ information_firstorder <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = "firstorder"
+    kind = "first.order"
   )
 }
 
@@ -334,10 +335,8 @@ penalty <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected")
+    kind
   ) {
-
-  kind <- match.arg(kind, c("observed", "expected"))
 
   e <- information_firstorder(
     theta = theta,
@@ -354,13 +353,13 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = kind
   )
-  if (lavmodel@eq.constraints) {
+  if (TRUE) {#(lavmodel@eq.constraints) {
     jinv <- lav_model_information_augment_invert(
       lavmodel = lavmodel,
       information = j,
       inverted = TRUE,
       check.pd = FALSE,
-      use.ginv = FALSE,
+      use.ginv = TRUE,
       rm.idx = integer(0L)
     )
   } else {
@@ -381,10 +380,9 @@ bias <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected")
+    kind_outside,
+    kind_inside
   ) {
-
-  kind <- match.arg(kind, c("observed", "expected"))
 
   j <- information_matrix(
     theta = theta,
@@ -392,7 +390,7 @@ bias <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = kind
+    kind = kind_outside
   )
   jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -408,7 +406,8 @@ bias <- function(
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = kind_inside
   )
 
   # Unpack A
@@ -444,18 +443,20 @@ fit_sem <- function(
     data,
     estimator = "ML",
     estimator.args = list(rbm = "none", plugin_penalty = NULL),
-    information = c("expected", "observed", "first.order"),
+    # information = c("expected", "observed", "first.order"),
+    info_penalty = c("observed", "expected"),
+    info_bias = c("observed", "expected"),
+    info_se = c("observed", "expected"),  #FIXME: this is akin to 'information' in lavaan
     debug = FALSE,
     lavfun = "sem",
     ...
   ) {
 
-  information <- match.arg(information, c("expected", "observed", "first.order"))
-  orig_info <- information
-  if (orig_info == "first.order") {
-    information <- "expected"
-    cli::cli_alert_info("Bias reduction methods will use expected information matrix, and standard error computation will use the outer product of the casewise scores.")
-  }
+  info_penalty <- match.arg(info_penalty)
+  info_bias <- match.arg(info_bias)
+  info_se <- match.arg(info_se)
+  information <- c(info_penalty, info_bias, info_se)
+  names(information) <- c("penalty", "bias", "se")
 
   # Initialise {lavaan} model object -------------------------------------------
   lavargs <- list(...)
@@ -580,7 +581,7 @@ fit_sem <- function(
       ...,
       bias_reduction = isFALSE(is_ML | is_eRBM),
       plugin_penalty = plugin_penalty,
-      kind = information,
+      kind = info_penalty,
       bounds = bounds,
       verbose = verbose
     )
@@ -609,7 +610,9 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      kind_inside = info_penalty,
+      kind_outside = info_bias
     )
   est <- res$par - b
 
@@ -623,7 +626,7 @@ fit_sem <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = orig_info
+    kind = info_se
   )
   jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -648,8 +651,7 @@ fit_sem <- function(
     converged = res$convergence == 0L,
     optim = res,
     vcov = jinv,
-    information_penalty = information,
-    information_se = orig_info,
+    information_se = information,
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,

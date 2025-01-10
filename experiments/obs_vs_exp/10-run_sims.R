@@ -1,0 +1,71 @@
+library(brlavaan)
+library(tidyverse)
+library(furrr)
+theme_set(theme_bw())
+here::i_am("experiments/obs_vs_exp/10-run_sims.R")
+
+## ----- Run simulations -------------------------------------------------------
+ncores <- future::availableCores() - 2
+future::plan(multisession, workers = ncores)
+B <- 100  # Number of simulations
+
+simu_id <-
+  expand_grid(
+    # dist = c("Normal", "Non-normal"),
+    dist = "Normal",
+    model = "twofac",
+    rel = 0.8,
+    n = c(15, 20, 50, 100, 1000),
+    info_penalty = c("observed", "expected"),
+    info_bias = c("observed", "expected"),
+    info_se = c("observed", "expected")
+  ) |>
+  rownames_to_column(var = "simid")
+
+simu_res <- vector("list", length = nrow(simu_id))
+for (i in seq_len(nrow(simu_id))) {
+  cli::cli_inform(">>> {Sys.time()} <<<\n\n[{i} / {nrow(simu_id)}] Now running {model} models ({dist}) rel = {rel}, n = {n}\n")
+  simu_res[[i]] <- sim_fun(
+    dist = simu_id$dist[i],
+    model = simu_id$model[i],
+    rel = simu_id$rel[i],
+    n = simu_id$n[i],
+    lavsim = FALSE,
+    lavfun = "sem",
+    nsimu = B,
+    info_penalty = simu_id$info_penalty[i],
+    info_bias = simu_id$info_bias[i],
+    info_se = simu_id$info_se[i]
+  )
+  cat("\n")
+  save(simu_res, file = "experiments/obs_vs_exp/ove_twofac.RData")
+}
+
+## ----- Analyse ---------------------------------------------------------------
+res <- do.call(rbind, lapply(c(simu_res), \(x) x$simu_res))
+
+# How many converged?
+res |>
+  summarise(
+    fail = any(!converged),
+    .by = c(simu, dist, model, n, rel, method, contains("info"))
+  ) |>
+  summarise(
+    count = sum(!fail),
+    .by = c(dist:info_se)
+  ) |>
+  pivot_wider(names_from = c(method), values_from = count)
+
+# Check bias
+res |>
+  mutate(bias = est - truth) |>
+  summarise(
+    mean_bias = mean(bias, na.rm = TRUE, trim = 0.05),
+    .by = c(dist:info_se, method)
+  ) |>
+  pivot_wider(
+    values_from = mean_bias,
+    names_from = method
+  ) |>
+  print(n = 1000)
+
