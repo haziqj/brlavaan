@@ -11,9 +11,8 @@ B <- 250  # Number of simulations
 
 simu_id <-
   expand_grid(
-    # dist = c("Normal", "Non-normal"),
     dist = "Normal",
-    model = "twofac",
+    model = c("twofac", "growth"),
     rel = 0.8,
     n = c(15, 20, 50, 100, 1000),
     info_penalty = c("observed", "expected"),
@@ -36,57 +35,63 @@ for (i in seq_len(nrow(simu_id))) {
     rel = rel,
     n = n,
     lavsim = FALSE,
-    lavfun = "sem",
+    lavfun = ifelse(model == "twofac", "sem", "growth"),
     nsimu = B,
     info_penalty = simu_id$info_penalty[i],
     info_bias = simu_id$info_bias[i],
     info_se = simu_id$info_se[i]
   )
   cat("\n")
-  save(simu_res, file = "experiments/obs_vs_exp/ove_twofac.RData")
+  save(simu_res, file = "experiments/obs_vs_exp/ove.RData")
 }
 
 ## ----- Analyse ---------------------------------------------------------------
-res <- do.call(rbind, lapply(c(simu_res), \(x) x$simu_res))
+# load("experiments/obs_vs_exp/ove.RData")
+simu_res |>
+  imap(\(x, idx) bind_cols(simid = idx, x$simu_res)) |>
+  bind_rows()
 
-# How many converged?
-res |>
-  summarise(
-    fail = any(!converged),
-    .by = c(simu, dist, model, n, rel, method, contains("info"))
-  ) |>
-  summarise(
-    count = sum(!fail),
-    .by = c(dist:info_se)
-  ) |>
-  mutate(count = count / B * 100) |>
-  pivot_wider(names_from = c(method), values_from = count)
-
-# Check bias
-res |>
-  mutate(bias = est - truth) |>
-  summarise(
-    mean_bias = mean(bias, na.rm = TRUE, trim = 0.05),
-    .by = c(dist:info_se, method)
-  ) |>
-  pivot_wider(
-    values_from = mean_bias,
-    names_from = method
-  ) |>
-  print(n = 1000)
-
-# Plot
-res |>
-  mutate(
-    bias = est - truth,
-    across(starts_with("info"), \(x) substr(x, 1, 3)),
-    n = factor(n),
-  ) |>
-  # unite("method", method, starts_with("info"), sep = "-") |>
-  summarise(
-    mean_bias = mean(bias, na.rm = TRUE, trim = 0.1),
-    .by = c(dist, model, rel, n, method, starts_with("info"))
-  ) |>
-  ggplot(aes(as.numeric(n), mean_bias, col = method)) +
-  geom_line() +
-  facet_grid(info_bias * info_se ~ info_penalty)
+# # How many converged?
+# res |>
+#   summarise(
+#     fail = any(!converged),
+#     .by = c(simu:info_se, method)
+#   ) |>
+#   drop_na() |>
+#   summarise(
+#     count = sum(!fail),
+#     .by = c(dist:method)
+#   ) |>
+#   mutate(prop = count / B * 100) |>
+#   select(-count) |>
+#   pivot_wider(names_from = c(method), values_from = prop) |>
+#   print(n = Inf)
+#
+# # Check bias
+# res |>
+#   mutate(bias = est - truth) |>
+#   summarise(
+#     mean_bias = mean(bias, na.rm = TRUE, trim = 0.05),
+#     .by = c(dist:info_se, method)
+#   ) |>
+#   pivot_wider(
+#     values_from = mean_bias,
+#     names_from = method
+#   ) |>
+#   print(n = 1000)
+#
+# # Plot
+# res |>
+#   mutate(
+#     bias = est - truth,
+#     across(starts_with("info"), \(x) substr(x, 1, 3)),
+#     n = factor(n),
+#   ) |>
+#   # unite("method", method, starts_with("info"), sep = "-") |>
+#   summarise(
+#     mean_bias = mean(bias, na.rm = TRUE, trim = 0.1),
+#     .by = c(dist, model, rel, n, method, starts_with("info"))
+#   ) |>
+#   ggplot(aes(as.numeric(n), mean_bias, col = method)) +
+#   geom_line() +
+#   facet_grid(info_bias * info_se ~ info_penalty)
