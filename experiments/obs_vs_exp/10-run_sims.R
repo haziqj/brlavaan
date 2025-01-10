@@ -7,7 +7,7 @@ here::i_am("experiments/obs_vs_exp/10-run_sims.R")
 ## ----- Run simulations -------------------------------------------------------
 ncores <- future::availableCores() - 2
 future::plan(multisession, workers = ncores)
-B <- 100  # Number of simulations
+B <- 250  # Number of simulations
 
 simu_id <-
   expand_grid(
@@ -24,12 +24,17 @@ simu_id <-
 
 simu_res <- vector("list", length = nrow(simu_id))
 for (i in seq_len(nrow(simu_id))) {
+  dist  <- simu_id$dist[i]
+  model <- simu_id$model[i]
+  rel   <- simu_id$rel[i]
+  n     <- simu_id$n[i]
+
   cli::cli_inform(">>> {Sys.time()} <<<\n\n[{i} / {nrow(simu_id)}] Now running {model} models ({dist}) rel = {rel}, n = {n}\n")
   simu_res[[i]] <- sim_fun(
-    dist = simu_id$dist[i],
-    model = simu_id$model[i],
-    rel = simu_id$rel[i],
-    n = simu_id$n[i],
+    dist = dist,
+    model = model,
+    rel = rel,
+    n = n,
     lavsim = FALSE,
     lavfun = "sem",
     nsimu = B,
