@@ -34,7 +34,10 @@ sim_fun <- function(
     nsimu = 4,
     lavsim = FALSE,
     lavfun = "sem",
-    whichsims = c("ML", "eRBM", "iRBM")
+    whichsims = c("ML", "eRBM", "iRBM"),
+    info_penalty = "observed",
+    info_bias = "observed",
+    info_se = "observed"
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
@@ -71,7 +74,10 @@ sim_fun <- function(
       estimator = "ML",
       information = "expected",
       debug = FALSE,
-      lavfun = lavfun
+      lavfun = lavfun,
+      info_penalty = info_penalty,
+      info_bias = info_bias,
+      info_se = info_se
     )
 
     nsimtypes <- length(whichsims)
@@ -79,15 +85,17 @@ sim_fun <- function(
 
     if ("ML" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$ML <- do.call(fit_sem, fitsemargs)
+      fitsemargs$start <- coef(fit_list$ML)  # use ML as starting values
     }
     if ("eRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$eRBM <- do.call(fit_sem, fitsemargs)
+      fitsemargs$start <- coef(fit_list$eRBM)  # use ML as starting values
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
     # if ("iRBMp_ridge" %in% whichsims) {
     #   fitsemargs$estimator.args <- list(rbm = "implicit",
@@ -105,14 +113,15 @@ sim_fun <- function(
     #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
     # }
 
-    names(fit_list) <- whichsims
-
     tibble::tibble(
       simu = j,
       dist = dist,
       model = model,
       rel = rel,
       n = n,
+      info_penalty = info_penalty,
+      info_bias = info_bias,
+      info_se = info_se,
       param = rep(names(true_vals), length(whichsims)),
       est = unlist(lapply(fit_list, \(x) x$coefficients)),
       se = unlist(lapply(fit_list, \(x) x$stderr)),

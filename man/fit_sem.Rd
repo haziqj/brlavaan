@@ -9,7 +9,9 @@ fit_sem(
   data,
   estimator = "ML",
   estimator.args = list(rbm = "none", plugin_penalty = NULL),
-  information = c("expected", "observed", "first.order"),
+  info_penalty = c("observed", "expected"),
+  info_bias = c("observed", "expected"),
+  info_se = c("observed", "expected"),
   debug = FALSE,
   lavfun = "sem",
   ...
@@ -32,14 +34,6 @@ treat them as ordinal variables.}
 \item \code{rbm}: The type of RBM method to use. One of \code{"none"}, \code{"explicit"}, or \code{"implicit"}.
 \item \code{plugin_penalty}: The type of penalty to use. One of \code{NULL}, \code{"pen_ridge"}, or \code{"pen_ridge_bound"}.
 }}
-
-\item{information}{The type of information matrix to use for both the bias
-reduction method and the calculation of standard errors. One of "expected",
-"observed", or "first.order".
-
-However, when "first.order" is specified, then this is only for the
-standard error calculations. The bias reduction methods will revert to
-using the expected information.}
 
 \item{debug}{If TRUE, the function will return a list of intermediate
 results for debugging purposes.}
