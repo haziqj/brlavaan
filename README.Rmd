@@ -59,7 +59,7 @@ mod <- "
   y4 ~~ y8
   y6 ~~ y8
 "
-fit <- brsem(model = mod, data = PoliticalDemocracy) 
+fit <- brsem(model = mod, data = PoliticalDemocracy, information = "expected") 
 summary(fit)
 ```
 
