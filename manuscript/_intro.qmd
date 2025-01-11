@@ -1,1 +1,7 @@
+- Same old song: Bias is a problem in small sample settings of SEM.
+- Answer sounds obvious: get more samples. But in psychometric applications, this is not feasible or just downright impossible. A practical example??
+- Previous studies: Resampling methods [@dhaene2022resampling], REML, Ozenne method.
+- Limitations of previous studies.
+- What we want to do: Empirical bias reducing adjustments to the ML estimation procedure. Briefly, what are the advantages?
+
 {{< lipsum 1 >}}
