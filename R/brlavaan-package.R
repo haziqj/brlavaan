@@ -11,7 +11,6 @@
 #' @importFrom mvtnorm dmvnorm
 #' @importFrom purrr safely
 #' @importFrom rlang arg_match
-#' @importFrom stats coef
 #' @importFrom stats nlminb
 #' @importFrom stats nobs
 #' @importFrom stringr str_pad
