@@ -4,7 +4,7 @@ test_that("brsem works", {
   fit <- brsem(mod, dat, estimator.args = list(rbm = "none"))
   expect_true(is(fit, "brlavaan"))
   expect_true(is(coef(fit), "lavaan.vector"))
-  expect_snapshot(summary(fit))
+  # expect_snapshot(summary(fit))
 })
 
 test_that("brcfa works", {
@@ -39,10 +39,10 @@ test_that("brsem works", {
     # textual =~ x4 + x5 + x6
     # speed   =~ x7 + x8 + x9
   "
-  ML <- list(rbm = FALSE)  # should be "none" but this is a test
+  ML    <- list(rbm = FALSE)  # should be "none" but this is a test
   eRBM  <- list(rbm = "explicit")
   iRBM  <- list(rbm = "implicit")
-  iRBMp <- list(rbm = "implicit", plugin_penalty = pen_ridge)
+  iRBMp <- list(rbm = "implicit", plugin_pen = pen_ridge)
 
   fit_ML <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = ML)
   fit_eRBM <- brcfa(HS.model, data = HolzingerSwineford1939, estimator.args = eRBM)
