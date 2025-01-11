@@ -9,7 +9,7 @@ loglik <- function(
     lavoptions,
     bias_reduction,
     kind,
-    plugin_penalty = NULL,
+    plugin_pen = NULL,
     bounds,
     verbose
   ) {
@@ -74,9 +74,9 @@ loglik <- function(
     )
   }
 
-  if (!is.null(plugin_penalty)) {
-    if (!is.function(plugin_penalty)) {
-      cli::cli_abort("`plugin_penalty` must be a function.")
+  if (!is.null(plugin_pen)) {
+    if (!is.function(plugin_pen)) {
+      cli::cli_abort("`plugin_pen` must be a function.")
     }
 
     pen_args <- list(
@@ -85,7 +85,7 @@ loglik <- function(
       lb = bounds$lb,
       ub = bounds$ub
     )
-    pen_term <- do.call(plugin_penalty, pen_args)
+    pen_term <- do.call(plugin_pen, pen_args)
   }
   pen_term <- pen_term / lavsamplestats@ntotal
 
@@ -95,6 +95,7 @@ loglik <- function(
       "Log-lik =", loglik, "|",
       "Bias term =", bias_term, "|",
       "Penalty term =", pen_term, "|",
+      "TOTAL =", loglik + bias_term - pen_term,
       "\n"
     )
   }
@@ -226,10 +227,10 @@ information_matrix <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected", "firstorder")
+    kind = c("observed", "expected", "first.order")
   ) {
 
-  kind <- match.arg(kind, c("observed", "expected", "firstorder"))
+  kind <- match.arg(kind, c("observed", "expected", "first.order"))
 
   # Unpack theta
   if (lavmodel@eq.constraints) {
@@ -260,7 +261,7 @@ information_matrix <- function(
       lavoptions = lavoptions
     )
   }
-  if (kind == "firstorder") {
+  if (kind == "first.order") {
     out <- lav_model_information_firstorder(
       lavmodel = this_lavmodel,
       lavsamplestats = lavsamplestats,
@@ -273,60 +274,6 @@ information_matrix <- function(
   lavsamplestats@ntotal * out
 }
 
-# Observed information
-information_observed <- function(
-    theta,
-    lavmodel,
-    lavsamplestats,
-    lavdata,
-    lavoptions
-  ) {
-  information_matrix(
-    theta = theta,
-    lavmodel = lavmodel,
-    lavsamplestats = lavsamplestats,
-    lavdata = lavdata,
-    lavoptions = lavoptions,
-    kind = "observed"
-  )
-}
-
-# Expected information
-information_expected <- function(
-    theta,
-    lavmodel,
-    lavsamplestats,
-    lavdata,
-    lavoptions
-  ) {
-  information_matrix(
-    theta = theta,
-    lavmodel = lavmodel,
-    lavsamplestats = lavsamplestats,
-    lavdata = lavdata,
-    lavoptions = lavoptions,
-    kind = "expected"
-  )
-}
-
-# Outer product of casewise scores
-information_firstorder <- function(
-    theta,
-    lavmodel,
-    lavsamplestats,
-    lavdata,
-    lavoptions
-  ) {
-  information_matrix(
-    theta = theta,
-    lavmodel = lavmodel,
-    lavsamplestats = lavsamplestats,
-    lavdata = lavdata,
-    lavoptions = lavoptions,
-    kind = "firstorder"
-  )
-}
-
 # Bias reduction penalty term
 penalty <- function(
     theta,
@@ -334,17 +281,16 @@ penalty <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected")
+    kind
   ) {
 
-  kind <- match.arg(kind, c("observed", "expected"))
-
-  e <- information_firstorder(
+  e <- information_matrix(
     theta = theta,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = "first.order"
   )
   j <- information_matrix(
     theta = theta,
@@ -354,13 +300,13 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = kind
   )
-  if (lavmodel@eq.constraints) {
+  if (TRUE) {#(lavmodel@eq.constraints) {
     jinv <- lav_model_information_augment_invert(
       lavmodel = lavmodel,
       information = j,
       inverted = TRUE,
       check.pd = FALSE,
-      use.ginv = FALSE,
+      use.ginv = TRUE,
       rm.idx = integer(0L)
     )
   } else {
@@ -381,10 +327,9 @@ bias <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind = c("observed", "expected")
+    kind_outside,
+    kind_inside
   ) {
-
-  kind <- match.arg(kind, c("observed", "expected"))
 
   j <- information_matrix(
     theta = theta,
@@ -392,7 +337,7 @@ bias <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = kind
+    kind = kind_outside
   )
   jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -408,7 +353,8 @@ bias <- function(
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
-    lavoptions = lavoptions
+    lavoptions = lavoptions,
+    kind = kind_inside
   )
 
   # Unpack A
@@ -433,41 +379,37 @@ bias <- function(
 #' recommend using the [brsem()], [brcfa()], or [brgrowth()] functions which is
 #' a wrapper around this function and outputs something more user-friendly.
 #'
-#' @inherit brsem params return
-#' @param debug If TRUE, the function will return a list of intermediate
-#'   results for debugging purposes.
-#' @param lavfun The lavaan function to use. Default is "sem".
+#' @inherit brlavaan params return
+#' @param rbm The type of RBM method to use. One of `"none"`, `"explicit"`, or
+#'   `"implicit"` (although, short forms are accepted, e.g. `"exp"`, `"iRBM`,
+#'   etc.)
+#' @param plugin_pen The type of penalty to use. One of `NULL`, `"pen_ridge"`,
+#'   or `"pen_ridge_bound"`. User-specified penalty functions are possible. See
+#'   description for details.
+#' @param info_pen The type of information matrix to use for the penalty term.
+#' @param info_bias The type of information matrix to use for the bias term of
+#'   the explicit reduced bias method.
+#' @param info_se The type of information matrix to use for calculation of
+#'   standard errors.
+#' @param debug If TRUE, the function will return a list of intermediate results
+#'   for debugging purposes.
 #'
 #' @export
 fit_sem <- function(
     model,
     data,
-    estimator = "ML",
-    estimator.args = list(rbm = "none", plugin_penalty = NULL),
-    information = c("expected", "observed", "first.order"),
+    rbm = c("implicit", "explicit", "none"),
+    plugin_pen = NULL,
+    info_pen = "observed",
+    info_bias = "observed",
+    info_se = "observed",  #FIXME: this is akin to 'information' in lavaan
     debug = FALSE,
     lavfun = "sem",
     ...
   ) {
 
-  information <- match.arg(information, c("expected", "observed", "first.order"))
-  orig_info <- information
-  if (orig_info == "first.order") {
-    information <- "expected"
-    cli::cli_alert_info("Bias reduction methods will use expected information matrix, and standard error computation will use the outer product of the casewise scores.")
-  }
-
-  # Initialise {lavaan} model object -------------------------------------------
+  # Check arguments and choose method-------------------------------------------
   lavargs <- list(...)
-  lavargs$model <- model
-  lavargs$data <- data
-  lavargs$do.fit <- FALSE
-
-  if (estimator != "ML") {
-    cli::cli_abort("Bias reduction methods are currently only available for ML estimation.")
-  }
-
-  # Catch old arguments
   if ("method" %in% names(lavargs)) {
     lifecycle::deprecate_warn(
       when = "0.0.1",
@@ -476,39 +418,61 @@ fit_sem <- function(
     )
 
     rbm <- lavargs$method
-    plugin_penalty <- NULL
+    plugin_pen <- NULL
     if (rbm == "ML") rbm <- "none"
-    if (rbm == "eRBM" | rbm == "eBRM") rbm <- "explicit"
-    if (rbm == "iRBM" | rbm == "iBRM") rbm <- "implicit"
+    if (grepl("eRB|eBR", rbm, ignore.case = TRUE)) rbm <- "explicit"
+    if (grepl("iRB|iBR", rbm, ignore.case = TRUE)) rbm <- "implicit"
+    if (grepl("iRB|iBR", rbm, ignore.case = TRUE)) rbm <- "implicit"
     if (rbm == "iRBMp" | rbm == "iBRMp") {
       rbm <- "implicit"
-      plugin_penalty <- pen_huber
+      plugin_pen <- pen_huber
       cli::cli_alert_warning("Using the Huber penalty for iRBM.")
     }
     lavargs$method <- NULL
-  } else {
-    rbm <- estimator.args$rbm
-    plugin_penalty <- estimator.args$plugin_penalty
+
+  } else if ("estimator.args" %in% names(lavargs)) {
+    # This comes from the brlavaan() function, which overwrites the arguments
+    if (!is.null(lavargs$estimator.args$rbm))
+      rbm <- lavargs$estimator.args$rbm
+    if (!is.null(lavargs$estimator.args$plugin_pen))
+      plugin_pen <- lavargs$estimator.args$plugin_pen
+    if (!is.null(lavargs$estimator.args$info_pen))
+      info_pen <- lavargs$estimator.args$info_pen
+    if (!is.null(lavargs$estimator.args$info_bias))
+      info_bias <- lavargs$estimator.args$info_bias
   }
-  if (is.null(rbm) | isFALSE(rbm)) rbm <- "none"
-  rbm <- match.arg(rbm, c("none", "explicit", "implicit"))
+  if ("information" %in% names(lavargs)) info_se <- lavargs$information
+  if ("estimator" %in% names(lavargs)) estimator <- lavargs$estimator
+  else estimator <- "ML"
+
+  # Validate arguments
+  rbm <- validate_rbm(rbm)
+  information <- list(info_pen, info_bias, info_se)
+  names(information) <- c("penalty", "bias", "se")
+
+  if (estimator != "ML") cli::cli_abort("Bias reduction methods are currently only available for ML estimation.")
 
   # Which method?
   is_ML     <- rbm == "none"
   is_eRBM   <- rbm == "explicit"
   is_iRBM   <- rbm == "implicit"
 
+  # Initialise {lavaan} model object -------------------------------------------
+  lavargs$model <- model
+  lavargs$data <- data
+  lavargs$do.fit <- FALSE
+
   fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   lavmodel       <- fit0@Model
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
   lavoptions     <- fit0@Options
-  n <- lavaan::nobs(fit0)
+  n              <- lavaan::nobs(fit0)
 
   # Bounds NOTE: Since lavaan 0.6-19, settings bounds = TRUE will remove the
   # simple equality constraints. So, have to redo.
   lavargs$bounds <- TRUE  # bounds are always used
-  fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
+  fit0 <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   pt <- lavaan::partable(fit0)
   lb <- pt$lower[pt$free > 0]
   ub <- pt$upper[pt$free > 0]
@@ -517,7 +481,7 @@ fit_sem <- function(
   # Starting values
   start <- lavargs$start
   if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
-  # Fix starting values
+  # Fix starting values, so they are not at boundaries
   fixidx <- which(start >= ub | start <= lb)
   start[fixidx] <- ((ub + lb) / 2)[fixidx]
 
@@ -545,25 +509,24 @@ fit_sem <- function(
       lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
 
       # Information about the model
-      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_penalty = plugin_penalty, kind = information, bounds = bounds, verbose = FALSE),
+      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_pen = plugin_pen, kind = info_pen, bounds = bounds, verbose = FALSE),
       grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-      j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = orig_info),
+      j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = info_pen),
       jinv = lav_model_information_augment_invert(
         lavmodel = lavmodel,
         information = information_matrix(
-          theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, orig_info
+          theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen
         ),
         inverted = TRUE,
-        check.pd = FALSE,
+        check.pd = TRUE,
         use.ginv = FALSE,
         rm.idx = integer(0L)
       ),
-      e = information_firstorder(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
+      e = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = "first.order"),
       scores_loglik = scores_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-      penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, information),
-      bias = bias(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, information),
-      information_penalty = information,
-      information_se = orig_info
+      penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen),
+      bias = bias(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen, info_bias),
+      information = unlist(information)
     )
     return(out)
   }
@@ -579,8 +542,8 @@ fit_sem <- function(
       theta = x,
       ...,
       bias_reduction = isFALSE(is_ML | is_eRBM),
-      plugin_penalty = plugin_penalty,
-      kind = information,
+      plugin_pen = plugin_pen,
+      kind = info_pen,
       bounds = bounds,
       verbose = verbose
     )
@@ -609,7 +572,9 @@ fit_sem <- function(
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      kind_inside = info_pen,
+      kind_outside = info_bias
     )
   est <- res$par - b
 
@@ -623,7 +588,7 @@ fit_sem <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = orig_info
+    kind = info_se
   )
   jinv <- lav_model_information_augment_invert(
     lavmodel = lavmodel,
@@ -639,6 +604,7 @@ fit_sem <- function(
   if (lavmodel@eq.constraints) {
     est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
       lavmodel@eq.constraints.k0
+    names(est) <- names(start)
   }
 
   list(
@@ -648,11 +614,10 @@ fit_sem <- function(
     converged = res$convergence == 0L,
     optim = res,
     vcov = jinv,
-    information_penalty = information,
-    information_se = orig_info,
+    information = information,
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,
-    plugin_penalty = plugin_penalty
+    plugin_pen = plugin_pen
   )
 }

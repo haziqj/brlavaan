@@ -1,12 +1,16 @@
-#' Fit a structural equation model using bias-reducing methods
+#' Fit a latent variable model using bias-reducing methods
 #'
-#' Fit a structural equation model using bias-reducing methods
+#' Fit a latent variable model using bias-reducing methods
 #'
-#' The `pen_ridge()` function applies a ridge regression style penalty
-#' $f(x) = || x ||^2$ that shrinks the parameters to zero. The
-#' `pen_ridge_bound()` function applies a penalty that shrinks the parameters to
-#' the bounds of the parameter space. The bounds are calculated by `{lavaan}` --
-#' see the paper for more details.
+#' The `pen_ridge()` function applies a ridge regression style penalty $f(x) =
+#' || x ||^2$ that shrinks the parameters to zero. The `pen_ridge_bound()`
+#' function applies a penalty that shrinks the parameters to the bounds of the
+#' parameter space. The bounds are calculated by `{lavaan}` -- see the paper for
+#' more details.
+#'
+#' The `info_pen` and `info_bias` arguments default to `"observed"`. It is not
+#' recommended to change this to say `"expected"`, especially for small sample
+#' sizes as the bias-reducing properties of the estimators are not guaranteed.
 #'
 #' @param model A description of the user-specified model. Typically, the model
 #'   is described using the lavaan model syntax. See [model.syntax] for more
@@ -17,38 +21,46 @@
 #'   treat them as ordinal variables.
 #' @param estimator The estimator to use. **Currently only "ML" is supported.**
 #' @param estimator.args A list containing RBM arguments. Possible arguments are
-#'   - `rbm`: The type of RBM method to use. One of `"none"`, `"explicit"`, or `"implicit"`.
-#'   - `plugin_penalty`: The type of penalty to use. One of `NULL`, `"pen_ridge"`, or `"pen_ridge_bound"`.
-#' @param information The type of information matrix to use for both the bias
-#'   reduction method and the calculation of standard errors. One of "expected",
-#'   "observed", or "first.order".
-#'
-#'   However, when "first.order" is specified, then this is only for the
-#'   standard error calculations. The bias reduction methods will revert to
-#'   using the expected information.
-#'
+#'   - `rbm`: The type of RBM method to use. One of `"none"`, `"explicit"`, or
+#'   `"implicit"` (although, short forms are accepted, e.g. `"exp"`, `"iRBM"`,
+#'   etc.)
+#'   - `plugin_pen`: The type of penalty to use. One of `NULL`, `"pen_ridge"`,
+#'   or `"pen_ridge_bound"`.
+#'   - `info_pen` The type of information matrix to use for the penalty term.
+#'   - `info_bias` The type of information matrix to use for the bias term of
+#'   the explicit reduced bias method.
+#' @param information The type of information matrix to use for calculation of
+#'   standard errors. Defaults to `"observed"`, although `"expected"` and
+#'   `"first.order"` is also permitted.
+#' @param lavfun The lavaan function to use. Default is "sem".
 #' @param ... Additional arguments to pass to the [lavaan] function.
 #'
 #' @return An object of class `brlavaan` which is a subclass of the
 #'   [lavaan-class] class.
 #' @export
-brsem <- function(
+brlavaan <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
-    information = c("expected", "observed", "first.order"),
+    estimator.args = list(rbm = "implicit", plugin_pen = NULL),
+    information = "observed",
+    lavfun = "sem",
     ...
 ) {
+
+  if (length(estimator.args$info_pen) > 0) {
+    if (estimator.args$info_pen == "expected")
+      cli::cli_alert_warning("Using expected information matrix for the penalty term is not guaranteed to produce bias-reducing properties in small samples.")
+  }
 
   fit <- fit_sem(
     model = model,
     data = data,
+    debug = FALSE,
+    lavfun = lavfun,
     estimator = estimator,
     estimator.args = estimator.args,
     information = information,
-    debug = FALSE,
-    lavfun = "sem",
     ...
   )
 
@@ -56,60 +68,76 @@ brsem <- function(
   new("brlavaan", out)
 }
 
-#' Fit confirmatory factor analysis model using bias-reducing methods
+#' Fit a structural equation model using empirical bias-reducing methods
 #'
-#' @inherit brsem params return
+#' @inherit brlavaan params return
+#' @export
+brsem <- function(
+    model,
+    data,
+    estimator = "ML",
+    estimator.args = list(rbm = "implicit", plugin_pen = NULL),
+    information = "observed",
+    ...
+) {
+
+  brlavaan(
+    model = model,
+    data = data,
+    estimator = estimator,
+    estimator.args = estimator.args,
+    information = information,
+    lavfun = "sem",
+    ...
+  )
+}
+
+#' Fit confirmatory factor analysis model using empirical bias-reducing methods
+#'
+#' @inherit brlavaan params return
 #' @export
 brcfa <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
-    information = c("expected", "observed", "first.order"),
+    estimator.args = list(rbm = "implicit", plugin_pen = NULL),
+    information = "observed",
     ...
 ) {
 
-  fit <- fit_sem(
+  brlavaan(
     model = model,
     data = data,
     estimator = estimator,
     estimator.args = estimator.args,
     information = information,
-    debug = FALSE,
     lavfun = "cfa",
     ...
   )
-
-  out <- create_lav_from_fitsem(fit, model, data, ...)
-  new("brlavaan", out)
 }
 
-#' Fit growth curve models using bias-reducing methods
+#' Fit growth curve models using empirical bias-reducing methods
 #'
-#' @inherit brsem params return
+#' @inherit brlavaan params return
 #' @export
 brgrowth <- function(
     model,
     data,
     estimator = "ML",
-    estimator.args = list(rbm = "implicit", plugin_penalty = pen_huber),
-    information = c("expected", "observed", "first.order"),
+    estimator.args = list(rbm = "implicit", plugin_pen = NULL),
+    information = "observed",
     ...
   ) {
 
-  fit <- fit_sem(
+  brlavaan(
     model = model,
     data = data,
     estimator = estimator,
     estimator.args = estimator.args,
     information = information,
-    debug = FALSE,
     lavfun = "growth",
     ...
   )
-
-  out <- create_lav_from_fitsem(fit, model, data, ...)
-  new("brlavaan", out)
 }
 
 create_lav_from_fitsem <- function(
@@ -126,11 +154,11 @@ create_lav_from_fitsem <- function(
   lavargs$data <- data
   lavargs$do.fit <- FALSE
   lavargs$method <- NULL  # if using old ways of specifying RBM method
-  lavargs$information <- fit$information_se
+  lavargs$information <- fit$information$se
   lavargs$start <- x
   lavargs$estimator.args <- list(
     rbm = fit$rbm,
-    plugin_penalty = fit$plugin_penalty
+    plugin_pen = fit$plugin_pen
   )
   fit0 <- do.call(get(fit$lavfun, envir = asNamespace("lavaan")), lavargs)
 
@@ -187,6 +215,9 @@ create_lav_from_fitsem <- function(
 
   # fit0@test <- fit_lav@test
   # fit0@baseline <- fit_lav@baseline
+
+  # Include the entire output of fit_sem
+  fit0@external <- fit
 
   fit0
 }

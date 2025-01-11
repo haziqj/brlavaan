@@ -2,7 +2,6 @@
 % Please edit documentation in R/brlavaan-package.R
 \docType{package}
 \name{brlavaan-package}
-\alias{brlavaan}
 \alias{brlavaan-package}
 \title{brlavaan: Bias-Reduced Latent Variable Analysis}
 \description{

@@ -31,10 +31,13 @@ sim_fun <- function(
     model = "twofac",
     rel = 0.8,
     n = 25,
-    nsimu = 4,
+    nsimu = 1,
     lavsim = FALSE,
     lavfun = "sem",
-    whichsims = c("ML", "eRBM", "iRBM")
+    whichsims = c("ML", "eRBM", "iRBM"),
+    info_pen = "observed",
+    info_bias = "observed",
+    info_se = "observed"
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
@@ -71,7 +74,10 @@ sim_fun <- function(
       estimator = "ML",
       information = "expected",
       debug = FALSE,
-      lavfun = lavfun
+      lavfun = lavfun,
+      info_pen = info_pen,
+      info_bias = info_bias,
+      info_se = info_se
     )
 
     nsimtypes <- length(whichsims)
@@ -79,47 +85,35 @@ sim_fun <- function(
 
     if ("ML" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$ML <- do.call(fit_sem, fitsemargs)
+      fitsemargs$start <- fit_list$ML$coefficients  # use ML as starting values
     }
     if ("eRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$eRBM <- do.call(fit_sem, fitsemargs)
+      fitsemargs$start <- fit_list$eRBM$coefficients
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
-      fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
+      fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
-    # if ("iRBMp_ridge" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_ridge)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
-    # if ("iRBMp_ridge_bound" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_ridge_bound)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
-    # if ("iRBMp_huber" %in% whichsims) {
-    #   fitsemargs$estimator.args <- list(rbm = "implicit",
-    #                                     plugin_penalty = pen_huber)
-    #   fit_list <- c(fit_list, list(do.call(fit_sem, fitsemargs)))
-    # }
-
-    names(fit_list) <- whichsims
 
     tibble::tibble(
-      simu = j,
+      sim = j,
       dist = dist,
       model = model,
       rel = rel,
       n = n,
-      param = rep(names(true_vals), length(whichsims)),
-      est = unlist(lapply(fit_list, \(x) x$coefficients)),
-      se = unlist(lapply(fit_list, \(x) x$stderr)),
-      truth = rep(true_vals, nsimtypes),
-      method = rep(names(fit_list), each = length(true_vals)),
-      timing = rep(sapply(fit_list, \(x) x$timing), each = length(true_vals)),
-      converged = rep(sapply(fit_list, \(x) x$converged), each = length(true_vals))
+      info_pen = substr(info_pen, 1, 3),
+      info_bias = substr(info_bias, 1, 3),
+      info_se = substr(info_se, 1, 3),
+      method = names(fit_list),
+      est = lapply(fit_list, \(x) x$coefficients),
+      se = lapply(fit_list, \(x) x$stderr),
+      truth = rep(list(true_vals), nsimtypes),
+      timing = sapply(fit_list, \(x) x$timing),
+      converged = sapply(fit_list, \(x) x$converged),
+      optim_message = sapply(fit_list, \(x) x$optim$message)
     )
   }
 
