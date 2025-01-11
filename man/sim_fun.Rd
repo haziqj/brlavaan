@@ -9,10 +9,13 @@ sim_fun(
   model = "twofac",
   rel = 0.8,
   n = 25,
-  nsimu = 4,
+  nsimu = 1,
   lavsim = FALSE,
   lavfun = "sem",
-  whichsims = c("ML", "eRBM", "iRBM")
+  whichsims = c("ML", "eRBM", "iRBM"),
+  info_pen = "observed",
+  info_bias = "observed",
+  info_se = "observed"
 )
 }
 \arguments{
@@ -34,6 +37,14 @@ function.}
 
 \item{whichsims}{A character vector with the estimators to use. Possible
 values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
+
+\item{info_pen}{The type of information matrix to use for the penalty term.}
+
+\item{info_bias}{The type of information matrix to use for the bias term of
+the explicit reduced bias method.}
+
+\item{info_se}{The type of information matrix to use for calculation of
+standard errors.}
 }
 \value{
 A list with two elements. The first element is a data frame with the

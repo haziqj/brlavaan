@@ -3,19 +3,14 @@ set.seed(111224)
 dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_growth(0.8)
 
-eRBM   <- list(rbm = "explicit")
-iRBM   <- list(rbm = "implicit")
-iRBMp  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge)
-iRBMpb <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge_bound)
-huber  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_huber)
-
 fit_lav    <- sem(mod, dat)
-fit_ML     <- fit_sem(mod, dat)
-fit_eRBM   <- fit_sem(mod, dat, estimator.args = eRBM)
-fit_iRBM   <- fit_sem(mod, dat, estimator.args = iRBM)
-fit_iRBMp  <- fit_sem(mod, dat, estimator.args = iRBMp)
-fit_iRBMpb <- fit_sem(mod, dat, estimator.args = iRBMpb)
-fit_huber  <- fit_sem(mod, dat, estimator.args = huber)
+fit_ML     <- fit_sem(mod, dat, rbm = "none")
+fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
+fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
+
+# fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
+# fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
+# fit_huber  <- fit_sem(mod, dat, plugin_pen = pen_huber)
 
 test_that("ML estimator matches lavaan", {
   expect_equal(
@@ -26,16 +21,16 @@ test_that("ML estimator matches lavaan", {
   )
 })
 
-tibble::tibble(
-  param = names(coef(fit_lav)),
-  truth = truth(dat),
-  ML = coef(fit_ML),
-  eRBM = coef(fit_eRBM),
-  iRBM = coef(fit_iRBM),
-  iRBMp_ridge = coef(fit_iRBMp),
-  iRBMp_ridgeb = coef(fit_iRBMpb),
-  iRBMp_huber = coef(fit_huber)
-)
+# tibble::tibble(
+#   param = names(coef(fit_lav)),
+#   truth = truth(dat),
+#   ML = coef(fit_ML),
+#   eRBM = coef(fit_eRBM),
+#   iRBM = coef(fit_iRBM),
+#   iRBMp_ridge = coef(fit_iRBMp),
+#   iRBMp_ridgeb = coef(fit_iRBMpb),
+#   iRBMp_huber = coef(fit_huber)
+# )
 
 N <- nrow(dat)
 p <- ncol(dat)

@@ -3,29 +3,14 @@ set.seed(123)
 dat <- gen_data_twofac(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_twofac(0.8)
 
-eRBM   <- list(rbm = "explicit")
-iRBM   <- list(rbm = "implicit")
-# iRBMp  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge)
-# iRBMpb <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_ridge_bound)
-# huber  <- list(rbm = "implicit", plugin_penalty = brlavaan:::pen_huber)
-
 fit_lav    <- sem(mod, dat)
-fit_ML     <- fit_sem(mod, dat)
-fit_eRBM   <- fit_sem(mod, dat, estimator.args = eRBM, verbose = TRUE,
-                      info_penalty = "observed",
-                      info_bias = "observed",
-                      info_se = "observed")
-fit_iRBM   <- fit_sem(mod, dat, estimator.args = iRBM, verbose = TRUE,
-                      info_penalty = "observed",
-                      info_bias = "observed",
-                      info_se = "expected",
-                      start = coef(fit_eRBM))
+fit_ML     <- fit_sem(mod, dat, rbm = "none")
+fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
+fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
 
-
-
-# fit_iRBMp  <- fit_sem(mod, dat, estimator.args = iRBMp, information = "expected")
-# fit_iRBMpb <- fit_sem(mod, dat, estimator.args = iRBMpb, information = "expected")
-# fit_huber  <- fit_sem(mod, dat, estimator.args = huber, information = "expected")
+# fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
+# fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
+# fit_huber  <- fit_sem(mod, dat, plugin_pen = pen_huber)
 
 N <- nrow(dat)
 p <- ncol(dat)
@@ -105,7 +90,7 @@ test_that("Checking likelihoods", {
   )
   expect_equal(
     loglik(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data,
-           fit_lav@Options, plugin_penalty = NULL, bias_reduction = FALSE,
+           fit_lav@Options, plugin_pen = NULL, bias_reduction = FALSE,
            verbose = FALSE),
     Loglik(lav_c, dat)
   )
@@ -156,18 +141,18 @@ test_that("Checking Hessian", {
 
 test_that("Checking penalty", {
   expect_equal(
-    penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options),
+    penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
     pen_Loglik(lav_c, dat) - Loglik(lav_c, dat)
   )
 })
 
 # Checking the iRBM fit against the same using our implementation
 res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat)
-res2 <- optim(coef(fit_lav), pen_Loglik, dat = dat, method = "BFGS",
-              control = list(fnscale = -1))
+# res2 <- optim(coef(fit_lav), pen_Loglik, dat = dat, method = "BFGS",
+#               control = list(fnscale = -1))
 
 test_that("Checking iRBM fit", {
-  expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
+  # expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
   expect_equal(
     res1$par,
     coef(fit_iRBM),

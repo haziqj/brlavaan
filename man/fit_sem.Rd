@@ -7,11 +7,11 @@
 fit_sem(
   model,
   data,
-  estimator = "ML",
-  estimator.args = list(rbm = "none", plugin_penalty = NULL),
-  info_penalty = c("observed", "expected"),
-  info_bias = c("observed", "expected"),
-  info_se = c("observed", "expected"),
+  rbm = c("implicit", "explicit", "none"),
+  plugin_pen = NULL,
+  info_pen = "observed",
+  info_bias = "observed",
+  info_se = "observed",
   debug = FALSE,
   lavfun = "sem",
   ...
@@ -27,16 +27,24 @@ information. Alternatively, a parameter table (eg. the output of the
 the model. If some variables are declared as ordered factors, lavaan will
 treat them as ordinal variables.}
 
-\item{estimator}{The estimator to use. \strong{Currently only "ML" is supported.}}
+\item{rbm}{The type of RBM method to use. One of \code{"none"}, \code{"explicit"}, or
+\code{"implicit"} (although, short forms are accepted, e.g. \code{"exp"}, \verb{"iRBM},
+etc.)}
 
-\item{estimator.args}{A list containing RBM arguments. Possible arguments are
-\itemize{
-\item \code{rbm}: The type of RBM method to use. One of \code{"none"}, \code{"explicit"}, or \code{"implicit"}.
-\item \code{plugin_penalty}: The type of penalty to use. One of \code{NULL}, \code{"pen_ridge"}, or \code{"pen_ridge_bound"}.
-}}
+\item{plugin_pen}{The type of penalty to use. One of \code{NULL}, \code{"pen_ridge"},
+or \code{"pen_ridge_bound"}. User-specified penalty functions are possible. See
+description for details.}
 
-\item{debug}{If TRUE, the function will return a list of intermediate
-results for debugging purposes.}
+\item{info_pen}{The type of information matrix to use for the penalty term.}
+
+\item{info_bias}{The type of information matrix to use for the bias term of
+the explicit reduced bias method.}
+
+\item{info_se}{The type of information matrix to use for calculation of
+standard errors.}
+
+\item{debug}{If TRUE, the function will return a list of intermediate results
+for debugging purposes.}
 
 \item{lavfun}{The lavaan function to use. Default is "sem".}
 
