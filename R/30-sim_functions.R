@@ -86,12 +86,12 @@ sim_fun <- function(
     if ("ML" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
       fit_list$ML <- do.call(fit_sem, fitsemargs)
-      fitsemargs$start <- coef(fit_list$ML)  # use ML as starting values
+      fitsemargs$start <- fit_list$ML$coefficients  # use ML as starting values
     }
     if ("eRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
-      fitsemargs$start <- coef(fit_list$eRBM)
+      fitsemargs$start <- fit_list$eRBM$coefficients
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
