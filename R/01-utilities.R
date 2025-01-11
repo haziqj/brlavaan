@@ -1,3 +1,16 @@
+validate_rbm <- function(x) {
+  valid_rbm <- c("none", "explicit", "implicit")
+
+  if (length(x) == 0) x <- "none"
+  x[is.na(x)] <- "none"
+  x[isFALSE(as.logical(x))] <- "none"
+
+  x[startsWith(x, "e")] <- "explicit"
+  x[startsWith(x, "i")] <- "implicit"
+
+  rlang::arg_match(x, valid_rbm)
+}
+
 get_lav_stuff <- function(fit) {
   # Utility function to extract lavaan stuff
   list(
@@ -11,16 +24,16 @@ get_lav_stuff <- function(fit) {
 get_estimator.args <- function(x) {
   if (inherits(x, "brlavaan")) {
     rbm <- x@Options$estimator.args$rbm
-    plugin_penalty <- x@Options$estimator.args$plugin_penalty
+    plugin_pen <- x@Options$estimator.args$plugin_pen
   } else {
     rbm <- x$rbm
-    plugin_penalty <- x$plugin_penalty
+    plugin_pen <- x$plugin_pen
   }
-  list(rbm = rbm, plugin_penalty = plugin_penalty)
+  list(rbm = rbm, plugin_pen = plugin_pen)
 }
 
 # To remove R CMD CHECK NOTE "no visible binding"
-globalVariables(c("rbm", "plugin_penalty"))
+globalVariables(c("rbm", "plugin_pen"))
 
 #' Predicates for `brlavaan` objects
 #'
@@ -50,7 +63,7 @@ is_eRBM <- function(x) {
 #' @export
 is_iRBM <- function(x) {
   list2env(get_estimator.args(x), environment())
-  rbm == "implicit" & is.null(plugin_penalty)
+  rbm == "implicit" & is.null(plugin_pen)
 }
 
 #' @rdname predicates
@@ -58,17 +71,73 @@ is_iRBM <- function(x) {
 is_iRBMp <- function(x, quietly = FALSE) {
   list2env(get_estimator.args(x), environment())
 
-  out <- rbm == "implicit" & !is.null(plugin_penalty)
+  out <- rbm == "implicit" & !is.null(plugin_pen)
 
   rbm <- paste0(
     toupper(substr(rbm, 1, 1)),
     tolower(substr(rbm, 2, nchar(rbm)))
   )
-  plugin_penalty <- plugin_penalty(call = TRUE)
+  plugin_pen <- plugin_pen(call = TRUE)
 
   if (isFALSE(quietly))
-    cli::cli_alert_info("is_iRBMp: RBM = {rbm}, Plugin penalty = {plugin_penalty}")
+    cli::cli_alert_info("is_iRBMp: RBM = {rbm}, Plugin penalty = {plugin_pen}")
 
-  attr(out, "plugin_penalty") <- plugin_penalty
+  attr(out, "plugin_pen") <- plugin_pen
   out
 }
+
+# # I thought it would be useful to have functions for each kind of information
+#
+# # Observed information
+# information_observed <- function(
+#     theta,
+#     lavmodel,
+#     lavsamplestats,
+#     lavdata,
+#     lavoptions
+#   ) {
+#   information_matrix(
+#     theta = theta,
+#     lavmodel = lavmodel,
+#     lavsamplestats = lavsamplestats,
+#     lavdata = lavdata,
+#     lavoptions = lavoptions,
+#     kind = "observed"
+#   )
+# }
+#
+# # Expected information
+# information_expected <- function(
+    #     theta,
+#     lavmodel,
+#     lavsamplestats,
+#     lavdata,
+#     lavoptions
+#   ) {
+#   information_matrix(
+#     theta = theta,
+#     lavmodel = lavmodel,
+#     lavsamplestats = lavsamplestats,
+#     lavdata = lavdata,
+#     lavoptions = lavoptions,
+#     kind = "expected"
+#   )
+# }
+#
+# # Outer product of casewise scores
+# information_firstorder <- function(
+    #     theta,
+#     lavmodel,
+#     lavsamplestats,
+#     lavdata,
+#     lavoptions
+#   ) {
+#   information_matrix(
+#     theta = theta,
+#     lavmodel = lavmodel,
+#     lavsamplestats = lavsamplestats,
+#     lavdata = lavdata,
+#     lavoptions = lavoptions,
+#     kind = "first.order"
+#   )
+# }
