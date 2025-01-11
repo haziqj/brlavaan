@@ -9,8 +9,8 @@ HS.model <- "
 "
 data(HolzingerSwineford1939, package = "lavaan")
 
-fit_lav   <- lavaan::cfa(HS.model, HolzingerSwineford1939)
-fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, estimator = "ML")
+fit_lav   <- lavaan::cfa(HS.model, HolzingerSwineford1939, information = "observed")
+fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, rbm = "none")
 
 list2env(get_lav_stuff(fit_lav), environment())
 
@@ -39,7 +39,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = NULL,
+      plugin_pen = NULL,
       verbose = FALSE
     )
     expect_equal(loglik_val, as.numeric(logLik(fit_lav)), tolerance = 1e-4)
@@ -81,7 +81,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = NULL,
+      plugin_pen = NULL,
       verbose = FALSE
     )
     expect_equal(grad.lav, rep(0, length(grad.lav)), tolerance = 1e-4)
@@ -114,7 +114,7 @@ test_that(
       lavoptions = lavoptions,
       bias_reduction = FALSE,
       kind = "observed",
-      plugin_penalty = NULL,
+      plugin_pen = NULL,
       verbose = FALSE
     )
     hessian.num2 <- numDeriv::jacobian(

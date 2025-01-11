@@ -35,7 +35,7 @@ sim_fun <- function(
     lavsim = FALSE,
     lavfun = "sem",
     whichsims = c("ML", "eRBM", "iRBM"),
-    info_penalty = "observed",
+    info_pen = "observed",
     info_bias = "observed",
     info_se = "observed"
   ) {
@@ -75,7 +75,7 @@ sim_fun <- function(
       information = "expected",
       debug = FALSE,
       lavfun = lavfun,
-      info_penalty = info_penalty,
+      info_pen = info_pen,
       info_bias = info_bias,
       info_se = info_se
     )
@@ -91,7 +91,7 @@ sim_fun <- function(
     if ("eRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
-      # fitsemargs$start <- coef(fit_list$eRBM)  # using eRBM starting values can lead to false convergence in nlminb!
+      fitsemargs$start <- coef(fit_list$eRBM)
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
@@ -104,7 +104,7 @@ sim_fun <- function(
       model = model,
       rel = rel,
       n = n,
-      info_pen = substr(info_penalty, 1, 3),
+      info_pen = substr(info_pen, 1, 3),
       info_bias = substr(info_bias, 1, 3),
       info_se = substr(info_se, 1, 3),
       method = names(fit_list),
