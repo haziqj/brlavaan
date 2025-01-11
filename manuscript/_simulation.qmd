@@ -9,7 +9,6 @@ bibliography:
   - refs-HJ.bib
 ---
 
-
 ```{r}
 library(tidyverse)
 library(gt)
@@ -18,6 +17,14 @@ theme_set(theme_bw())
 here::i_am("manuscript/_simulation.qmd")
 load(here::here("experiments/tables_figures.RData"))
 ```
+
+
+### Simulation setup
+
+- Describe the two models: growth curve and two-factor model
+- Outcomes of interest: bias, RMSE, coverage
+
+### Results
 
 For the growth curve model, virtually no convergence issues.
 In the two factor SEM, convergence issues in small sample sizes ($n\leq 20$) in the low reliability setting [WHY??], with as much as 30% failure and had to be removed from the analysis.

@@ -6,7 +6,7 @@ library(brlavaan)
 library(semTools)
 
 ## ----- Generate data set -----------------------------------------------------
-n <- 5000  # sample size
+n <- 50  # sample size
 
 # Define factor loadings
 lambda_sk <- c(0.8, 0.7, 0.6)  # skill loadings
@@ -95,9 +95,9 @@ mod_int <- "
   sk2.mo3 ~~ v6 * sk3.mo3
 "
 
-fit1 <- sem(mod_int, data = dat_dmc, std.lv = TRUE)
-fit2 <- brsem(mod_int, data = dat_dmc, method = "eRBM", std.lv = TRUE, meanstructure = TRUE)
-fit3 <- brsem(mod_int, data = dat_dmc, method = "iRBM", std.lv = TRUE, meanstructure = TRUE)
+fit1 <- sem(mod_int, data = dat_dmc)
+fit2 <- brsem(mod_int, data = dat_dmc, method = "eRBM", verbose = TRUE)
+fit3 <- brsem(mod_int, data = dat_dmc, start = coef(fit2), verbose = TRUE)
 
 # Simple slopes
 probe <- probe2WayMC(fit3, c("ski", "mot", "int"), "per", "mot", c(-1, 0, 1))
