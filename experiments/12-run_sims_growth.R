@@ -1,13 +1,13 @@
 simu_id <-
   expand_grid(
-    # dist = c("Normal", "Kurtosis", "Non-normal"),
-    # model = "growth",
-    # rel = c(0.8, 0.5),
-    # n = c(15, 20, 50, 100, 1000),
-    dist = "Kurtosis",
+    dist = c("Normal", "Kurtosis", "Non-normal"),
     model = "growth",
-    rel = 0.8,
-    n = 15
+    rel = c(0.8, 0.5),
+    n = c(15, 20, 50, 100, 1000)
+    # dist = "Kurtosis",
+    # model = "growth",
+    # rel = 0.8,
+    # n = 15
   ) |>
   rownames_to_column(var = "simid")
 
