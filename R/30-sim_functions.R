@@ -28,7 +28,7 @@
 #' @export
 sim_fun <- function(
     dist = "Normal",
-    model = "twofac",
+    model = "growth",
     rel = 0.8,
     n = 25,
     nsimu = 1,
@@ -85,7 +85,19 @@ sim_fun <- function(
 
     if ("ML" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
-      fit_list$ML <- do.call(fit_sem, fitsemargs)
+
+      # Start from lavaan defaults
+      fita <- do.call(fit_sem, fitsemargs)
+
+      # Start from truth
+      fitsemargs$start <- true_vals
+      fitb <- do.call(fit_sem, fitsemargs)
+
+      fitz <- list(fita, fitb)
+      compare_loglik <- sapply(fitz, \(x) x$optim$objective)
+      higher_loglik <- which.min(compare_loglik)
+
+      fit_list$ML <- fitz[[higher_loglik]]
       fitsemargs$start <- fit_list$ML$coefficients  # use ML as starting values
     }
     if ("eRBM" %in% whichsims) {
@@ -95,7 +107,26 @@ sim_fun <- function(
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
-      fit_list$iRBM <- do.call(fit_sem, fitsemargs)
+
+      # Start from eBR estimates
+      fitc <- do.call(fit_sem, fitsemargs)
+
+      # Start from lavaan defaults
+      fitsemargs$start <- NULL
+      fita <- do.call(fit_sem, fitsemargs)
+
+      # Start from truth
+      fitsemargs$start <- true_vals
+      fitb <- do.call(fit_sem, fitsemargs)
+
+      # Start from ML estimates
+      fitsemargs$start <- fit_list$ML$coefficients
+      fitd <- do.call(fit_sem, fitsemargs)
+
+      fitz <- list(fita, fitb, fitc, fitd)
+      compare_loglik <- sapply(fitz, \(x) x$optim$objective)
+      higher_loglik <- which.min(compare_loglik)
+      fit_list$iRBM <- fitz[[higher_loglik]]
     }
 
     tibble::tibble(
