@@ -28,7 +28,7 @@
 #' @export
 sim_fun <- function(
     dist = "Normal",
-    model = "growth",
+    model = "twofac",
     rel = 0.8,
     n = 25,
     nsimu = 1,
