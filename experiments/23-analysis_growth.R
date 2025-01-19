@@ -1,5 +1,17 @@
 # source("experiments/20-analyse_sims.R")
 
+
+
+
+
+
+
+
+
+
+
+
+
 ## ----- Table 2 ---------------------------------------------------------------
 # Results (trimmed) growth curve model reliability .80.
 
