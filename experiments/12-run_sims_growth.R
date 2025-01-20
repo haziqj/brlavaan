@@ -30,7 +30,7 @@ for (i in seq_len(nrow(simu_id))) {
     whichsims = c("ML", "eRBM", "iRBM"),
     info_pen = "observed",
     info_bias = "observed",
-    info_se = "expected"
+    info_se = "observed"
   )
   cat("\n")
   save(simu_res_growth, file = "experiments/simu_res_growth.RData")
