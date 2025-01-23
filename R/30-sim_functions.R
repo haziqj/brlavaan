@@ -144,6 +144,10 @@ sim_fun <- function(
       truth = rep(list(true_vals), nsimtypes),
       timing = sapply(fit_list, \(x) x$timing),
       converged = sapply(fit_list, \(x) x$converged),
+      Sigma_OK = sapply(fit_list, \(x) {
+        EV <- eigen(x$Sigma, only.values = TRUE)$values
+        all(EV > 0)
+      }),
       optim_message = sapply(fit_list, \(x) x$optim$message)
     )
   }
