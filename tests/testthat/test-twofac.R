@@ -1,12 +1,12 @@
 # Written by Ollie Kemp
-set.seed(123)
+set.seed(21)
 dat <- gen_data_twofac(n = 15, rel = 0.8, dist = "Normal")
 mod <- txt_mod_twofac(0.8)
 
 fit_lav    <- sem(mod, dat)
 fit_ML     <- fit_sem(mod, dat, rbm = "none")
 fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
-fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
+## fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
 
 # fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
 # fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
@@ -48,11 +48,20 @@ Loglik <- function(pars, dat, i = NULL) {
   }
 }
 
+Sigma <- function(pars) {
+  L <- matrix(c(1, pars[1], pars[2],0,0,0,0,0,0, 1, pars[3], pars[4]), nrow = p, ncol = 2)
+  B <-  matrix(c(0, pars[5], 0, 0), nrow = 2, ncol = 2)
+  theta <- diag(pars[6:11])
+  psi <- diag(pars[12:13])
+  IB_inv <- solve(diag(2) - B)
+  (L %*% IB_inv %*% psi %*% t(IB_inv) %*% t(L)) + theta
+}
+
 grad_Loglik <- function(pars, dat, i = NULL) {
   if (is.null(i)) {
-    numDeriv::grad(Loglik, x = lav_c, dat = dat, i = NULL)
+    numDeriv::grad(Loglik, x = pars, dat = dat, i = NULL)
   } else {
-    numDeriv::grad(Loglik, x = lav_c, dat = dat,  i = i)
+    numDeriv::grad(Loglik, x = pars, dat = dat,  i = i)
   }
 }
 
@@ -63,7 +72,7 @@ emat <- function(pars, dat) {
 }
 
 jmat <- function(pars, dat) {
-  -numDeriv::hessian(Loglik, x = lav_c, dat = dat, i = NULL)
+  -numDeriv::hessian(Loglik, x = pars, dat = dat, i = NULL)
 }
 
 pen_Loglik <- function(pars, dat) {
@@ -72,6 +81,18 @@ pen_Loglik <- function(pars, dat) {
   jinv <- jmat(pars, dat) |> solve()
   ll - 0.5 * sum(diag(jinv %*% e))
 }
+
+penalty <- function(pars, dat) {
+  e <- emat(pars, dat)
+  jinv <- jmat(pars, dat) |> solve()
+  - 0.5 * sum(diag(jinv %*% e))
+}
+
+bias <- function(pars, dat) {
+    jinv <- jmat(pars, dat) |> solve()
+    jinv %*% numDeriv::grad(penalty, x = pars, dat = dat)
+}
+
 
 neg_pen_Loglik <- function(pars, dat) {
   -pen_Loglik(pars, dat)
