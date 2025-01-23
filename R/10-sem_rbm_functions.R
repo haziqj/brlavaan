@@ -393,6 +393,7 @@ bias <- function(
 #'   standard errors.
 #' @param debug If TRUE, the function will return a list of intermediate results
 #'   for debugging purposes.
+#' @param maxgrad If TRUE, the function will return the maximum gradient value.
 #'
 #' @export
 fit_sem <- function(
@@ -405,6 +406,7 @@ fit_sem <- function(
     info_se = "observed",  #FIXME: this is akin to 'information' in lavaan
     debug = FALSE,
     lavfun = "sem",
+    maxgrad = FALSE,
     ...
   ) {
 
@@ -581,6 +583,21 @@ fit_sem <- function(
   elapsed_time <- proc.time() - start_time
   elapsed_time <- elapsed_time["elapsed"]
 
+  # Get max grad ---------------------------------------------------------------
+  if (isTRUE(maxgrad)) {
+    max_grad <- max(abs(numDeriv::grad(
+      func = obj_fun,
+      x = res$par,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )))
+  } else {
+    max_grad <- NULL
+  }
+
+
   # Standard errors ------------------------------------------------------------
   j <- information_matrix(
     theta = as.numeric(est),
@@ -612,6 +629,7 @@ fit_sem <- function(
     stderr = sds,
     timing = elapsed_time,
     converged = res$convergence == 0L,
+    max_grad = max_grad,
     optim = res,
     vcov = jinv,
     information = information,

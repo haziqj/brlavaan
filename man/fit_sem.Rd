@@ -14,6 +14,7 @@ fit_sem(
   info_se = "observed",
   debug = FALSE,
   lavfun = "sem",
+  maxgrad = FALSE,
   ...
 )
 }
@@ -47,6 +48,8 @@ standard errors.}
 for debugging purposes.}
 
 \item{lavfun}{The lavaan function to use. Default is "sem".}
+
+\item{maxgrad}{If TRUE, the function will return the maximum gradient value.}
 
 \item{...}{Additional arguments to pass to the \link{lavaan} function.}
 }
