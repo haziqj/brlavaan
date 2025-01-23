@@ -38,6 +38,7 @@ loglik <- function(
     # Return huge number, to signal the nlminb() optimizer something is not
     # quite OK with this parameter vector
     return(-1e40)
+    # return(NA)
   }
 
   # Mean structure?
@@ -583,16 +584,30 @@ fit_sem <- function(
   elapsed_time <- proc.time() - start_time
   elapsed_time <- elapsed_time["elapsed"]
 
+  # Implied model covariance matrix --------------------------------------------
+  lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = est)
+  Sigma <- lavaan::lav_model_implied(lavmodel)$cov[[1]]
+
   # Get max grad ---------------------------------------------------------------
   if (isTRUE(maxgrad)) {
-    max_grad <- max(abs(numDeriv::grad(
+
+    hinv <- solve(numDeriv::hessian(
       func = obj_fun,
       x = res$par,
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions
-    )))
+    ))
+    max_scores <- numDeriv::grad(
+      func = obj_fun,
+      x = res$par,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+    max_grad <- as.numeric(hinv %*% max_scores)  # not actually max_grad, fix name
   } else {
     max_grad <- NULL
   }
@@ -632,6 +647,7 @@ fit_sem <- function(
     max_grad = max_grad,
     optim = res,
     vcov = jinv,
+    Sigma = Sigma,
     information = information,
     lavfun = lavfun,
     estimator = estimator,
@@ -639,3 +655,30 @@ fit_sem <- function(
     plugin_pen = plugin_pen
   )
 }
+
+Sigma_twofac <- function(x) {
+
+  mod <- txt_mod_twofac(0.8)
+  dat <- gen_data_twofac(100, 0.8)
+  fit0 <- lavaan::sem(mod, dat)
+
+  this_lavmodel <- lavaan::lav_model_set_parameters(fit0@Model, x = x)
+
+  # Compute model implied mean and (co)variance matrix
+  lavimplied <- lavaan::lav_model_implied(this_lavmodel)
+  lavimplied$cov[[1]]
+}
+
+Sigma_growth <- function(x) {
+
+  mod <- txt_mod_growth(0.8)
+  dat <- gen_data_growth(100, 0.8)
+  fit0 <- lavaan::sem(mod, dat)
+
+  this_lavmodel <- lavaan::lav_model_set_parameters(fit0@Model, x = x)
+
+  # Compute model implied mean and (co)variance matrix
+  lavimplied <- lavaan::lav_model_implied(this_lavmodel)
+  lavimplied$cov[[1]]
+}
+
