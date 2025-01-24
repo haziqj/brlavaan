@@ -472,14 +472,23 @@ fit_sem <- function(
   lavoptions     <- fit0@Options
   n              <- lavaan::nobs(fit0)
 
-  # Bounds NOTE: Since lavaan 0.6-19, settings bounds = TRUE will remove the
-  # simple equality constraints. So, have to redo.
-  lavargs$bounds <- TRUE  # bounds are always used
+  # Bounds for nlminb from user settings
+  pt <- lavaan::partable(fit0)
+  lb <- pt$lower[pt$free > 0]
+  ub <- pt$upper[pt$free > 0]
+  obounds <- list(lb = lb, ub = ub)
+
+  # And now, bounds for the penalty function. NOTE: Since lavaan 0.6-19,
+  # settings bounds = TRUE will remove the simple equality constraints. So, have
+  # to redo.
+  user_bounds <- lavargs$bounds
+  lavargs$bounds <- "standard"
   fit0 <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
   pt <- lavaan::partable(fit0)
   lb <- pt$lower[pt$free > 0]
   ub <- pt$upper[pt$free > 0]
   bounds <- list(lb = lb, ub = ub)
+  lavargs$bounds <- user_bounds
 
   # Starting values
   start <- lavargs$start
@@ -493,6 +502,8 @@ fit_sem <- function(
     theta_pack <- as.numeric(
         (start - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
       )
+    # FIXME: This is a hack
+    obounds <- lapply(obounds, \(x) x[seq_along(theta_pack)])
   } else {
     theta_pack <- start
   }
@@ -561,6 +572,8 @@ fit_sem <- function(
     start = theta_pack,
     objective = obj_fun,
     gradient = grad_fun,
+    lower = obounds$lb,
+    upper = obounds$ub,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
@@ -611,7 +624,6 @@ fit_sem <- function(
     scaled_grad <- NULL
   }
 
-
   # Standard errors ------------------------------------------------------------
   j <- information_matrix(
     theta = as.numeric(est),
@@ -651,7 +663,8 @@ fit_sem <- function(
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,
-    plugin_pen = plugin_pen
+    plugin_pen = plugin_pen,
+    bounds = obounds
   )
 }
 
