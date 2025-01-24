@@ -63,7 +63,6 @@ sim_fun <- function(
   mod <- txt_mod(rel)
   true_vals <- truth(datasets[[1]])
 
-
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
     dat <- datasets[[j]]
@@ -77,7 +76,8 @@ sim_fun <- function(
       lavfun = lavfun,
       info_pen = info_pen,
       info_bias = info_bias,
-      info_se = info_se
+      info_se = info_se,
+      maxgrad = TRUE
     )
 
     nsimtypes <- length(whichsims)
@@ -144,6 +144,8 @@ sim_fun <- function(
       truth = rep(list(true_vals), nsimtypes),
       timing = sapply(fit_list, \(x) x$timing),
       converged = sapply(fit_list, \(x) x$converged),
+      scaled_grad = lapply(fit_list, \(x) x$scaled_grad),
+      max_loglik = sapply(fit_list, \(x) -1 * x$optim$objective),
       Sigma_OK = sapply(fit_list, \(x) {
         EV <- eigen(x$Sigma, only.values = TRUE)$values
         all(EV > 0)
