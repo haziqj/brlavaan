@@ -301,7 +301,7 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = kind
   )
-  if (TRUE) {#(lavmodel@eq.constraints) {
+  if (lavmodel@eq.constraints) {
     jinv <- lav_model_information_augment_invert(
       lavmodel = lavmodel,
       information = j,
@@ -311,7 +311,7 @@ penalty <- function(
       rm.idx = integer(0L)
     )
   } else {
-    jinv <- solve(j)
+    jinv <- try(solve(j), silent = TRUE)
   }
 
   if (inherits(jinv, "try-error")) {
@@ -590,7 +590,6 @@ fit_sem <- function(
 
   # Get max grad ---------------------------------------------------------------
   if (isTRUE(maxgrad)) {
-
     hinv <- solve(numDeriv::hessian(
       func = obj_fun,
       x = res$par,
@@ -607,9 +606,9 @@ fit_sem <- function(
       lavdata = lavdata,
       lavoptions = lavoptions
     )
-    max_grad <- as.numeric(hinv %*% max_scores)  # not actually max_grad, fix name
+    scaled_grad <- as.numeric(hinv %*% max_scores)
   } else {
-    max_grad <- NULL
+    scaled_grad <- NULL
   }
 
 
@@ -644,7 +643,7 @@ fit_sem <- function(
     stderr = sds,
     timing = elapsed_time,
     converged = res$convergence == 0L,
-    max_grad = max_grad,
+    scaled_grad = scaled_grad,
     optim = res,
     vcov = jinv,
     Sigma = Sigma,
