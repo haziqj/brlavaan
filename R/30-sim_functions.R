@@ -30,7 +30,7 @@ sim_fun <- function(
     dist = "Normal",
     model = "twofac",
     rel = 0.8,
-    n = 25,
+    n = 15,
     nsimu = 1,
     lavsim = FALSE,
     lavfun = "sem",
@@ -77,7 +77,8 @@ sim_fun <- function(
       info_pen = info_pen,
       info_bias = info_bias,
       info_se = info_se,
-      maxgrad = TRUE
+      maxgrad = TRUE,
+      bounds = TRUE
     )
 
     nsimtypes <- length(whichsims)
@@ -85,48 +86,16 @@ sim_fun <- function(
 
     if ("ML" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
-
-      # Start from lavaan defaults
-      fita <- do.call(fit_sem, fitsemargs)
-
-      # Start from truth
-      fitsemargs$start <- true_vals
-      fitb <- do.call(fit_sem, fitsemargs)
-
-      fitz <- list(fita, fitb)
-      compare_loglik <- sapply(fitz, \(x) x$optim$objective)
-      higher_loglik <- which.min(compare_loglik)
-
-      fit_list$ML <- fitz[[higher_loglik]]
-      fitsemargs$start <- fit_list$ML$coefficients  # use ML as starting values
+      fit_list$ML <- do.call(fit_sem, fitsemargs)
     }
     if ("eRBM" %in% whichsims) {
+      fitsemargs$start <- true_vals
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
-      fitsemargs$start <- fit_list$eRBM$coefficients
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
-
-      # Start from eBR estimates
-      fitc <- do.call(fit_sem, fitsemargs)
-
-      # Start from lavaan defaults
-      fitsemargs$start <- NULL
-      fita <- do.call(fit_sem, fitsemargs)
-
-      # Start from truth
-      fitsemargs$start <- true_vals
-      fitb <- do.call(fit_sem, fitsemargs)
-
-      # Start from ML estimates
-      fitsemargs$start <- fit_list$ML$coefficients
-      fitd <- do.call(fit_sem, fitsemargs)
-
-      fitz <- list(fita, fitb, fitc, fitd)
-      compare_loglik <- sapply(fitz, \(x) x$optim$objective)
-      higher_loglik <- which.min(compare_loglik)
-      fit_list$iRBM <- fitz[[higher_loglik]]
+      fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
 
     tibble::tibble(

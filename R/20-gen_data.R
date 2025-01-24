@@ -130,97 +130,141 @@ txt_mod_growth_pop <- function(rel) {
 #' @rdname growth-curve
 #' @export
 txt_mod_growth <- function(rel) {
-  rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+  "
+  # intercept with coefficients fixed to 1
+  i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+        1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
 
-  if (rel == "0.8") {
-    mod <- "
-      # intercept with coefficients fixed to 1
-      i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
-            1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
+  # slope with coefficients fixed to 0:9 (number of days)
+  s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+        5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
 
-      # slope with coefficients fixed to 0:9 (number of days)
-      s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
-            5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+  i ~~ i
+  i ~ 1
 
-      i ~~ start(550)*i
-      i ~ start(0)*1
+  s ~~ s
+  s ~ 1
 
-      s ~~ start(100)*s
-      s ~ start(0)*1
+  i ~~ s
 
-      i ~~ start(40)*s
+  # fix intercepts
+  Day0 ~ 0*1
+  Day1 ~ 0*1
+  Day2 ~ 0*1
+  Day3 ~ 0*1
+  Day4 ~ 0*1
+  Day5 ~ 0*1
+  Day6 ~ 0*1
+  Day7 ~ 0*1
+  Day8 ~ 0*1
+  Day9 ~ 0*1
 
-      # fix intercepts
-      Day0 ~ 0*1
-      Day1 ~ 0*1
-      Day2 ~ 0*1
-      Day3 ~ 0*1
-      Day4 ~ 0*1
-      Day5 ~ 0*1
-      Day6 ~ 0*1
-      Day7 ~ 0*1
-      Day8 ~ 0*1
-      Day9 ~ 0*1
-
-      # apply equality constraints
-      Day0 ~~ v*Day0 + start(500)*Day0
-      Day1 ~~ v*Day1 + start(500)*Day1
-      Day2 ~~ v*Day2 + start(500)*Day2
-      Day3 ~~ v*Day3 + start(500)*Day3
-      Day4 ~~ v*Day4 + start(500)*Day4
-      Day5 ~~ v*Day5 + start(500)*Day5
-      Day6 ~~ v*Day6 + start(500)*Day6
-      Day7 ~~ v*Day7 + start(500)*Day7
-      Day8 ~~ v*Day8 + start(500)*Day8
-      Day9 ~~ v*Day9 + start(500)*Day9
-    "
-  }
-  if (rel == "0.5") {
-    mod <- "
-      # intercept with coefficients fixed to 1
-      i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
-            1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
-
-      # slope with coefficients fixed to 0:9 (number of days)
-      s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
-            5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
-
-      i ~~ start(275)*i
-      i ~ start(0)*1
-
-      s ~~ start(50)*s
-      s ~ start(0)*1
-
-      i ~~ start(20)*s
-
-      # fix intercepts
-      Day0 ~ 0*1
-      Day1 ~ 0*1
-      Day2 ~ 0*1
-      Day3 ~ 0*1
-      Day4 ~ 0*1
-      Day5 ~ 0*1
-      Day6 ~ 0*1
-      Day7 ~ 0*1
-      Day8 ~ 0*1
-      Day9 ~ 0*1
-
-      # apply equality constraints
-      Day0 ~~ v*Day0 + start(1300)*Day0
-      Day1 ~~ v*Day1 + start(1300)*Day1
-      Day2 ~~ v*Day2 + start(1300)*Day2
-      Day3 ~~ v*Day3 + start(1300)*Day3
-      Day4 ~~ v*Day4 + start(1300)*Day4
-      Day5 ~~ v*Day5 + start(1300)*Day5
-      Day6 ~~ v*Day6 + start(1300)*Day6
-      Day7 ~~ v*Day7 + start(1300)*Day7
-      Day8 ~~ v*Day8 + start(1300)*Day8
-      Day9 ~~ v*Day9 + start(1300)*Day9
-    "
-  }
-
-  mod
+  # apply equality constraints
+  Day0 ~~ v*Day0
+  Day1 ~~ v*Day1
+  Day2 ~~ v*Day2
+  Day3 ~~ v*Day3
+  Day4 ~~ v*Day4
+  Day5 ~~ v*Day5
+  Day6 ~~ v*Day6
+  Day7 ~~ v*Day7
+  Day8 ~~ v*Day8
+  Day9 ~~ v*Day9
+  "
 }
+
+# txt_mod_growth <- function(rel) {
+#   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+#
+#   if (rel == "0.8") {
+#     mod <- "
+#       # intercept with coefficients fixed to 1
+#       i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+#             1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
+#
+#       # slope with coefficients fixed to 0:9 (number of days)
+#       s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+#             5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+#
+#       i ~~ start(550)*i
+#       i ~ start(0)*1
+#
+#       s ~~ start(100)*s
+#       s ~ start(0)*1
+#
+#       i ~~ start(40)*s
+#
+#       # fix intercepts
+#       Day0 ~ 0*1
+#       Day1 ~ 0*1
+#       Day2 ~ 0*1
+#       Day3 ~ 0*1
+#       Day4 ~ 0*1
+#       Day5 ~ 0*1
+#       Day6 ~ 0*1
+#       Day7 ~ 0*1
+#       Day8 ~ 0*1
+#       Day9 ~ 0*1
+#
+#       # apply equality constraints
+#       Day0 ~~ v*Day0 + start(500)*Day0
+#       Day1 ~~ v*Day1 + start(500)*Day1
+#       Day2 ~~ v*Day2 + start(500)*Day2
+#       Day3 ~~ v*Day3 + start(500)*Day3
+#       Day4 ~~ v*Day4 + start(500)*Day4
+#       Day5 ~~ v*Day5 + start(500)*Day5
+#       Day6 ~~ v*Day6 + start(500)*Day6
+#       Day7 ~~ v*Day7 + start(500)*Day7
+#       Day8 ~~ v*Day8 + start(500)*Day8
+#       Day9 ~~ v*Day9 + start(500)*Day9
+#     "
+#   }
+#   if (rel == "0.5") {
+#     mod <- "
+#       # intercept with coefficients fixed to 1
+#       i =~  1*Day0 + 1*Day1 + 1*Day2 + 1*Day3 + 1*Day4 +
+#             1*Day5 + 1*Day6 + 1*Day7 + 1*Day8 + 1*Day9
+#
+#       # slope with coefficients fixed to 0:9 (number of days)
+#       s =~  0*Day0 + 1*Day1 + 2*Day2 + 3*Day3 + 4*Day4 +
+#             5*Day5 + 6*Day6 + 7*Day7 + 8*Day8 + 9*Day9
+#
+#       i ~~ start(275)*i
+#       i ~ start(0)*1
+#
+#       s ~~ start(50)*s
+#       s ~ start(0)*1
+#
+#       i ~~ start(20)*s
+#
+#       # fix intercepts
+#       Day0 ~ 0*1
+#       Day1 ~ 0*1
+#       Day2 ~ 0*1
+#       Day3 ~ 0*1
+#       Day4 ~ 0*1
+#       Day5 ~ 0*1
+#       Day6 ~ 0*1
+#       Day7 ~ 0*1
+#       Day8 ~ 0*1
+#       Day9 ~ 0*1
+#
+#       # apply equality constraints
+#       Day0 ~~ v*Day0 + start(1300)*Day0
+#       Day1 ~~ v*Day1 + start(1300)*Day1
+#       Day2 ~~ v*Day2 + start(1300)*Day2
+#       Day3 ~~ v*Day3 + start(1300)*Day3
+#       Day4 ~~ v*Day4 + start(1300)*Day4
+#       Day5 ~~ v*Day5 + start(1300)*Day5
+#       Day6 ~~ v*Day6 + start(1300)*Day6
+#       Day7 ~~ v*Day7 + start(1300)*Day7
+#       Day8 ~~ v*Day8 + start(1300)*Day8
+#       Day9 ~~ v*Day9 + start(1300)*Day9
+#     "
+#   }
+#
+#   mod
+# }
 
 #' @rdname true-values
 #' @export
@@ -372,11 +416,54 @@ txt_mod_twofac_pop <- function(rel) {
 #' @export
 txt_mod_twofac <- function(rel) {
   "
-    fx =~ x1 + x2 + x3
-    fy =~ y1 + y2 + y3
-    fy ~ fx
+  fx =~ x1 + x2 + x3
+  fy =~ y1 + y2 + y3
+  fy ~ fx
   "
 }
+
+# txt_mod_twofac <- function(rel) {
+#   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+#
+#   if (rel == "0.8") {
+#     mod <- "
+#       fx =~ x1 + start(0.7)*x2 + start(0.6)*x3
+#       fy =~ y1 + start(0.7)*y2 + start(0.6)*y3
+#
+#       fx ~~ start(1)*fx
+#       fy ~~ start(1)*fy
+#       fy ~ start(0.25)*fx
+#
+#       x1 ~~ start(0.25)*x1
+#       x2 ~~ start(0.1225)*x2
+#       x3 ~~ start(0.09)*x3
+#
+#       y1 ~~ start(0.25)*y1
+#       y2 ~~ start(0.1225)*y2
+#       y3 ~~ start(0.09)*y3
+#     "
+#   }
+#   if (rel == "0.5") {
+#     mod <- "
+#       fx =~ x1 + start(0.7)*x2 + start(0.6)*x3
+#       fy =~ y1 + start(0.7)*y2 + start(0.6)*y3
+#
+#       fx ~~ start(1)*fx
+#       fy ~~ start(1)*fy
+#       fy ~ start(0.25)*fx
+#
+#       x1 ~~ start(1)*x1
+#       x2 ~~ start(0.49)*x2
+#       x3 ~~ start(0.36)*x3
+#
+#       y1 ~~ start(1)*y1
+#       y2 ~~ start(0.49)*y2
+#       y3 ~~ start(0.36)*y3
+#     "
+#   }
+#
+#   mod
+# }
 
 #' @rdname true-values
 #' @export
