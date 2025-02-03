@@ -3,7 +3,7 @@ simu_id <-
     dist = c("Normal", "Kurtosis", "Non-normal"),
     model = "twofac",
     rel = c(0.8, 0.5),
-    n = c(50, 100)
+    n = c(15, 25, 50, 100, 250, 500, 1000)
     # dist = "Non-normal",
     # model = "twofac",
     # rel = 0.5,
