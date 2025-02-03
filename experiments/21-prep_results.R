@@ -1,6 +1,8 @@
 ## ----- Organise simulation results -------------------------------------------
 load(here::here("experiments/simu_res_growth.RData"))
 load(here::here("experiments/simu_res_twofac.RData"))
+growthpars <- c("v", "i~~i", "s~~s", "i~~s")
+twofacpars <- c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")
 
 # Create a simid table
 simu_res <- c(simu_res_growth, simu_res_twofac)
@@ -19,7 +21,8 @@ res_nested <-
   simu_res |>
   imap(\(x, idx) bind_cols(simid = idx, x$simu_res)) |>
   bind_rows() |>
-  drop_na()
+  drop_na() |>
+  select(-starts_with("info"))
 
 # This is the full (raw) results data frame
 res <-
@@ -40,6 +43,32 @@ truth <-
     across(truth, first),
     .by = c(model, param, rel)
   )
+
+res |>
+  filter(truth != 0, param %in% growthpars, dist != "Kurtosis") |>
+  filter(converged, Sigma_OK) |>
+  summarise(
+    bias = mean((est - truth) / truth, na.rm = TRUE, trim = 0.05),
+    .by = dist:param
+  ) |>
+  filter(model == "growth") |>
+  mutate(n = factor(n)) |>
+  ggplot(aes(as.numeric(n), bias, col = method)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_colour_manual(values = mycols) +
+  facet_grid(param ~ dist * rel) +
+  theme_bw()
+
+
+
+
+
+
+
+
+
+
 
 ## ----- Organise D&R sims -----------------------------------------------------
 dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
