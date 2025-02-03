@@ -78,7 +78,8 @@ sim_fun <- function(
       info_bias = info_bias,
       info_se = info_se,
       maxgrad = TRUE,
-      bounds = TRUE
+      bounds = TRUE,
+      start = true_vals
     )
 
     nsimtypes <- length(whichsims)
@@ -89,7 +90,6 @@ sim_fun <- function(
       fit_list$ML <- do.call(fit_sem, fitsemargs)
     }
     if ("eRBM" %in% whichsims) {
-      fitsemargs$start <- true_vals
       fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
     }
