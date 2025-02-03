@@ -3,7 +3,7 @@ simu_id <-
     dist = c("Normal", "Kurtosis", "Non-normal"),
     model = "growth",
     rel = c(0.8, 0.5),
-    n = c(15, 20, 50, 100, 1000)
+    n = c(15, 25, 50, 100, 250, 500, 1000)
     # dist = "Kurtosis",
     # model = "growth",
     # rel = 0.8,
