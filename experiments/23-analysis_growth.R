@@ -1,6 +1,19 @@
 # source("experiments/20-analyse_sims.R")
+res_summ |>
+  filter(model == "twofac", dist != "Kurtosis") |>
+  # filter(method %in% c("ML", "eRBM")) |>
+  ggplot(aes(as.numeric(n), rel_mean_bias, col = method)) +
+  geom_hline(yintercept = 0, linetype = "dashed", col = "gray30") +
+  geom_line(linewidth = .8) +
+  scale_colour_manual(values = mycols, name = NULL) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000), name = "Sample size") +
+  scale_y_continuous(labels = scales::percent, name = "Relative mean bias") +
+  guides(colour = guide_legend(nrow = 1, position = "top", reverse = TRUE)) +
+  facet_grid(param ~ dist * rel) +
+  theme_bw() +
+  coord_cartesian(ylim = c(-0.5, 0.5))
 
-
+#
 
 
 
