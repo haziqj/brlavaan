@@ -37,7 +37,8 @@ sim_fun <- function(
     whichsims = c("ML", "eRBM", "iRBM"),
     info_pen = "observed",
     info_bias = "observed",
-    info_se = "observed"
+    info_se = "observed",
+    keep_going = FALSE
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
@@ -55,17 +56,19 @@ sim_fun <- function(
   } else {
     cli::cli_abort("Unknown model: {model}")
   }
-  datasets <- replicate(
-    nsimu,
-    gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim),
-    simplify = FALSE
-  )
+  # datasets <- replicate(
+  #   nsimu,
+  #   gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim),
+  #   simplify = FALSE
+  # )
+  # true_vals <- truth(datasets[[1]])
   mod <- txt_mod(rel)
-  true_vals <- truth(datasets[[1]])
 
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
-    dat <- datasets[[j]]
+    # dat <- datasets[[j]]
+    dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim)
+    true_vals <- truth(dat)
 
     fitsemargs <- list(
       model = mod,
@@ -98,6 +101,9 @@ sim_fun <- function(
       fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
 
+    converged <- sapply(fit_list, \(x) x$converged)
+    if (any(!converged)) return(NULL)
+
     tibble::tibble(
       sim = j,
       dist = dist,
@@ -112,7 +118,7 @@ sim_fun <- function(
       se = lapply(fit_list, \(x) x$stderr),
       truth = rep(list(true_vals), nsimtypes),
       timing = sapply(fit_list, \(x) x$timing),
-      converged = sapply(fit_list, \(x) x$converged),
+      converged = converged,
       scaled_grad = lapply(fit_list, \(x) x$scaled_grad),
       max_loglik = sapply(fit_list, \(x) -1 * x$optim$objective),
       Sigma_OK = sapply(fit_list, \(x) {
@@ -124,12 +130,32 @@ sim_fun <- function(
   }
 
   # Run simulation -------------------------------------------------------------
-  simu_res <- furrr::future_map(
-    seq_len(nsimu),
-    purrr::safely(single_sim, otherwise = NA),
-    .progress = TRUE,
-    .options = furrr::furrr_options(seed = TRUE)
-  )
+  if (isTRUE(keep_going)) {
+    simu_res <- list()
+    i <- 1
+    how_many_fine <- 0
+    while (how_many_fine < nsimu) {
+      batch_size <- nsimu - how_many_fine
+      cat("Batch size: ", batch_size, "\n")
+      new_res <- furrr::future_map(
+        .x = (i - 1) + seq_len(batch_size),
+        .f = purrr::safely(single_sim, otherwise = NA),
+        .progress = TRUE,
+        .options = furrr::furrr_options(seed = TRUE)
+      )
+      where_fine <- which(sapply(new_res, \(x) !is.null(x$result)))
+      how_many_fine <- how_many_fine + length(where_fine)
+      simu_res <- append(simu_res, new_res[where_fine])
+      i <- i + batch_size
+    }
+  } else {
+    simu_res <- furrr::future_map(
+      seq_len(nsimu),
+      purrr::safely(single_sim, otherwise = NA),
+      .progress = TRUE,
+      .options = furrr::furrr_options(seed = TRUE)
+    )
+  }
 
   # Clean up -------------------------------------------------------------------
   where_error <- which(sapply(simu_res, \(x) !is.null(x$error)))
