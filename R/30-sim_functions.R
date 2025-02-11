@@ -56,17 +56,10 @@ sim_fun <- function(
   } else {
     cli::cli_abort("Unknown model: {model}")
   }
-  # datasets <- replicate(
-  #   nsimu,
-  #   gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim),
-  #   simplify = FALSE
-  # )
-  # true_vals <- truth(datasets[[1]])
   mod <- txt_mod(rel)
 
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
-    # dat <- datasets[[j]]
     dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim)
     true_vals <- truth(dat)
 
@@ -101,8 +94,8 @@ sim_fun <- function(
       fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
 
-    converged <- sapply(fit_list, \(x) x$converged)
-    if (any(!converged)) return(NULL)
+    # converged <- sapply(fit_list, \(x) x$converged)
+    # if (any(!converged)) return(NULL)
 
     tibble::tibble(
       sim = j,
@@ -118,7 +111,7 @@ sim_fun <- function(
       se = lapply(fit_list, \(x) x$stderr),
       truth = rep(list(true_vals), nsimtypes),
       timing = sapply(fit_list, \(x) x$timing),
-      converged = converged,
+      converged = sapply(fit_list, \(x) x$converged),
       scaled_grad = lapply(fit_list, \(x) x$scaled_grad),
       max_loglik = sapply(fit_list, \(x) -1 * x$optim$objective),
       Sigma_OK = sapply(fit_list, \(x) {
@@ -136,16 +129,24 @@ sim_fun <- function(
     how_many_fine <- 0
     while (how_many_fine < nsimu) {
       batch_size <- nsimu - how_many_fine
-      cat("Batch size: ", batch_size, "\n")
+      cat("\n")
+      cli::cli_alert_info("Batch size: {batch_size} \n")
       new_res <- furrr::future_map(
         .x = (i - 1) + seq_len(batch_size),
-        .f = purrr::safely(single_sim, otherwise = NA),
+        .f = purrr::safely(single_sim, otherwise = NULL),
         .progress = TRUE,
         .options = furrr::furrr_options(seed = TRUE)
       )
-      where_fine <- which(sapply(new_res, \(x) !is.null(x$result)))
-      how_many_fine <- how_many_fine + length(where_fine)
-      simu_res <- append(simu_res, new_res[where_fine])
+
+      # Convergence table
+      conv_count <- sum(sapply(new_res, \(x) {
+        y <- x$result$converged
+        if (is.null(y)) return(FALSE)
+        else return(all(y))
+      }))
+      how_many_fine <- how_many_fine + conv_count
+
+      simu_res <- append(simu_res, new_res)
       i <- i + batch_size
     }
   } else {
