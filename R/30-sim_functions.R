@@ -21,6 +21,11 @@
 #' @param nsimu The number of replications to run.
 #' @param whichsims A character vector with the estimators to use. Possible
 #'   values are `ML`, `eRBM`, and `iRBM` for now
+#' @param info_pen Should be `"observed"`
+#' @param info_bias Should be `"observed"`
+#' @param info_se Should be `"observed"`
+#' @param keep_going If `TRUE`, the simulation will continue until the desired
+#'   `nsimu` runs are obtained.
 #'
 #' @return A list with two elements. The first element is a data frame with the
 #'   results of the simulation study. The second element is a list with the
@@ -123,7 +128,7 @@ sim_fun <- function(
   }
 
   # Run simulation -------------------------------------------------------------
-  if (isTRUE(keep_going)) {
+  if (!isFALSE(keep_going)) {
     simu_res <- list()
     i <- 1
     how_many_fine <- 0
@@ -140,9 +145,16 @@ sim_fun <- function(
 
       # Convergence table
       conv_count <- sum(sapply(new_res, \(x) {
-        y <- x$result$converged
+        y <- x$result$converged  # vector of length 3 in order of ML, eRBM, iRBM
         if (is.null(y)) return(FALSE)
-        else return(all(y))
+        else {
+          if (is.numeric(keep_going)) {
+            out <- all(y[keep_going])
+          } else {
+            out <- all(y)
+          }
+          return(out)
+        }
       }))
       how_many_fine <- how_many_fine + conv_count
 
