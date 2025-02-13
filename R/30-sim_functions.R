@@ -79,7 +79,7 @@ sim_fun <- function(
       info_bias = info_bias,
       info_se = info_se,
       maxgrad = TRUE,
-      bounds = TRUE,
+      bounds = "standard",
       start = true_vals
     )
 
@@ -95,7 +95,7 @@ sim_fun <- function(
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
     }
     if ("iRBM" %in% whichsims) {
-      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL)
+      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL, fn.scale = 1/10)
       fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
 
