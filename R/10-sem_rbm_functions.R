@@ -11,7 +11,8 @@ loglik <- function(
     kind,
     plugin_pen = NULL,
     bounds,
-    verbose
+    verbose,
+    fn.scale = 1
   ) {
 
   # Unpack theta
@@ -105,6 +106,7 @@ loglik <- function(
   out <- loglik + bias_term - pen_term
   # nlminb() works better with smaller numbers
   # out <- out / (2 * lavsamplestats@ntotal)
+  out <- fn.scale * out
 
   out
 }
@@ -301,6 +303,7 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = kind
   )
+  j <- as.matrix(Matrix::nearPD(j)$mat)
   if (lavmodel@eq.constraints) {
     jinv <- lav_model_information_augment_invert(
       lavmodel = lavmodel,
@@ -311,8 +314,11 @@ penalty <- function(
       rm.idx = integer(0L)
     )
   } else {
-    jinv <- try(solve(j), silent = TRUE)
+    jinv <- try(solve(j), silent = !TRUE)
   }
+
+  # jinv <- as.matrix(Matrix::nearPD(jinv)$mat)
+  e <- as.matrix(Matrix::nearPD(e)$mat)
 
   if (inherits(jinv, "try-error")) {
     return(NA)
@@ -340,14 +346,20 @@ bias <- function(
     lavoptions = lavoptions,
     kind = kind_outside
   )
-  jinv <- lav_model_information_augment_invert(
-    lavmodel = lavmodel,
-    information = j,
-    inverted = TRUE,
-    check.pd = FALSE,
-    use.ginv = FALSE,
-    rm.idx = integer(0L)
-  )
+  j <- as.matrix(Matrix::nearPD(j)$mat)
+  if (lavmodel@eq.constraints) {
+    jinv <- lav_model_information_augment_invert(
+      lavmodel = lavmodel,
+      information = j,
+      inverted = TRUE,
+      check.pd = FALSE,
+      use.ginv = TRUE,
+      rm.idx = integer(0L)
+    )
+  } else {
+    jinv <- try(solve(j), silent = !TRUE)
+  }
+
   A <- numDeriv::grad(
     func = penalty,
     x = theta,
@@ -408,6 +420,7 @@ fit_sem <- function(
     debug = FALSE,
     lavfun = "sem",
     maxgrad = FALSE,
+    fn.scale = 1,
     ...
   ) {
 
@@ -559,7 +572,8 @@ fit_sem <- function(
       plugin_pen = plugin_pen,
       kind = info_pen,
       bounds = bounds,
-      verbose = verbose
+      verbose = verbose,
+      fn.scale = fn.scale
     )
   }
   grad_fun <-
@@ -633,14 +647,20 @@ fit_sem <- function(
     lavoptions = lavoptions,
     kind = info_se
   )
-  jinv <- lav_model_information_augment_invert(
-    lavmodel = lavmodel,
-    information = j,
-    inverted = TRUE,
-    check.pd = FALSE,
-    use.ginv = FALSE,
-    rm.idx = integer(0L)
-  )
+  j <- as.matrix(Matrix::nearPD(j)$mat)
+  if (lavmodel@eq.constraints) {
+    jinv <- lav_model_information_augment_invert(
+      lavmodel = lavmodel,
+      information = j,
+      inverted = TRUE,
+      check.pd = FALSE,
+      use.ginv = TRUE,
+      rm.idx = integer(0L)
+    )
+  } else {
+    jinv <- try(solve(j), silent = !TRUE)
+  }
+
   sds <- sqrt(diag(jinv))
 
   # Unpack estimators

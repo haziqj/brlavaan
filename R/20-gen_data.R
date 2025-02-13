@@ -268,7 +268,7 @@ txt_mod_growth <- function(rel) {
 
 #' @rdname true-values
 #' @export
-truth_growth <- function(rel) {
+truth_growth <- function(rel, scale = 1) {
   if (rel == "0.8") {
     truth <- c(550, 0, 100, 0, 40, rep(500, 10))
   }
@@ -277,12 +277,16 @@ truth_growth <- function(rel) {
   }
 
   names(truth) <- c("i~~i", "i~1", "s~~s", "s~1", "i~~s", rep("v", 10))
+  where_int <- grepl("i~1|s~1", names(truth))
+  truth[where_int] <- truth[where_int] * scale
+  truth[!where_int] <- truth[!where_int] * scale ^ 2
+
   truth
 }
 
 #' @rdname gen-data
 #' @export
-gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE) {
+gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE, scale = 1 / 10, seed = NULL) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) {
     if (dist != "Normal")
@@ -321,6 +325,7 @@ gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
     diag(theta) <- 1300
   }
 
+  set.seed(seed)
   # Simulate data --------------------------------------------------------------
   if (dist == "Normal_lav") {
     dat <- lavaan::simulateData(model = mod, sample.nobs = n)
@@ -367,7 +372,8 @@ gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
     colnames(dat) <- paste0("Day", 0:9)
   }
 
-  attr(dat, "truth") <- truth_growth(rel)
+  dat <- dat * scale
+  attr(dat, "truth") <- truth_growth(rel, scale = scale)
   attr(dat, "dist") <- dist
   dat
 }
