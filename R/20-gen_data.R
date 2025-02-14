@@ -15,6 +15,7 @@
 #' @param meanstructure Logical (this is almost always `FALSE`). If `TRUE`,
 #'   include the mean structure in the estimation. Only for two-factor models
 #'   (since growth models do not have a mean structure).
+#' @param seed Seed for reproducibility.
 #'
 #' @return A data frame with simulated data. For convenience, both the true
 #'   values (`"truth"`) and distribution (`"dist"`) are attached as attributes.
@@ -286,7 +287,14 @@ truth_growth <- function(rel, scale = 1) {
 
 #' @rdname gen-data
 #' @export
-gen_data_growth <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE, scale = 1 / 10, seed = NULL) {
+gen_data_growth <- function(
+    n = 100,
+    rel = 0.8,
+    dist = "Normal",
+    lavsim = FALSE,
+    scale = 1,
+    seed = NULL
+  ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) {
     if (dist != "Normal")
@@ -500,7 +508,14 @@ truth_twofac <- function(rel, meanstructure = FALSE) {
 
 #' @rdname gen-data
 #' @export
-gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE, meanstructure = FALSE) {
+gen_data_twofac <- function(
+    n = 100,
+    rel = 0.8,
+    dist = "Normal",
+    lavsim = FALSE,
+    meanstructure = FALSE,
+    seed = NULL
+  ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) {
     if (dist != "Normal")
@@ -534,6 +549,8 @@ gen_data_twofac <- function(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE,
   beta[2, 1] <- 0.25
   diag(theta) <- diag((lambda %*% psi %*% t(lambda)) %*%
                         solve(reliability) - (lambda %*% psi %*% t(lambda)))
+
+  set.seed(seed)
 
   # Simulate data --------------------------------------------------------------
   if (dist == "Normal_lav") {
