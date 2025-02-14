@@ -17,7 +17,8 @@ model <- "
 "
 
 # Equality constraints (no bounds)
-fit <- growth(model, data = Demo.growth)
+fit <- growth(model, data = Demo.growth[1:10, ])
+coef(fit)
 fit@Model@eq.constraints  # TRUE
 fit@Model@eq.constraints.K
 fit@Model@eq.constraints.k0
@@ -29,12 +30,14 @@ x_pack <- as.numeric(
 x_pack
 
 # Equality constraints (with bounds)
-fit <- growth(model, data = Demo.growth, bounds = "standard")
+fit <- growth(model, data = Demo.growth[1:10, ], bounds = "standard",
+              ceq.simple = TRUE)
+coef(fit)
 fit@Model@eq.constraints  # FALSE
-fit@Model@eq.constraints.K
-fit@Model@eq.constraints.k0
+fit@Model@eq.constraints.K # empty
+fit@Model@eq.constraints.k0 # empty
 
-ceq.function <- fit@Model@ceq.function
-cin.function <- fit@Model@cin.function
-ceq.function(x)
-cin.function(x_pack)
+x <- coef(fit)
+x_pack <- x
+
+
