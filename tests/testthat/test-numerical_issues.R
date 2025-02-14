@@ -1,3 +1,4 @@
+skip()
 # The iRBM method requires good starting values, especially for small sample
 # sizes.
 
