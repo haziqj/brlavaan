@@ -1,12 +1,13 @@
 # Written by Ollie Kemp
 set.seed(21)
-dat <- gen_data_twofac(n = 15, rel = 0.8, dist = "Normal")
-mod <- txt_mod_twofac(0.8)
+dat <- gen_data_twofac(n = 15, rel = 0.5, dist = "Normal")
+mod <- txt_mod_twofac(0.5)
 
-fit_lav    <- sem(mod, dat)
-fit_ML     <- fit_sem(mod, dat, rbm = "none")
+fit_lav    <- sem(mod, dat, bounds = "standard")
+fit_ML     <- fit_sem(mod, dat, rbm = "none", bounds = "standard", verbose = TRUE)
 fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
-## fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
+fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML), verbose = TRUE, bounds = "standard")
+fit_iRBM$converged
 
 # fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
 # fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
@@ -93,7 +94,6 @@ bias <- function(pars, dat) {
     jinv %*% numDeriv::grad(penalty, x = pars, dat = dat)
 }
 
-
 neg_pen_Loglik <- function(pars, dat) {
   -pen_Loglik(pars, dat)
 }
@@ -162,7 +162,7 @@ test_that("Checking Hessian", {
 
 test_that("Checking penalty", {
   expect_equal(
-    penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
+    brlavaan:::penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
     pen_Loglik(lav_c, dat) - Loglik(lav_c, dat)
   )
 })

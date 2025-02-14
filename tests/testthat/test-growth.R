@@ -1,12 +1,13 @@
 ## IK + OK, 29 Oct 2024
 set.seed(111224)
-dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal")
+dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal", scale = 1 / 10)
 mod <- txt_mod_growth(0.8)
 
 fit_lav    <- sem(mod, dat)
 fit_ML     <- fit_sem(mod, dat, rbm = "none")
 fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
-fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML))
+fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_lav))
+fit_iRBM$converged
 
 # fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
 # fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
