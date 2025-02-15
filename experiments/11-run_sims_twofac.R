@@ -1,10 +1,10 @@
 simu_res_twofac <- vector("list", length = nrow(simu_id))
 for (i in seq_len(nrow(simu_id))) {
   dist  <- simu_id$dist[i]
-  model <- simu_id$model[i]
+  model <- "twofac"
   rel   <- simu_id$rel[i]
   n     <- simu_id$n[i]
-  seeds <- simu_id$seed[i]
+  seeds <- simu_id$seed[[i]][1:B]
 
   cli::cli_inform(">>> {Sys.time()} <<<\n\n[{i} / {nrow(simu_id)}] Now running {model} models ({dist}) rel = {rel}, n = {n}\n")
   simu_res_twofac[[i]] <- sim_fun(
