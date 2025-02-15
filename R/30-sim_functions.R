@@ -117,11 +117,11 @@ sim_fun <- function(
     fit_list <- list()
 
     if ("ML" %in% whichsims) {
-      fit_list$ML <- do.call(fit_sem, fitsemargs)
+      fit_list$ML <- try(do.call(fit_sem, fitsemargs))
     }
     if ("eRBM" %in% whichsims) {
       fitsemargs$rbm <- "explicit"
-      fit_list$eRBM <- do.call(fit_sem, fitsemargs)
+      fit_list$eRBM <- try(do.call(fit_sem, fitsemargs))
     }
     if ("iRBM" %in% whichsims) {
       fitsemargs$rbm <- "implicit"
@@ -142,18 +142,18 @@ sim_fun <- function(
       info_bias = substr(info_bias, 1, 3),
       info_se = substr(info_se, 1, 3),
       method = names(fit_list),
-      est = lapply(fit_list, \(x) x$coefficients),
-      se = lapply(fit_list, \(x) x$stderr),
+      est = lapply(fit_list, purrr::possibly(\(x) x$coefficients, NA)),
+      se = lapply(fit_list, purrr::possibly(\(x) x$stderr, NA)),
       truth = rep(list(true_vals), nsimtypes),
-      timing = sapply(fit_list, \(x) x$timing),
-      converged = sapply(fit_list, \(x) x$converged),
-      scaled_grad = lapply(fit_list, \(x) x$scaled_grad),
-      max_loglik = sapply(fit_list, \(x) -1 * x$optim$objective),
-      Sigma_OK = sapply(fit_list, \(x) {
+      timing = sapply(fit_list, purrr::possibly(\(x) x$timing, NA)),
+      converged = sapply(fit_list, purrr::possibly(\(x) x$converged, NA)),
+      scaled_grad = lapply(fit_list, purrr::possibly(\(x) x$scaled_grad, NA)),
+      max_loglik = sapply(fit_list, purrr::possibly(\(x) -1 * x$optim$objective, NA)),
+      Sigma_OK = sapply(fit_list, purrr::possibly(\(x) {
         EV <- eigen(x$Sigma, only.values = TRUE)$values
         all(EV > 0)
-      }),
-      optim_message = sapply(fit_list, \(x) x$optim$message)
+      }, NA)),
+      optim_message = sapply(fit_list, purrr::possibly(\(x) x$optim$message, NA))
     )
   }
 
