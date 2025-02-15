@@ -582,14 +582,14 @@ fit_sem <- function(
 
   # Get max grad ---------------------------------------------------------------
   if (isTRUE(maxgrad)) {
-    hinv <- solve(numDeriv::hessian(
+    hinv <- try(solve(numDeriv::hessian(
       func = obj_fun,
       x = res$par,
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions
-    ))
+    )))
     max_scores <- numDeriv::grad(
       func = obj_fun,
       x = res$par,
@@ -598,7 +598,11 @@ fit_sem <- function(
       lavdata = lavdata,
       lavoptions = lavoptions
     )
-    scaled_grad <- as.numeric(hinv %*% max_scores)
+    if (inherits(hinv, "try-error")) {
+      scaled_grad <- NA
+    } else {
+      scaled_grad <- as.numeric(hinv %*% max_scores)
+    }
   } else {
     scaled_grad <- NULL
   }
