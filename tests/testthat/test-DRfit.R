@@ -1,5 +1,4 @@
 skip()
-library(tidyverse)
 here::i_am("tests/testthat/test-DRfit.R")
 dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
 dr_file2 <- here::here("experiments/2FSEM_est_combined_final.RData")

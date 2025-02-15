@@ -358,7 +358,12 @@ bias <- function(
 #' @param debug If TRUE, the function will return a list of intermediate results
 #'   for debugging purposes.
 #' @param maxgrad If TRUE, the function will return the maximum gradient value.
-#'
+#' @param nearPD `r lifecycle::badge("experimental")` If TRUE, the function will
+#'   ensure the information matrix is positive definite (using
+#'   [Matrix::nearPD()]), which may resolve numerical issues in the bias
+#'   reduction method and standard error calculations.
+#' @param fn.scale `r lifecycle::badge("experimental")` A scaling factor for the
+#'   log-likelihood function.
 #' @export
 fit_sem <- function(
     model,
@@ -618,7 +623,6 @@ fit_sem <- function(
   #     use.ginv = TRUE,
   #     rm.idx = integer(0L)
   #   )
-  # } else {
   # }
   sds <- sqrt(diag(jinv))
 

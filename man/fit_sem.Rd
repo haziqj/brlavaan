@@ -15,6 +15,8 @@ fit_sem(
   debug = FALSE,
   lavfun = "sem",
   maxgrad = FALSE,
+  nearPD = TRUE,
+  fn.scale = 1,
   ...
 )
 }
@@ -50,6 +52,14 @@ for debugging purposes.}
 \item{lavfun}{The lavaan function to use. Default is "sem".}
 
 \item{maxgrad}{If TRUE, the function will return the maximum gradient value.}
+
+\item{nearPD}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} If TRUE, the function will
+ensure the information matrix is positive definite (using
+\code{\link[Matrix:nearPD]{Matrix::nearPD()}}), which may resolve numerical issues in the bias
+reduction method and standard error calculations.}
+
+\item{fn.scale}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} A scaling factor for the
+log-likelihood function.}
 
 \item{...}{Additional arguments to pass to the \link{lavaan} function.}
 }

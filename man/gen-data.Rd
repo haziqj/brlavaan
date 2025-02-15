@@ -7,14 +7,23 @@
 \alias{truth}
 \title{Generate data for simulation studies}
 \usage{
-gen_data_growth(n = 100, rel = 0.8, dist = "Normal", lavsim = FALSE)
+gen_data_growth(
+  n = 100,
+  rel = 0.8,
+  dist = "Normal",
+  lavsim = FALSE,
+  scale = 1,
+  seed
+)
 
 gen_data_twofac(
   n = 100,
   rel = 0.8,
   dist = "Normal",
   lavsim = FALSE,
-  meanstructure = FALSE
+  meanstructure = FALSE,
+  scale = 1,
+  seed
 )
 
 truth(x)
@@ -29,6 +38,12 @@ truth(x)
 
 \item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link{simulateData}
 function.}
+
+\item{scale}{Scaling factor for the data. Default is 1, but for the growth
+curve model data, it is found that having a smaller scale (1/10) can be
+beneficial for convergence.}
+
+\item{seed}{Seed for reproducibility.}
 
 \item{meanstructure}{Logical (this is almost always \code{FALSE}). If \code{TRUE},
 include the mean structure in the estimation. Only for two-factor models

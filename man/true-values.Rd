@@ -6,12 +6,16 @@
 \alias{truth_twofac}
 \title{Retrieve the true values of the models used for simulation}
 \usage{
-truth_growth(rel)
+truth_growth(rel, scale = 1)
 
-truth_twofac(rel, meanstructure = FALSE)
+truth_twofac(rel, meanstructure = FALSE, scale = 1)
 }
 \arguments{
 \item{rel}{Reliability of the growth curve model. Either 0.8 or 0.5.}
+
+\item{scale}{Scaling factor for the data. Default is 1, but for the growth
+curve model data, it is found that having a smaller scale (1/10) can be
+beneficial for convergence.}
 
 \item{meanstructure}{Logical (this is almost always \code{FALSE}). If \code{TRUE},
 include the mean structure in the estimation. Only for two-factor models
