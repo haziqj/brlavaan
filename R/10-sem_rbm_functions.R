@@ -644,6 +644,7 @@ fit_sem <- function(
     estimator = estimator,
     rbm = rbm,
     plugin_pen = plugin_pen,
+    nearPD = nearPD,
     bounds = list(lower = lower, upper = upper)
   )
 }
