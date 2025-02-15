@@ -11,3 +11,4 @@
 ^\.github$
 ^codecov\.yml$
 ^vignettes/articles$
+^inst/dhaene_rosseel$
