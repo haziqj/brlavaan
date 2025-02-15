@@ -11,7 +11,6 @@ sim_fun(
   n = 15,
   nsimu = 1,
   lavsim = FALSE,
-  lavfun = "sem",
   whichsims = c("ML", "eRBM", "iRBM"),
   info_pen = "observed",
   info_bias = "observed",
@@ -35,8 +34,6 @@ sim_fun(
 
 \item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link{simulateData}
 function.}
-
-\item{lavfun}{The lavaan function to use. Default is "sem".}
 
 \item{whichsims}{A character vector with the estimators to use. Possible
 values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}

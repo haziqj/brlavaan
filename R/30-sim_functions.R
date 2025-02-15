@@ -40,7 +40,6 @@ sim_fun <- function(
     n = 15,
     nsimu = 1,
     lavsim = FALSE,
-    lavfun = "sem",
     whichsims = c("ML", "eRBM", "iRBM"),
     info_pen = "observed",
     info_bias = "observed",
