@@ -75,12 +75,25 @@ sim_fun <- function(
   } else {
     cli::cli_abort("Unknown model: {model}")
   }
+  datasets <- NULL
+  if (!is.null(seeds)) {
+    datasets <- purrr::map(
+      .x = seeds,
+      .f = \(s) gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim,
+                         scale = data_scale, seed = s)
+    )
+  }
   mod <- txt_mod(rel)
+
 
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
-    dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim,
-                    seed = seeds[j], scale = data_scale)
+    if (is.null(datasets)) {
+      dat <- gen_data_twofac(n = n, rel = rel, dist = dist, lavsim = lavsim,
+                             scale = data_scale)
+    } else {
+      dat <- datasets[[j]]
+    }
     true_vals <- truth(dat)
 
     fitsemargs <- list(
