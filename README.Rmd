@@ -1,5 +1,7 @@
 ---
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -59,8 +61,16 @@ mod <- "
   y4 ~~ y8
   y6 ~~ y8
 "
-fit <- brsem(model = mod, data = PoliticalDemocracy, information = "expected") 
-summary(fit)
+
+# lavaan fit (ML)
+fit_lav <- sem(model = mod, data = PoliticalDemocracy)
+
+# Bias-reduced fit (by default, implicit method is performed)
+fit_iRBM <- brsem(model = mod, data = PoliticalDemocracy, start = coef(fit_lav)) 
+summary(fit_iRBM)
+
+# Should be different
+tinytest::expect_equal(coef(fit_iRBM), coef(fit_lav))
 ```
 
 By default, the implicit reduced bias ML estimator is used. 
@@ -81,7 +91,6 @@ To switch off the bias reduction, set `rbm = "none"`:
 
 ```{r}
 fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = "none"))
-fit_lav <-   sem(mod, PoliticalDemocracy)
 tinytest::expect_equal(
    coef(fit_ML),
    coef(fit_lav),
