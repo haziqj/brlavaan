@@ -25,12 +25,16 @@ Depends:
 Imports: 
     cli,
     covsim,
+    dplyr,
     furrr,
     future,
     here,
     lifecycle,
+    lme4,
+    magrittr,
     MASS,
     Matrix,
+    matrixcalc,
     methods,
     mvtnorm,
     numDeriv,
@@ -39,5 +43,6 @@ Imports:
     stats,
     stringr,
     tibble,
+    tidyr,
     utils
 Config/Needs/website: rmarkdown
