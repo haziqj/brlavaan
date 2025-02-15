@@ -12,6 +12,7 @@ loglik <- function(
     plugin_pen = NULL,
     bounds,
     verbose,
+    nearPD = TRUE,
     fn.scale = 1
   ) {
 
@@ -25,18 +26,17 @@ loglik <- function(
   # Compute model implied mean and (co)variance matrix
   lavimplied <- lavaan::lav_model_implied(this_lavmodel)
 
-  # Check if lavimplied$cov[[1]] is PD
+  # Check if implied Sigma is PD
+  Sigma <- lavimplied$cov[[1]]  # THIS IS THE "current" Sigma
   eigvals <- try(
-    eigen(lavimplied$cov[[1]], symmetric = TRUE, only.values = TRUE)$values,
+    eigen(Sigma, symmetric = TRUE, only.values = TRUE)$values,
     silent = TRUE
   )
-  # Sigma <- lavimplied$cov[[1]]  # THIS IS THE "current" Sigma
 
   if (any(eigvals < 1e-07) | inherits(eigvals, "try-error")) {
     # Return huge number, to signal the nlminb() optimizer something is not
     # quite OK with this parameter vector
     return(-1e40)
-    # return(NA)
   }
 
   # Mean structure?
@@ -52,7 +52,7 @@ loglik <- function(
     sample.cov  = lavsamplestats@cov[[1]],
     sample.nobs = lavsamplestats@nobs[[1]],
     Mu          = Mu,
-    Sigma       = lavimplied$cov[[1]],
+    Sigma       = Sigma,
     x.idx       = lavsamplestats@x.idx[[1]],
     x.mean      = lavsamplestats@mean.x[[1]],
     x.cov       = lavsamplestats@cov.x[[1]],
@@ -69,7 +69,8 @@ loglik <- function(
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions,
-      kind = kind
+      kind = kind,
+      nearPD = nearPD
     )
   }
 
@@ -81,8 +82,8 @@ loglik <- function(
     pen_args <- list(
       x = theta,
       x.packed = theta.packed,
-      lb = bounds$lb,
-      ub = bounds$ub
+      lb = bounds$lower,
+      ub = bounds$upper
     )
     pen_term <- do.call(plugin_pen, pen_args)
   }
@@ -120,7 +121,7 @@ grad_loglik <- function(
   # Unpack theta
   theta <- unpack_x(theta, lavmodel)
 
-  # Fill in parameters in lavaan's internal matrix representation
+  # Update lavmodel
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Gradient of fit function F_ML (not loglik yet)
@@ -133,13 +134,8 @@ grad_loglik <- function(
   out <- -1 * lavsamplestats@ntotal * grad_F
 
   # Repack gradients
-  # if (lavmodel@eq.constraints) {
-  #   out <- as.numeric(out %*% lavmodel@eq.constraints.K)
-  # }
   out <- pack_x(out, lavmodel)
 
-  # Adjust gradient for rescaling
-  # out <- out / (2 * lavsamplestats@ntotal)
   out
 }
 
@@ -153,20 +149,13 @@ scores_loglik <- function(
 ) {
 
   # Unpack theta
-  # if (lavmodel@eq.constraints) {
-  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-  #     lavmodel@eq.constraints.k0
-  # }
   theta <- unpack_x(theta, lavmodel)
 
-
-  # Fill in parameters in lavaan's internal matrix representation
+  # Update lavstuff
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
-
-  # Compute model implied mean and (co)variance matrix
   lavimplied <- lavaan::lav_model_implied(this_lavmodel)
 
-  # Only 1 group
+  # FIXME: Only 1 group!!!
   moments <- list(cov = lavimplied$cov[[1]])
   if(lavmodel@meanstructure) {
     moments$mean <- lavimplied$mean[[1]]
@@ -200,13 +189,9 @@ hessian_loglik <- function(
   ) {
 
   # Unpack theta
-  # if (lavmodel@eq.constraints) {
-  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-  #     lavmodel@eq.constraints.k0
-  # }
   theta <- unpack_x(theta, lavmodel)
 
-  # Fill in parameters in lavaan's internal matrix representation
+  # Update lavstuff
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
 
   # Hessian of F_ML
@@ -234,10 +219,6 @@ information_matrix <- function(
   kind <- match.arg(kind, c("observed", "expected", "first.order"))
 
   # Unpack theta
-  # if (lavmodel@eq.constraints) {
-  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-  #     lavmodel@eq.constraints.k0
-  # }
   theta <- unpack_x(theta, lavmodel)
 
   # Fill in parameters in lavaan's internal matrix representation
@@ -283,7 +264,8 @@ penalty <- function(
     lavsamplestats,
     lavdata,
     lavoptions,
-    kind
+    kind,
+    nearPD = TRUE
   ) {
 
   e <- information_matrix(
@@ -294,6 +276,7 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = "first.order"
   )
+  if (isTRUE(nearPD)) e <- as.matrix(Matrix::nearPD(e)$mat)
   j <- information_matrix(
     theta = theta,
     lavmodel = lavmodel,
@@ -302,22 +285,8 @@ penalty <- function(
     lavoptions = lavoptions,
     kind = kind
   )
-  j <- as.matrix(Matrix::nearPD(j)$mat)
-  if (lavmodel@eq.constraints) {
-    jinv <- lav_model_information_augment_invert(
-      lavmodel = lavmodel,
-      information = j,
-      inverted = TRUE,
-      check.pd = FALSE,
-      use.ginv = TRUE,
-      rm.idx = integer(0L)
-    )
-  } else {
-    jinv <- try(solve(j), silent = !TRUE)
-  }
-
-  # jinv <- as.matrix(Matrix::nearPD(jinv)$mat)
-  e <- as.matrix(Matrix::nearPD(e)$mat)
+  if (isTRUE(nearPD)) j <- as.matrix(Matrix::nearPD(j)$mat)
+  jinv <- try(solve(j), silent = !TRUE)
 
   if (inherits(jinv, "try-error")) {
     return(NA)
@@ -334,7 +303,8 @@ bias <- function(
     lavdata,
     lavoptions,
     kind_outside,
-    kind_inside
+    kind_inside,
+    nearPD = TRUE
   ) {
 
   j <- information_matrix(
@@ -345,19 +315,8 @@ bias <- function(
     lavoptions = lavoptions,
     kind = kind_outside
   )
-  j <- as.matrix(Matrix::nearPD(j)$mat)
-  if (lavmodel@eq.constraints) {
-    jinv <- lav_model_information_augment_invert(
-      lavmodel = lavmodel,
-      information = j,
-      inverted = TRUE,
-      check.pd = FALSE,
-      use.ginv = TRUE,
-      rm.idx = integer(0L)
-    )
-  } else {
-    jinv <- try(solve(j), silent = !TRUE)
-  }
+  if (isTRUE(nearPD)) j <- as.matrix(Matrix::nearPD(j)$mat)
+  jinv <- try(solve(j), silent = !TRUE)
 
   A <- numDeriv::grad(
     func = penalty,
@@ -366,22 +325,13 @@ bias <- function(
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
     lavoptions = lavoptions,
-    kind = kind_inside
+    kind = kind_inside,
+    nearPD = nearPD
   )
 
-  # Unpack A
-  # if (lavmodel@eq.constraints) {
-  #   A <- lavmodel@eq.constraints.K %*% A
-  # }
-  A <- unpack_x(A, lavmodel)
-
+  A <- unpack_x(A, lavmodel)  # unpack A
   out <- -drop(jinv %*% A)
-
-  # Repack! (since optimiser expects packed version)
-  # if (lavmodel@eq.constraints) {
-  #   out <- as.numeric(out %*% lavmodel@eq.constraints.K)
-  # }
-  out <- pack_x(out, lavmodel)
+  out <- pack_x(out, lavmodel)  # repack! since optimiser expects packed version
 
   out
 }
@@ -421,6 +371,7 @@ fit_sem <- function(
     debug = FALSE,
     lavfun = "sem",
     maxgrad = FALSE,
+    nearPD = TRUE,
     fn.scale = 1,
     ...
   ) {
@@ -538,24 +489,29 @@ fit_sem <- function(
       lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
 
       # Information about the model
-      loglik = loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_pen = plugin_pen, kind = info_pen, bounds = bounds, verbose = FALSE),
-      grad_loglik = grad_loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions),
-      j = information_matrix(start, lavmodel, lavsamplestats, lavdata, lavoptions, kind = info_pen),
-      jinv = lav_model_information_augment_invert(
-        lavmodel = lavmodel,
-        information = information_matrix(
-          start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen
-        ),
-        inverted = TRUE,
-        check.pd = TRUE,
-        use.ginv = FALSE,
-        rm.idx = integer(0L)
-      ),
-      e = information_matrix(start, lavmodel, lavsamplestats, lavdata, lavoptions, kind = "first.order"),
-      scores_loglik = scores_loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions),
-      penalty = penalty(start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen),
-      bias = bias(start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen, info_bias),
-      information = unlist(information)
+      loglik = loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions,
+                      bias_reduction = isFALSE(is_ML | is_eRBM),
+                      plugin_pen = plugin_pen, kind = info_pen,
+                      bounds = list(lower, upper), verbose = FALSE,
+                      fn.scale = fn.scale, nearPD = nearPD),
+      grad_loglik = grad_loglik(start, lavmodel, lavsamplestats, lavdata,
+                                lavoptions),
+      j = information_matrix(start, lavmodel, lavsamplestats, lavdata,
+                             lavoptions, kind = info_pen),
+      jinv = try(solve(
+        information_matrix(start, lavmodel, lavsamplestats, lavdata, lavoptions,
+                           kind = info_pen)
+      )),
+      e = information_matrix(start, lavmodel, lavsamplestats, lavdata,
+                             lavoptions, kind = "first.order"),
+      scores_loglik = scores_loglik(start, lavmodel, lavsamplestats, lavdata,
+                                    lavoptions),
+      penalty = penalty(start, lavmodel, lavsamplestats, lavdata, lavoptions,
+                        info_pen, nearPD),
+      bias = bias(start, lavmodel, lavsamplestats, lavdata, lavoptions,
+                  info_pen, info_bias, nearPD),
+      information = unlist(information),
+      nearPD = nearPD
     )
     return(out)
   }
@@ -573,8 +529,9 @@ fit_sem <- function(
       bias_reduction = isFALSE(is_ML | is_eRBM),
       plugin_pen = plugin_pen,
       kind = info_pen,
-      bounds = bounds,
+      bounds = list(lower = lower, upper = upper),
       verbose = verbose,
+      nearPD = nearPD,
       fn.scale = fn.scale
     )
   }
@@ -606,7 +563,8 @@ fit_sem <- function(
       lavdata = lavdata,
       lavoptions = lavoptions,
       kind_inside = info_pen,
-      kind_outside = info_bias
+      kind_outside = info_bias,
+      nearPD = nearPD
     )
   est <- res$par - b
 
@@ -649,28 +607,22 @@ fit_sem <- function(
     lavoptions = lavoptions,
     kind = info_se
   )
-  j <- as.matrix(Matrix::nearPD(j)$mat)
-  if (lavmodel@eq.constraints) {
-    jinv <- lav_model_information_augment_invert(
-      lavmodel = lavmodel,
-      information = j,
-      inverted = TRUE,
-      check.pd = FALSE,
-      use.ginv = TRUE,
-      rm.idx = integer(0L)
-    )
-  } else {
-    jinv <- try(solve(j), silent = !TRUE)
-  }
-
+  if (isTRUE(nearPD)) j <- as.matrix(Matrix::nearPD(j)$mat)
+  jinv <- try(solve(j), silent = !TRUE)
+  # if (lavmodel@eq.constraints) {
+  #   jinv <- lav_model_information_augment_invert(
+  #     lavmodel = lavmodel,
+  #     information = j,
+  #     inverted = TRUE,
+  #     check.pd = FALSE,
+  #     use.ginv = TRUE,
+  #     rm.idx = integer(0L)
+  #   )
+  # } else {
+  # }
   sds <- sqrt(diag(jinv))
 
   # Unpack estimators
-  # if (lavmodel@eq.constraints) {
-  #   est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
-  #     lavmodel@eq.constraints.k0
-  #   names(est) <- names(start)
-  # }
   est <- unpack_x(est, lavmodel)
   names(est) <- names(lavaan::coef(fit0))
 

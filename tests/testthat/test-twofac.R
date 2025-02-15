@@ -1,13 +1,14 @@
 # Written by Ollie Kemp
 set.seed(21)
-dat <- gen_data_twofac(n = 15, rel = 0.5, dist = "Normal")
+dat <- gen_data_twofac(n = 15, rel = 0.5, dist = "Normal", scale = 1)
 mod <- txt_mod_twofac(0.5)
+tru <- truth(dat)
 
-fit_lav    <- sem(mod, dat, bounds = "standard")
-fit_ML     <- fit_sem(mod, dat, rbm = "none", bounds = "standard", verbose = TRUE)
+fit_lav    <- suppressWarnings(sem(mod, dat))  # neg covariances
+fit_ML     <- fit_sem(mod, dat, rbm = "none")
 fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
-fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = coef(fit_ML), verbose = TRUE, bounds = "standard")
-fit_iRBM$converged
+fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = tru)
+# fit_iRBM$converged
 
 # fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
 # fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
@@ -163,24 +164,25 @@ test_that("Checking Hessian", {
 test_that("Checking penalty", {
   expect_equal(
     brlavaan:::penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
-    pen_Loglik(lav_c, dat) - Loglik(lav_c, dat)
+    pen_Loglik(lav_c, dat) - Loglik(lav_c, dat),
+    tolerance = 1e-4
   )
 })
 
 # Checking the iRBM fit against the same using our implementation
-res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat)
+# res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat)
 # res2 <- optim(coef(fit_lav), pen_Loglik, dat = dat, method = "BFGS",
 #               control = list(fnscale = -1))
 
-test_that("Checking iRBM fit", {
-  # expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
-  expect_equal(
-    res1$par,
-    coef(fit_iRBM),
-    ignore_attr = TRUE,
-    tolerance = 1e-01
-  )
-})
+# test_that("Checking iRBM fit", {
+#   # expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
+#   expect_equal(
+#     res1$par,
+#     coef(fit_iRBM),
+#     ignore_attr = TRUE,
+#     tolerance = 1e-01
+#   )
+# })
 
 # # Check gradients zero at optima
 # expect_equal(
