@@ -28,6 +28,7 @@
 #'   `nsimu` runs are obtained.
 #' @param data_scale A scaling factor for the data. Default is `1`. Usefor for
 #'   the growth curve simulations that this is set to `1/10`.
+#' @param seeds A vector of seeds to use for the simulation study.
 #'
 #' @return A list with two elements. The first element is a data frame with the
 #'   results of the simulation study. The second element is a list with the
