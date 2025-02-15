@@ -17,10 +17,7 @@ loglik <- function(
 
   # Unpack theta
   theta.packed <- theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
+  theta <- unpack_x(theta.packed, lavmodel)
 
   # Fill in parameters in lavaan's internal matrix representation
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
@@ -121,10 +118,7 @@ grad_loglik <- function(
   ) {
 
   # Unpack theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
+  theta <- unpack_x(theta, lavmodel)
 
   # Fill in parameters in lavaan's internal matrix representation
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
@@ -139,9 +133,10 @@ grad_loglik <- function(
   out <- -1 * lavsamplestats@ntotal * grad_F
 
   # Repack gradients
-  if (lavmodel@eq.constraints) {
-    out <- as.numeric(out %*% lavmodel@eq.constraints.K)
-  }
+  # if (lavmodel@eq.constraints) {
+  #   out <- as.numeric(out %*% lavmodel@eq.constraints.K)
+  # }
+  out <- pack_x(out, lavmodel)
 
   # Adjust gradient for rescaling
   # out <- out / (2 * lavsamplestats@ntotal)
@@ -158,10 +153,12 @@ scores_loglik <- function(
 ) {
 
   # Unpack theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
+  # if (lavmodel@eq.constraints) {
+  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+  #     lavmodel@eq.constraints.k0
+  # }
+  theta <- unpack_x(theta, lavmodel)
+
 
   # Fill in parameters in lavaan's internal matrix representation
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
@@ -203,10 +200,11 @@ hessian_loglik <- function(
   ) {
 
   # Unpack theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
+  # if (lavmodel@eq.constraints) {
+  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+  #     lavmodel@eq.constraints.k0
+  # }
+  theta <- unpack_x(theta, lavmodel)
 
   # Fill in parameters in lavaan's internal matrix representation
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
@@ -236,10 +234,11 @@ information_matrix <- function(
   kind <- match.arg(kind, c("observed", "expected", "first.order"))
 
   # Unpack theta
-  if (lavmodel@eq.constraints) {
-    theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
-      lavmodel@eq.constraints.k0
-  }
+  # if (lavmodel@eq.constraints) {
+  #   theta <- as.numeric(lavmodel@eq.constraints.K %*% theta) +
+  #     lavmodel@eq.constraints.k0
+  # }
+  theta <- unpack_x(theta, lavmodel)
 
   # Fill in parameters in lavaan's internal matrix representation
   this_lavmodel <- lavaan::lav_model_set_parameters(lavmodel, x = theta)
@@ -371,16 +370,18 @@ bias <- function(
   )
 
   # Unpack A
-  if (lavmodel@eq.constraints) {
-    A <- lavmodel@eq.constraints.K %*% A
-  }
+  # if (lavmodel@eq.constraints) {
+  #   A <- lavmodel@eq.constraints.K %*% A
+  # }
+  A <- unpack_x(A, lavmodel)
 
   out <- -drop(jinv %*% A)
 
   # Repack! (since optimiser expects packed version)
-  if (lavmodel@eq.constraints) {
-    out <- as.numeric(out %*% lavmodel@eq.constraints.K)
-  }
+  # if (lavmodel@eq.constraints) {
+  #   out <- as.numeric(out %*% lavmodel@eq.constraints.K)
+  # }
+  out <- pack_x(out, lavmodel)
 
   out
 }
@@ -476,6 +477,8 @@ fit_sem <- function(
   # Initialise {lavaan} model object -------------------------------------------
   lavargs$model <- model
   lavargs$data <- data
+  if (!is.null(lavargs$bounds))
+    lavargs$ceq.simple <- TRUE  # YR advises to force simple bounds
   lavargs$do.fit <- FALSE
 
   fit0           <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
@@ -483,51 +486,50 @@ fit_sem <- function(
   lavsamplestats <- fit0@SampleStats
   lavdata        <- fit0@Data
   lavoptions     <- fit0@Options
-  n              <- lavaan::nobs(fit0)
-
-  # Bounds for nlminb from user settings
-  pt <- lavaan::partable(fit0)
-  lb <- pt$lower[pt$free > 0]
-  ub <- pt$upper[pt$free > 0]
-  obounds <- list(lb = lb, ub = ub)
-
-  # And now, bounds for the penalty function. NOTE: Since lavaan 0.6-19,
-  # settings bounds = TRUE will remove the simple equality constraints. So, have
-  # to redo.
-  user_bounds <- lavargs$bounds
-  lavargs$bounds <- "standard"
-  fit0 <- do.call(get(lavfun, envir = asNamespace("lavaan")), lavargs)
-  pt <- lavaan::partable(fit0)
-  lb <- pt$lower[pt$free > 0]
-  ub <- pt$upper[pt$free > 0]
-  bounds <- list(lb = lb, ub = ub)
-  lavargs$bounds <- user_bounds
+  lavpartable    <- fit0@ParTable
+  n              <- fit0@SampleStats@ntotal
 
   # Starting values
-  start <- lavargs$start
-  if (is.null(start)) start <- lavaan::coef(fit0)  # starting values
-  # Fix starting values, so they are not at boundaries
-  fixidx <- which(start >= ub | start <= lb)
-  start[fixidx] <- ((ub + lb) / 2)[fixidx]
+  start <- lavaan::lav_model_get_parameters(lavmodel)
+  if (lavmodel@eq.constraints) start <- pack_x(start, lavmodel)
 
-  # Pack theta and bounds
-  if (lavmodel@eq.constraints) {
-    theta_pack <- as.numeric(
-        (start - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
-      )
-    # FIXME: This is a hack
-    obounds <- lapply(obounds, \(x) x[seq_along(theta_pack)])
+  # Bounds (taken from lavaan's lav_model_estimate.R lines 240-277)
+  if (is.null(lavpartable$lower)) {
+    lower <- -Inf
   } else {
-    theta_pack <- start
+    if (lavmodel@ceq.simple.only) {
+      free.idx <- which(lavpartable$free > 0L & !duplicated(lavpartable$free))
+      lower <- lavpartable$lower[free.idx]
+    } else if (lavmodel@eq.constraints) {
+      # Bounds have no effect any longer...
+      # 0.6-19 -> we switch to (un)constrained estimation
+      lower <- -Inf
+    } else {
+      lower <- lavpartable$lower[lavpartable$free > 0L]
+    }
+  }
+  if (is.null(lavpartable$upper)) {
+    upper <- +Inf
+  } else {
+    if (lavmodel@ceq.simple.only) {
+      free.idx <- which(lavpartable$free > 0L & !duplicated(lavpartable$free))
+      upper <- lavpartable$upper[free.idx]
+    } else if (lavmodel@eq.constraints) {
+      # Bounds have no effect any longer...
+      upper <- +Inf
+    } else {
+      upper <- lavpartable$upper[lavpartable$free > 0L]
+    }
   }
 
   # DEBUG ----------------------------------------------------------------------
   if (isTRUE(debug)) {
     out <- list(
       # Parameters and sample size
-      theta_unpack = start,
-      theta_pack = theta_pack,
-      bounds = bounds,
+      theta_unpack = unpack_x(start, lavmodel),
+      theta_pack = start,
+      lower = lower,
+      upper = upper,
       n = n,
 
       # Information about constraints
@@ -536,23 +538,23 @@ fit_sem <- function(
       lavmodel_eq.constraints.K = lavmodel@eq.constraints.K,
 
       # Information about the model
-      loglik = loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_pen = plugin_pen, kind = info_pen, bounds = bounds, verbose = FALSE),
-      grad_loglik = grad_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-      j = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = info_pen),
+      loglik = loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions, bias_reduction = isFALSE(is_ML | is_eRBM), plugin_pen = plugin_pen, kind = info_pen, bounds = bounds, verbose = FALSE),
+      grad_loglik = grad_loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions),
+      j = information_matrix(start, lavmodel, lavsamplestats, lavdata, lavoptions, kind = info_pen),
       jinv = lav_model_information_augment_invert(
         lavmodel = lavmodel,
         information = information_matrix(
-          theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen
+          start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen
         ),
         inverted = TRUE,
         check.pd = TRUE,
         use.ginv = FALSE,
         rm.idx = integer(0L)
       ),
-      e = information_matrix(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, kind = "first.order"),
-      scores_loglik = scores_loglik(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions),
-      penalty = penalty(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen),
-      bias = bias(theta_pack, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen, info_bias),
+      e = information_matrix(start, lavmodel, lavsamplestats, lavdata, lavoptions, kind = "first.order"),
+      scores_loglik = scores_loglik(start, lavmodel, lavsamplestats, lavdata, lavoptions),
+      penalty = penalty(start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen),
+      bias = bias(start, lavmodel, lavsamplestats, lavdata, lavoptions, info_pen, info_bias),
       information = unlist(information)
     )
     return(out)
@@ -583,11 +585,11 @@ fit_sem <- function(
       NULL
 
   res <- nlminb(
-    start = theta_pack,
+    start = start,
     objective = obj_fun,
     gradient = grad_fun,
-    lower = obounds$lb,
-    upper = obounds$ub,
+    lower = lower,
+    upper = upper,
     lavmodel = lavmodel,
     lavsamplestats = lavsamplestats,
     lavdata = lavdata,
@@ -664,11 +666,13 @@ fit_sem <- function(
   sds <- sqrt(diag(jinv))
 
   # Unpack estimators
-  if (lavmodel@eq.constraints) {
-    est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
-      lavmodel@eq.constraints.k0
-    names(est) <- names(start)
-  }
+  # if (lavmodel@eq.constraints) {
+  #   est  <- as.numeric(lavmodel@eq.constraints.K %*% est) +
+  #     lavmodel@eq.constraints.k0
+  #   names(est) <- names(start)
+  # }
+  est <- unpack_x(est, lavmodel)
+  names(est) <- names(lavaan::coef(fit0))
 
   list(
     coefficients = est,
@@ -684,7 +688,7 @@ fit_sem <- function(
     estimator = estimator,
     rbm = rbm,
     plugin_pen = plugin_pen,
-    bounds = obounds
+    bounds = list(lower = lower, upper = upper)
   )
 }
 
@@ -714,3 +718,29 @@ Sigma_growth <- function(x) {
   lavimplied$cov[[1]]
 }
 
+trf_x <- function(x, lavmodel, how = c("pack", "unpack")) {
+  how <- match.arg(how)
+  if (is.null(x)) return(x)
+  if (lavmodel@eq.constraints) {
+    k0 <- lavmodel@eq.constraints.k0
+    K <- lavmodel@eq.constraints.K
+    if (how == "pack") {
+      out <- as.numeric((x - k0) %*% K)
+    } else if (how == "unpack") {
+      out <- as.numeric(K %*% x + k0)
+    }
+  } else if (lavmodel@ceq.simple.only) {
+    K <- lavmodel@ceq.simple.K
+    if (how == "pack") {
+      out <- as.numeric(x %*% apply(K, 2, \(x) x / sum(x)))
+    } else if (how == "unpack") {
+      out <- as.numeric(K %*% x)
+    }
+  } else {
+    out <- x
+  }
+  out
+}
+
+pack_x <- function(x, lavmodel) trf_x(x, lavmodel, "pack")
+unpack_x <- function(x, lavmodel) trf_x(x, lavmodel, "unpack")
