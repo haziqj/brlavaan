@@ -55,14 +55,18 @@ mod <- "
   y4 ~~ y8
   y6 ~~ y8
 "
-fit <- brsem(model = mod, data = PoliticalDemocracy, information = "expected") 
-summary(fit)
-#> brlavaan 0.1.0 did NOT end normally after 18 iterations
-#> ** WARNING ** Estimates below are most likely unreliable
+
+# lavaan fit (ML)
+fit_lav <- sem(model = mod, data = PoliticalDemocracy)
+
+# Bias-reduced fit (by default, implicit method is performed)
+fit_iRBM <- brsem(model = mod, data = PoliticalDemocracy, start = coef(fit_lav)) 
+summary(fit_iRBM)
+#> brlavaan 0.1.1.9000 ended normally after 57 iterations
 #> 
+#>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT
 #>   Plugin penalty                                  NONE
-#>   Estimator                                         ML
 #>   Optimization method                           NLMINB
 #>   Number of model parameters                        31
 #> 
@@ -72,64 +76,70 @@ summary(fit)
 #> Parameter Estimates:
 #> 
 #>   Standard errors                             Standard
-#>   Information                                 Expected
-#>   Information saturated (h1) model          Structured
+#>   Information                                 Observed
+#>   Observed information based on                Hessian
 #> 
 #> Latent Variables:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   ind60 =~                                            
 #>     x1                1.000                           
-#>     x2                2.193    0.299    7.328    0.000
-#>     x3                1.821    0.261    6.984    0.000
+#>     x2                2.176    0.139   15.607    0.000
+#>     x3                1.814    0.153   11.886    0.000
 #>   dem60 =~                                            
 #>     y1                1.000                           
-#>     y2                1.321    3.758    0.351    0.725
-#>     y3                1.057    2.316    0.456    0.648
-#>     y4                1.278    3.489    0.366    0.714
+#>     y2                1.254    0.185    6.791    0.000
+#>     y3                1.050    0.148    7.092    0.000
+#>     y4                1.254    0.150    8.374    0.000
 #>   dem65 =~                                            
 #>     y5                1.000                           
-#>     y6                1.314    1.926    0.682    0.495
-#>     y7                1.430    1.652    0.866    0.387
-#>     y8                1.419    2.007    0.707    0.480
+#>     y6                1.185    0.171    6.932    0.000
+#>     y7                1.268    0.159    7.970    0.000
+#>     y8                1.257    0.162    7.750    0.000
 #> 
 #> Regressions:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>   dem60 ~                                             
-#>     ind60            -0.073    0.251   -0.292    0.771
+#>     ind60             1.483    0.400    3.712    0.000
 #>   dem65 ~                                             
-#>     ind60             0.075    0.225    0.333    0.739
-#>     dem60             0.047    0.670    0.070    0.944
+#>     ind60             0.570    0.236    2.417    0.016
+#>     dem60             0.832    0.098    8.510    0.000
 #> 
 #> Covariances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
 #>  .y1 ~~                                               
-#>    .y5                0.110    0.420    0.261    0.794
+#>    .y5                0.646    0.382    1.693    0.090
 #>  .y2 ~~                                               
-#>    .y4                0.036    1.260    0.028    0.978
-#>    .y6                0.044    0.812    0.054    0.957
+#>    .y4                1.292    0.707    1.828    0.068
+#>    .y6                2.140    0.732    2.923    0.003
 #>  .y3 ~~                                               
-#>    .y7                0.036    0.670    0.053    0.958
+#>    .y7                0.816    0.640    1.275    0.202
 #>  .y4 ~~                                               
-#>    .y8                0.046    0.680    0.067    0.946
+#>    .y8                0.407    0.476    0.856    0.392
 #>  .y6 ~~                                               
-#>    .y8                0.026    1.069    0.024    0.981
+#>    .y8                1.312    0.572    2.294    0.022
 #> 
 #> Variances:
 #>                    Estimate  Std.Err  z-value  P(>|z|)
-#>    .x1                0.024    0.032    0.750    0.453
-#>    .x2                1.104    0.237    4.663    0.000
-#>    .x3                0.930    0.185    5.023    0.000
-#>    .y1                3.360    0.818    4.106    0.000
-#>    .y2                7.691    1.845    4.168    0.000
-#>    .y3                5.349    1.116    4.792    0.000
-#>    .y4                5.466    1.457    3.752    0.000
-#>    .y5                3.326    0.719    4.625    0.000
-#>    .y6                5.553    1.369    4.056    0.000
-#>    .y7                5.329    1.295    4.116    0.000
-#>    .y8                5.174    1.395    3.710    0.000
-#>     ind60             0.334    0.066    5.021    0.000
-#>    .dem60             0.210    0.633    0.332    0.740
-#>    .dem65             0.317    0.527    0.602    0.547
+#>    .x1                0.083    0.020    4.071    0.000
+#>    .x2                0.122    0.072    1.699    0.089
+#>    .x3                0.472    0.091    5.169    0.000
+#>    .y1                1.896    0.481    3.943    0.000
+#>    .y2                7.363    1.353    5.443    0.000
+#>    .y3                5.161    1.004    5.143    0.000
+#>    .y4                3.198    0.779    4.107    0.000
+#>    .y5                2.406    0.513    4.694    0.000
+#>    .y6                4.919    0.896    5.492    0.000
+#>    .y7                3.474    0.748    4.642    0.000
+#>    .y8                3.271    0.719    4.547    0.000
+#>     ind60             0.447    0.086    5.197    0.000
+#>    .dem60             4.019    0.958    4.197    0.000
+#>    .dem65             0.203    0.231    0.880    0.379
+
+# Should be different
+tinytest::expect_equal(coef(fit_iRBM), coef(fit_lav))
+#> ----- FAILED[data]: <-->
+#>  call| tinytest::expect_equal(coef(fit_iRBM), coef(fit_lav))
+#>  diff| Mean relative difference: 0.01133601
 ```
 
 By default, the implicit reduced bias ML estimator is used. To switch to
@@ -150,7 +160,6 @@ To switch off the bias reduction, set `rbm = "none"`:
 
 ``` r
 fit_ML  <- brsem(mod, PoliticalDemocracy, estimator.args = list(rbm = "none"))
-fit_lav <-   sem(mod, PoliticalDemocracy)
 tinytest::expect_equal(
    coef(fit_ML),
    coef(fit_lav),
