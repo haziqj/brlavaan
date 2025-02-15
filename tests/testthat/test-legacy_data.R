@@ -74,6 +74,9 @@ test_that("Growth curve rel = 0.5", {
 
 test_that("Growth curve rel = 0.8", {
   the_seed <- 1234
+  dist <- "Kurtosis"
+  nobs <- 20
+
   n.factors <- 2
   n.indicators <- 10
   lambda <- matrix(data = c(rep(1, times = n.indicators), 0:(n.indicators-1)),
@@ -87,8 +90,6 @@ test_that("Growth curve rel = 0.8", {
                   ncol = n.indicators)
   diag(theta) <- 500
 
-  dist <- "Kurtosis"
-  nobs <- 20
   set.seed(the_seed)
 
   if(dist == "Normal") {
@@ -149,6 +150,8 @@ test_that("Growth curve rel = 0.8", {
 test_that("Two factor SEM rel = 0.5", {
 
   the_seed <- 789
+  dist <- "NonNormal"
+  nobs <- 50
 
   n.factors <- 2
   n.indicators <- 6
@@ -173,8 +176,7 @@ test_that("Two factor SEM rel = 0.5", {
   diag(theta) <- diag((lambda %*% psi %*% t(lambda)) %*%
                         solve(reliability) - (lambda %*% psi %*% t(lambda)))
 
-  dist <- "NonNormal"
-  nobs <- 50
+
   set.seed(the_seed)
 
   if(dist == "Normal") {
@@ -244,10 +246,11 @@ test_that("Two factor SEM rel = 0.5", {
   expect_equal(data, dat, ignore_attr = FALSE)
 })
 
-
-test_that("Two factor SEM rel = 0.5", {
+test_that("Two factor SEM rel = 0.8", {
 
   the_seed <- 789
+  dist <- "Normal"
+  nobs <- 100
 
   n.factors <- 2
   n.indicators <- 6
@@ -272,8 +275,6 @@ test_that("Two factor SEM rel = 0.5", {
   diag(theta) <- diag((lambda %*% psi %*% t(lambda)) %*%
                         solve(reliability) - (lambda %*% psi %*% t(lambda)))
 
-  dist <- "Normal"
-  nobs <- 100
   set.seed(the_seed)
 
   if(dist == "Normal") {

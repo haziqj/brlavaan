@@ -483,7 +483,7 @@ txt_mod_twofac <- function(rel) {
 
 #' @rdname true-values
 #' @export
-truth_twofac <- function(rel, meanstructure = FALSE) {
+truth_twofac <- function(rel, meanstructure = FALSE, scale = 1) {
   if (rel == "0.8") {
     truth <- c(0.7, 0.6, 0.7, 0.6, 0.25, rep(c(0.25, 0.1225, 0.09), 2), 1, 1)
   }
@@ -505,6 +505,10 @@ truth_twofac <- function(rel, meanstructure = FALSE) {
     )
   }
 
+  where_var <- grepl("~~", names(truth))
+  truth[where_var] <- truth[where_var] * scale ^ 2
+  # truth[!where_int] <- truth[!where_int] * scale ^ 2
+
   truth
 }
 
@@ -516,6 +520,7 @@ gen_data_twofac <- function(
     dist = "Normal",
     lavsim = FALSE,
     meanstructure = FALSE,
+    scale = 1,
     seed
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
@@ -615,7 +620,8 @@ gen_data_twofac <- function(
     colnames(dat) <- c("x1", "x2", "x3", "y1", "y2", "y3")
   }
 
-  attr(dat, "truth") <- truth_twofac(rel, meanstructure)
+  dat <- dat * scale
+  attr(dat, "truth") <- truth_twofac(rel, meanstructure, scale)
   attr(dat, "dist") <- dist
   dat
 }

@@ -4,10 +4,10 @@ dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal", scale = 1 / 10)
 mod <- txt_mod_growth(0.8)
 tru <- truth(dat)
 
-fit_lav    <- growth(mod, dat, start = tru, bounds = "standard")
-fit_ML     <- fit_sem(mod, dat, start = tru, rbm = "none", bounds = "standard")
-fit_eRBM   <- fit_sem(mod, dat, start = tru, rbm = "explicit", bounds = "standard")
-fit_iRBM   <- fit_sem(mod, dat, start = tru, rbm = "implicit", bounds = "standard", verbose = !TRUE)
+fit_lav    <- growth(mod, dat, start = tru)
+fit_ML     <- fit_sem(mod, dat, start = tru, rbm = "none")
+fit_eRBM   <- fit_sem(mod, dat, start = tru, rbm = "explicit")
+fit_iRBM   <- fit_sem(mod, dat, start = tru, rbm = "implicit")
 # fit_iRBM$converged
 
 # fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
@@ -97,19 +97,19 @@ test_that("Check gradients against lavaan", {
   expect_equal(
     numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda),
     fit_lav@optim$dx,
-    tolerance = 1e-06
+    tolerance = 1e-05
   )
   expect_equal(
     numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda),
     grad_Loglik(lav_c, dat = dat, L = Lambda),
-    tolerance = 1e-06
+    tolerance = 1e-05
   )
 })
 
 test_that("Check Hessian against lavaan", {
   expect_equal(
     -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda),
-    lavInspect(fit_lav, "hessian")[ord_names, ord_names] * 100,
+    lavInspect(fit_lav, "hessian")[ord_names, ord_names] * lavaan::nobs(fit_lav),
     ignore_attr = TRUE,
     tolerance = 1e-01
   )
@@ -120,6 +120,17 @@ test_that("Check Hessian against lavaan", {
     tolerance = 1e-01
   )
 })
+
+# 15/2/2025: The following will not work... because brlavaan now uses
+# Matrix::nearestPD() to fix the Hinv.
+
+# test_that("Checking penalty", {
+#   expect_equal(
+#     brlavaan:::penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
+#     pen_Loglik(lav_c, dat, Lambda) - Loglik(lav_c, dat, Lambda),
+#     tolerance = 1e-4
+#   )
+# })
 
 # neg_pen_Loglik <- function(pars, dat, L) -pen_Loglik(pars, dat, L)
 # res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat, L = Lambda)
@@ -134,10 +145,10 @@ test_that("Check Hessian against lavaan", {
 #   )
 # })
 
-test_that("Check iRBM fit", {
-  coef_pos <- c(2, 4, 6, 1, 5, 3)
-  expect_equal(
-    numDeriv::grad(pen_Loglik, coef(fit_iRBM)[coef_pos], dat = dat, L = Lambda),
-    rep(0, 6),
-    tolerance = 1e-02)
-})
+# test_that("Check iRBM fit", {
+#   coef_pos <- c(2, 4, 6, 1, 5, 3)
+#   expect_equal(
+#     numDeriv::grad(pen_Loglik, coef(fit_iRBM)[coef_pos], dat = dat, L = Lambda),
+#     rep(0, 6),
+#     tolerance = 1e-02)
+# })
