@@ -89,8 +89,8 @@ sim_fun <- function(
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
     if (is.null(datasets)) {
-      dat <- gen_data_twofac(n = n, rel = rel, dist = dist, lavsim = lavsim,
-                             scale = data_scale)
+      dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim,
+                      scale = data_scale)
     } else {
       dat <- datasets[[j]]
     }
