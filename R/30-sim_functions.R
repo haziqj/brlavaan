@@ -26,6 +26,8 @@
 #' @param info_se Should be `"observed"`
 #' @param keep_going If `TRUE`, the simulation will continue until the desired
 #'   `nsimu` runs are obtained.
+#' @param data_scale A scaling factor for the data. Default is `1`. Usefor for
+#'   the growth curve simulations that this is set to `1/10`.
 #'
 #' @return A list with two elements. The first element is a data frame with the
 #'   results of the simulation study. The second element is a list with the
@@ -43,11 +45,23 @@ sim_fun <- function(
     info_pen = "observed",
     info_bias = "observed",
     info_se = "observed",
-    keep_going = FALSE
+    keep_going = FALSE,
+    data_scale = 1,
+    seeds = NULL
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
   rel <- match.arg(as.character(rel), c("0.8", "0.5"))
+
+  # Check seeds
+  if (!is.null(seeds)) {
+    if (length(seeds) != nsimu) {
+      cli::cli_abort("Length of seeds must be equal to nsimu")
+    }
+    if (isTRUE(keep_going)) {
+      cli::cli_abort("Cannot use keep_going and seeds at the same time")
+    }
+  }
 
   # Generate all data ----------------------------------------------------------
   if (model == "growth") {
@@ -65,20 +79,23 @@ sim_fun <- function(
 
   # Single run function --------------------------------------------------------
   single_sim <- function(j) {
-    dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim)
+    dat <- gen_data(n = n, rel = rel, dist = dist, lavsim = lavsim,
+                    seed = seeds[j], scale = data_scale)
     true_vals <- truth(dat)
 
     fitsemargs <- list(
       model = mod,
       data = dat,
-      estimator = "ML",
-      information = "expected",
-      debug = FALSE,
-      lavfun = lavfun,
+      rbm = "none",
+      plugin_pen = NULL,
       info_pen = info_pen,
       info_bias = info_bias,
       info_se = info_se,
+      debug = FALSE,
+      lavfun = lavfun,
       maxgrad = TRUE,
+      nearPD = TRUE,
+
       bounds = "standard",
       start = true_vals
     )
@@ -87,15 +104,14 @@ sim_fun <- function(
     fit_list <- list()
 
     if ("ML" %in% whichsims) {
-      fitsemargs$estimator.args <- list(rbm = "none", plugin_penalty = NULL)
       fit_list$ML <- do.call(fit_sem, fitsemargs)
     }
     if ("eRBM" %in% whichsims) {
-      fitsemargs$estimator.args <- list(rbm = "explicit", plugin_penalty = NULL)
+      fitsemargs$rbm <- "explicit"
       fit_list$eRBM <- do.call(fit_sem, fitsemargs)
     }
     if ("iRBM" %in% whichsims) {
-      fitsemargs$estimator.args <- list(rbm = "implicit", plugin_penalty = NULL, fn.scale = 1/10)
+      fitsemargs$rbm <- "implicit"
       fit_list$iRBM <- do.call(fit_sem, fitsemargs)
     }
 
@@ -103,6 +119,7 @@ sim_fun <- function(
     # if (any(!converged)) return(NULL)
 
     tibble::tibble(
+      seed = seeds[j],
       sim = j,
       dist = dist,
       model = model,

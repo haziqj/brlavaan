@@ -372,7 +372,7 @@ fit_sem <- function(
     plugin_pen = NULL,
     info_pen = "observed",
     info_bias = "observed",
-    info_se = "observed",  #FIXME: this is akin to 'information' in lavaan
+    info_se = "observed",  # FIXME: this is akin to 'information' in lavaan
     debug = FALSE,
     lavfun = "sem",
     maxgrad = FALSE,
