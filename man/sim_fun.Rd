@@ -16,7 +16,9 @@ sim_fun(
   info_pen = "observed",
   info_bias = "observed",
   info_se = "observed",
-  keep_going = FALSE
+  keep_going = FALSE,
+  data_scale = 1,
+  seeds = NULL
 )
 }
 \arguments{
@@ -47,6 +49,9 @@ values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
 
 \item{keep_going}{If \code{TRUE}, the simulation will continue until the desired
 \code{nsimu} runs are obtained.}
+
+\item{data_scale}{A scaling factor for the data. Default is \code{1}. Usefor for
+the growth curve simulations that this is set to \code{1/10}.}
 }
 \value{
 A list with two elements. The first element is a data frame with the
