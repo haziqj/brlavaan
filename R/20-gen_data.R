@@ -293,7 +293,7 @@ gen_data_growth <- function(
     dist = "Normal",
     lavsim = FALSE,
     scale = 1,
-    seed = NULL
+    seed
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) {
@@ -333,7 +333,9 @@ gen_data_growth <- function(
     diag(theta) <- 1300
   }
 
-  set.seed(seed)
+  if (missing(seed)) seed <- NULL
+  if (!is.null(seed)) set.seed(seed)
+
   # Simulate data --------------------------------------------------------------
   if (dist == "Normal_lav") {
     dat <- lavaan::simulateData(model = mod, sample.nobs = n)
@@ -514,7 +516,7 @@ gen_data_twofac <- function(
     dist = "Normal",
     lavsim = FALSE,
     meanstructure = FALSE,
-    seed = NULL
+    seed
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   if (isTRUE(lavsim)) {
@@ -550,7 +552,8 @@ gen_data_twofac <- function(
   diag(theta) <- diag((lambda %*% psi %*% t(lambda)) %*%
                         solve(reliability) - (lambda %*% psi %*% t(lambda)))
 
-  set.seed(seed)
+  if (missing(seed)) seed <- NULL
+  if (!is.null(seed)) set.seed(seed)
 
   # Simulate data --------------------------------------------------------------
   if (dist == "Normal_lav") {
