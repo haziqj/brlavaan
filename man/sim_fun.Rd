@@ -49,6 +49,8 @@ values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
 
 \item{data_scale}{A scaling factor for the data. Default is \code{1}. Usefor for
 the growth curve simulations that this is set to \code{1/10}.}
+
+\item{seeds}{A vector of seeds to use for the simulation study.}
 }
 \value{
 A list with two elements. The first element is a data frame with the
