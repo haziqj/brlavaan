@@ -7,7 +7,8 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![R-CMD-check.yaml](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg?branch=package)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
+[![R CMD
+check](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/haziqj/sem-bias/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/haziqj/sem-bias/graph/badge.svg?token=00UGXV3BMK)](https://codecov.io/gh/haziqj/sem-bias)
 <!-- badges: end -->
 
@@ -62,7 +63,7 @@ fit_lav <- sem(model = mod, data = PoliticalDemocracy)
 # Bias-reduced fit (by default, implicit method is performed)
 fit_iRBM <- brsem(model = mod, data = PoliticalDemocracy, start = coef(fit_lav)) 
 summary(fit_iRBM)
-#> brlavaan 0.1.1.9000 ended normally after 57 iterations
+#> brlavaan 0.1.1.9001 ended normally after 57 iterations
 #> 
 #>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT
