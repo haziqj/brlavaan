@@ -141,3 +141,13 @@ is_iRBMp <- function(x, quietly = FALSE) {
 #     kind = "first.order"
 #   )
 # }
+
+# Unexported lavaan functions
+lavaan___.internal_get_IB.inv <-
+  utils::getFromNamespace(".internal_get_IB.inv", "lavaan")
+lavaan___computeDelta <-
+  utils::getFromNamespace("computeDelta", "lavaan")
+lavaan___derivative.mu.LISREL <-
+  utils::getFromNamespace("derivative.mu.LISREL", "lavaan")
+lavaan___lav_model_vcov <-
+  utils::getFromNamespace("lav_model_vcov", "lavaan")

@@ -1,6 +1,6 @@
 Package: brlavaan
 Title: Bias-Reduced Latent Variable Analysis
-Version: 0.1.1.9002
+Version: 0.1.1.9003
 Authors@R: c(
     person("Haziq", "Jamil", , "haziq.jamil@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-3298-1010")),
@@ -25,12 +25,16 @@ Depends:
 Imports: 
     cli,
     covsim,
+    dplyr,
     furrr,
     future,
     here,
     lifecycle,
+    lme4,
+    magrittr,
     MASS,
     Matrix,
+    matrixcalc,
     methods,
     mvtnorm,
     numDeriv,
@@ -39,5 +43,6 @@ Imports:
     stats,
     stringr,
     tibble,
+    tidyr,
     utils
 Config/Needs/website: rmarkdown
