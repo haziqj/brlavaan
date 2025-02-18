@@ -107,7 +107,7 @@ sim_fun <- function(
       debug = FALSE,
       lavfun = lavfun,
       maxgrad = TRUE,
-      nearPD = TRUE,
+      nearPD = FALSE,
 
       bounds = "standard",
       start = true_vals
