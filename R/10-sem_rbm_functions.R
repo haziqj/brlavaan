@@ -12,7 +12,7 @@ loglik <- function(
     plugin_pen = NULL,
     bounds,
     verbose,
-    nearPD = TRUE,
+    nearPD = FALSE,
     fn.scale = 1
   ) {
 
@@ -265,7 +265,7 @@ penalty <- function(
     lavdata,
     lavoptions,
     kind,
-    nearPD = TRUE
+    nearPD = FALSE
   ) {
 
   e <- information_matrix(
@@ -304,7 +304,7 @@ bias <- function(
     lavoptions,
     kind_outside,
     kind_inside,
-    nearPD = TRUE
+    nearPD = FALSE
   ) {
 
   j <- information_matrix(
@@ -376,7 +376,7 @@ fit_sem <- function(
     debug = FALSE,
     lavfun = "sem",
     maxgrad = FALSE,
-    nearPD = TRUE,
+    nearPD = FALSE,
     fn.scale = 1,
     ...
   ) {
