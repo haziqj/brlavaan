@@ -188,10 +188,6 @@ sim_fun <- function(
         }
       }))
       how_many_fine <- how_many_fine + conv_count
-      cat("\n")
-      cli::cli_alert_info("Conv count: {conv_count} \n")
-      cli::cli_alert_info("Total fine: {how_many_fine} \n")
-      if (is.na(conv_count)) browser()
 
       simu_res <- append(simu_res, new_res)
       i <- i + batch_size
