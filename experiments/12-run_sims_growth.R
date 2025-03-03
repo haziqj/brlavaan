@@ -1,5 +1,5 @@
 simu_res_growth <- vector("list", length = nrow(simu_id))
-for (i in 1:10) {  # seq_len(nrow(simu_id))
+for (i in 26:30) {  # seq_len(nrow(simu_id))
   dist  <- simu_id$dist[i]
   model <- "growth"
   rel   <- simu_id$rel[i]
@@ -24,5 +24,5 @@ for (i in 1:10) {  # seq_len(nrow(simu_id))
     data_scale = 1 / 10
   )
   cat("\n")
-  save(simu_res_growth, file = "experiments/simu_res_growthmp2.RData")
+  save(simu_res_growth, file = "experiments/simu_res_growthmp1.RData")
 }
