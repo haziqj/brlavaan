@@ -1,12 +1,13 @@
 library(tidyverse)
 library(brlavaan)
 here::i_am("experiments/growth/analysis.R")
-load(here::here("experiments/simu_res_growthmp1.RData"))
-simu_res_MP1 <- simu_res_growth
-load(here::here("experiments/simu_res_growthmp2.RData"))
-simu_res_MP2 <- simu_res_growth
-load(here::here("experiments/simu_res_growthmp3.RData"))
-simu_res_MP3 <- simu_res_growth
+load(here::here("experiments/simu_res_growth_MP2.RData"))
+# load(here::here("experiments/simu_res_growthmp1.RData"))
+# simu_res_MP1 <- simu_res_growth
+# load(here::here("experiments/simu_res_growthmp2.RData"))
+# simu_res_MP2 <- simu_res_growth
+# load(here::here("experiments/simu_res_growthmp3.RData"))
+# simu_res_MP3 <- simu_res_growth
 
 simu_id <-
   expand_grid(
@@ -17,13 +18,15 @@ simu_id <-
   ) |>
   rownames_to_column(var = "simid")
 
-simu_res <- vector("list", length = nrow(simu_id))
-simu_res[which(sapply(simu_res_MP1, \(x) !is.null(x)))] <-
-  simu_res_MP1[which(sapply(simu_res_MP1, \(x) !is.null(x)))]
-simu_res[which(sapply(simu_res_MP2, \(x) !is.null(x)))] <-
-  simu_res_MP2[which(sapply(simu_res_MP2, \(x) !is.null(x)))]
-simu_res[which(sapply(simu_res_MP3, \(x) !is.null(x)))] <-
-  simu_res_MP3[which(sapply(simu_res_MP3, \(x) !is.null(x)))]
+# simu_res <- vector("list", length = nrow(simu_id))
+# simu_res[which(sapply(simu_res_MP1, \(x) !is.null(x)))] <-
+#   simu_res_MP1[which(sapply(simu_res_MP1, \(x) !is.null(x)))]
+# simu_res[which(sapply(simu_res_MP2, \(x) !is.null(x)))] <-
+#   simu_res_MP2[which(sapply(simu_res_MP2, \(x) !is.null(x)))]
+# simu_res[which(sapply(simu_res_MP3, \(x) !is.null(x)))] <-
+#   simu_res_MP3[which(sapply(simu_res_MP3, \(x) !is.null(x)))]
+simu_res <- simu_res_growth
+
 
 growthpars <- c("v", "i~~i", "s~~s", "i~~s")
 mycols <- c(
@@ -328,7 +331,7 @@ p_perf_n50_type <-
 # Bias vs sample size
 p_biassampsize_ours <-
   res_filtered |>
-  filter(abs(bias) < 2) |>
+  filter(abs(bias) < 10) |>
   summarise(
     bias = mean(bias, trim = 0),
     .by = c(dist:method, type)
@@ -350,7 +353,7 @@ p_biassampsize_ours <-
   theme(axis.text.x = element_text(angle = 45, hjust = 1)); p_biassampsize_ours
 
 res_filtered |>
-  filter(abs(bias) < 2) |>
+  filter(abs(bias) < 10, method != "eRBM") |>
   summarise(
     bias = mean(bias, trim = 0),
     .by = c(dist:method, param)
@@ -360,7 +363,7 @@ res_filtered |>
   ggplot(aes(n, bias, col = method)) +
   geom_line(linewidth = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist) +
+  ggh4x::facet_nested(param ~ rel + dist, scales = "free_y") +
   scale_colour_manual(values = mycols) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
   scale_y_continuous(labels = scales::percent) +
