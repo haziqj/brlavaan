@@ -1,17 +1,17 @@
 library(tidyverse)
 library(brlavaan)
-here::i_am("experiments/LATEST/analysis.R")
-load(here::here("experiments/simu_res_twofac_MP1.RData"))
-simu_res_MP1 <- simu_res_twofac
-load(here::here("experiments/simu_res_twofac_MP2.RData"))
-simu_res_MP2 <- simu_res_twofac
-load(here::here("experiments/simu_res_twofac_MP3.RData"))
-simu_res_MP3 <- simu_res_twofac
+here::i_am("experiments/growth/analysis.R")
+load(here::here("experiments/simu_res_growthmp1.RData"))
+simu_res_MP1 <- simu_res_growth
+load(here::here("experiments/simu_res_growthmp2.RData"))
+simu_res_MP2 <- simu_res_growth
+load(here::here("experiments/simu_res_growthmp3.RData"))
+simu_res_MP3 <- simu_res_growth
 
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    model = "twofac",
+    model = "growth",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000)
   ) |>
@@ -25,8 +25,7 @@ simu_res[which(sapply(simu_res_MP2, \(x) !is.null(x)))] <-
 simu_res[which(sapply(simu_res_MP3, \(x) !is.null(x)))] <-
   simu_res_MP3[which(sapply(simu_res_MP3, \(x) !is.null(x)))]
 
-# growthpars <- c("v", "i~~i", "s~~s", "i~~s")
-twofacpars <- c("y1~~y1", "fx~~fx", "fy~~fy", "fy~fx", "fx=~x2")
+growthpars <- c("v", "i~~i", "s~~s", "i~~s")
 mycols <- c(
   ML = "#E31A1C",
   eRBM = "#A6CEE3",
@@ -57,17 +56,13 @@ res <-
   mutate(param = lapply(truth, names), .before = est) |>
   unnest(param:truth) |>
   select(!starts_with("info")) |>
-  # # For the growth model, keep the first instance of param == "v"
-  # filter(
-  #   row_number() == 1,
-  #   .by = c(simid, sim, dist, model, rel, n, method, param)
-  # )
-  # filter(param %in% twofacpars)
+  # For the growth model, keep the first instance of param == "v"
+  distinct(simid, sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>
   mutate(type = case_when(
-    grepl("=~", param) ~ "Lambda",
-    grepl("fy~~fy|fx~~fx", param) ~ "Psi",
-    grepl("~~", param) ~ "Theta",
-    TRUE ~ "beta"
+    grepl("~1", param) ~ "alpha",
+    grepl("~~", param) ~ "Psi",
+    param == "v" ~ "Theta",
+    TRUE ~ NA
   ))
 
 ## ----- Convergence -----------------------------------------------------------
@@ -101,18 +96,18 @@ res_nested |>
   labs(x = "Simulations", y = NULL, fill = NULL) +
   theme(legend.position = "none")
 
-res_nested |>
-  summarise(
-    count = sum(converged),
-    .by = dist:method
-  ) |>
-  mutate(
-    count = count / max(count),
-    .by = dist:n
-  ) |>
-  pivot_wider(names_from = method, values_from = count) |>
-  select(-starts_with("info")) |>
-  print(n = Inf)
+# res_nested |>
+#   summarise(
+#     count = sum(converged),
+#     .by = dist:method
+#   ) |>
+#   mutate(
+#     count = count / max(count),
+#     .by = dist:n
+#   ) |>
+#   pivot_wider(names_from = method, values_from = count) |>
+#   select(-starts_with("info")) |>
+#   print(n = Inf)
 
 p_conv_succ <-
   res_nested |>
@@ -189,30 +184,31 @@ truth <-
 # Centred distributions
 p2 <-
   res_filtered |>
-  filter(n == 50, dist != "Kurtosis", abs(relbias) < 2) |>
+  filter(n == 50, dist != "Kurtosis", abs(bias) < 7) |>
   ggplot(aes(bias, type, fill = method)) +
   geom_boxplot(alpha = 0.8, outlier.size = 0.5) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   scale_fill_manual(values = mycols) +
-  scale_y_discrete(labels = rev(c(
-    expression(Theta),
-    expression(Psi),
-    expression(Lambda),
-    expression(beta)
-  ))) +
+  # scale_y_discrete(labels = rev(c(
+  #   expression(Theta),
+  #   expression(Psi),
+  #   expression(Lambda),
+  #   expression(beta)
+  # ))) +
   ggh4x::facet_nested(dist + rel ~ .) +
   theme_bw() +
+  # coord_cartesian(xlim = c(-4, 4)) +
   labs(x = "Bias", y = NULL, fill = NULL, title = "Sample size n = 50") +
   theme(legend.position = "none"); p2
 
-# cowplot::plot_grid(
-#   p2, p1,
-#   rel_widths = c(4, 1)
-# )
+cowplot::plot_grid(
+  p2, p1,
+  rel_widths = c(4, 1)
+)
 
 p_dist_n50_all <-
   res_filtered |>
-  filter(n == 50, dist == "Normal", abs(relbias) < 2) |>
+  filter(n == 50, dist == "Normal", abs(bias) < 7) |>
   ggplot(aes(bias, param, fill = method)) +
   geom_boxplot(alpha = 0.8, outlier.size = 0.5) +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -238,11 +234,11 @@ p_dist_n50_all <-
 the_trim <- 0.05
 p_perf_n50_all <-
   res_filtered |>
-  filter(n == 50, dist == "Normal") |>
+  filter(n == 50, dist == "Normal", abs(bias) < 2) |>
   summarise(
-    rmse = sqrt(mean(relbias ^ 2, na.rm = TRUE, trim = the_trim)),
-    meanbias = mean(relbias, trim = the_trim),
-    pu = mean(relbias < 0),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = the_trim)),
+    meanbias = mean(bias, trim = the_trim),
+    pu = mean(bias < 0),
     coverage = mean(covered, na.rm = TRUE),
     .by = c(dist:param, type)
   ) |>
@@ -251,7 +247,7 @@ p_perf_n50_all <-
     metric = factor(
       metric,
       levels = c("meanbias", "rmse", "pu", "coverage"),
-      labels = c("Rel.~mean~bias", "Rel.~RMSE", "Prob.~underest.", "Coverage")
+      labels = c("Mean~bias", "RMSE", "Prob.~underest.",  "Coverage")
     ),
     rel = factor(rel, labels = c("Rel == 0.8", "Rel == 0.5")),
   ) |>
@@ -259,7 +255,7 @@ p_perf_n50_all <-
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
   geom_vline(
     data = tibble(
-      metric = factor(c("Rel.~mean~bias", "Rel.~RMSE", "Prob.~underest.",  "Coverage")),
+      metric = factor(c("Mean~bias", "RMSE", "Prob.~underest.",  "Coverage")),
       value = c(0, 0, 0.5, 0.95),
     ),
     aes(xintercept = value),
@@ -270,8 +266,8 @@ p_perf_n50_all <-
                       labeller = label_parsed) +
   ggh4x::facetted_pos_scales(
     x = list(
-      scale_x_continuous(labels = scales::percent),
-      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(limits = c(-0.3, 0.3)),
+      scale_x_continuous(),
       scale_x_continuous(limits = c(0.35, 0.65), labels = scales::percent),
       scale_x_continuous(limits = c(0.7, 1), labels = scales::percent)
     )
@@ -283,7 +279,7 @@ p_perf_n50_all <-
 the_trim <- 0.05
 p_perf_n50_type <-
   res_filtered |>
-  filter(n == 50) |>
+  filter(n == 50, abs(bias) < 2) |>
   summarise(
     rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = the_trim)),
     meanbias = mean(relbias, trim = the_trim),
@@ -296,88 +292,45 @@ p_perf_n50_type <-
     metric = factor(
       metric,
       levels = c("meanbias", "rmse", "pu", "coverage"),
-      labels = c("Rel. mean bias", "RMSE", "Prob. underest.", "Coverage")
+      labels = c("Mean bias", "RMSE", "Prob. underest.", "Coverage")
     )
   ) |>
   ggplot(aes(value, type, fill = method)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
   geom_vline(
     data = tibble(
-      metric = factor(c("Rel. mean bias", "RMSE", "Prob. underest.", "Coverage")),
+      metric = factor(c("Mean bias", "RMSE", "Prob. underest.", "Coverage")),
       value = c(0, 0, 0.5, 0.95),
     ),
     aes(xintercept = value),
     linetype = "dashed"
   ) +
   scale_fill_manual(values = mycols) +
-  ggh4x::facet_nested(dist + rel ~ metric, scales = "free", space = "free_y") +
+  ggh4x::facet_nested(rel + dist ~ metric, scales = "free", space = "free_y") +
   ggh4x::facetted_pos_scales(
     x = list(
-      scale_x_continuous(labels = scales::percent),
-      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(),
+      scale_x_continuous(),
       scale_x_continuous(limits = c(0.35, 0.65), labels = scales::percent),
       scale_x_continuous(limits = c(0.7, 1), labels = scales::percent)
     )
   ) +
   theme_bw() +
   labs(x = NULL, y = NULL, fill = NULL, title = "n = 50") +
-  theme(legend.position = "bottom") +
   scale_y_discrete(labels = rev(c(
     expression(Theta),
     expression(Psi),
-    expression(Lambda),
-    expression(beta)
-  ))); p_perf_n50_type
+    expression(alpha)
+  ))) +
+  theme(legend.position = "bottom"); p_perf_n50_type
 
-# the_trim <- 0.05
-# res_filtered |>
-#   filter(n == 50, dist != "Kurtosis") |>
-#   summarise(
-#     rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = the_trim)),
-#     meanbias = mean(relbias, trim = the_trim),
-#     pu = mean(relbias < 0),
-#     coverage = mean(covered, na.rm = TRUE),
-#     .by = c(dist:method, param)
-#   ) |>
-#   pivot_longer(rmse:coverage, names_to = "metric", values_to = "value") |>
-#   mutate(
-#     metric = factor(
-#       metric,
-#       levels = c("meanbias", "rmse", "pu", "coverage"),
-#       labels = c("Rel. mean bias", "RMSE", "Prob. underest.", "Coverage")
-#     )
-#   ) |>
-#   filter(param %in% twofacpars) |>
-#   ggplot(aes(value, param, fill = method)) +
-#   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-#   geom_vline(
-#     data = tibble(
-#       metric = factor(c("Rel. mean bias", "RMSE", "Prob. underest.", "Coverage")),
-#       value = c(0, 0, 0.5, 0.95),
-#     ),
-#     aes(xintercept = value),
-#     linetype = "dashed"
-#   ) +
-#   scale_fill_manual(values = mycols) +
-#   ggh4x::facet_nested(dist + rel ~ metric, scales = "free", space = "free_y") +
-#   ggh4x::facetted_pos_scales(
-#     x = list(
-#       scale_x_continuous(labels = scales::percent),
-#       scale_x_continuous(labels = scales::percent),
-#       scale_x_continuous(limits = c(0.35, 0.65), labels = scales::percent),
-#       scale_x_continuous(limits = c(0.7, 1), labels = scales::percent)
-#     )
-#   ) +
-#   theme_bw() +
-#   labs(x = NULL, y = NULL, fill = NULL, title = "n = 50") +
-#   theme(legend.position = "bottom")
 
 # Bias vs sample size
 p_biassampsize_ours <-
   res_filtered |>
-  # filter(dist != "Kurtosis") |>
+  filter(abs(bias) < 2) |>
   summarise(
-    bias = mean(relbias, trim = the_trim),
+    bias = mean(bias, trim = 0),
     .by = c(dist:method, type)
   ) |>
   mutate(
@@ -387,7 +340,7 @@ p_biassampsize_ours <-
   ggplot(aes(n, bias, col = method)) +
   geom_line(linewidth = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(type ~ dist + rel, labeller = label_parsed) +
+  ggh4x::facet_nested(type ~ rel + dist, labeller = label_parsed, scales = "free_y") +
   scale_colour_manual(values = mycols) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
   scale_y_continuous(labels = scales::percent) +
@@ -396,21 +349,21 @@ p_biassampsize_ours <-
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)); p_biassampsize_ours
 
-# res_filtered |>
-#   filter(dist != "Kurtosis") |>
-#   summarise(
-#     bias = mean(relbias, trim = the_trim),
-#     .by = c(dist:method, param)
-#   ) |>
-#   filter(param %in% twofacpars) |>
-#   mutate(n = as.numeric(factor(n))) |>
-#   ggplot(aes(n, bias, col = method)) +
-#   geom_line(linewidth = 0.8) +
-#   geom_hline(yintercept = 0, linetype = "dashed") +
-#   ggh4x::facet_nested(param ~ dist + rel) +
-#   scale_colour_manual(values = mycols) +
-#   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-#   scale_y_continuous(labels = scales::percent) +
-#   labs(x = "Sample size (n)", y = "Rel. mean bias") +
-#   theme_bw()
+res_filtered |>
+  filter(abs(bias) < 2) |>
+  summarise(
+    bias = mean(bias, trim = 0),
+    .by = c(dist:method, param)
+  ) |>
+  filter(param %in% growthpars) |>
+  mutate(n = as.numeric(factor(n))) |>
+  ggplot(aes(n, bias, col = method)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist) +
+  scale_colour_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Sample size (n)", y = "Rel. mean bias") +
+  theme_bw()
 
