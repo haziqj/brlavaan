@@ -1,23 +1,89 @@
+---
+#execute:
+#  echo: false
+#  message: false
+#  warning: false
+#html-table-processing: none
+#lightbox: true
+bibliography: 
+  - refs-HJ.bib
+  - refs-OK.bib
+---
+
 ## Structural Equation Models
 
-- Define a generic SEM model
+A Structural equation model has two parts, a measurement part and a structural part. For observation $i$, the measurement part of the model is defined as 
 
 $$
-y = \nu + \Lambda \eta + \epsilon \\
-\eta = B \eta + \zeta\\
-\epsilon \sim N(0, \Theta_\epsilon)\\
-\zeta \sim N(0, \Psi)\\
-$$ {#eq-sem}
+y_i = \nu + \Lambda \eta_i + \epsilon_i,
+$${#eq-measurement}
+
+where $y_i$ is a $m \times 1$ vector of observed variables, $\nu$ is a $m \times 1$ vector of measurement intercepts, $\gamma$ is a $m \times k$ matrix of factor loadings, $\eta_i$ is a $k \times 1$ vector of latent variables, and $\epsilon_i$ is a $m \times 1$ vector of measurement errors, assumed to be normally distributed with mean zero and covariance matrix $\Phi$.
+
+The structural part of the model is defined as
+
+$$
+\eta_i =\alpha + B \eta_i + \zeta_i,
+$$ {#eq-structural}
+
+where $\alpha$ is a $k \times 1$ vector of factor means, $B$ is a $k \times k$ matrix of regression coefficients for which $\text{diag}(B) = 0$ and $I-B$ is invertible, and $\zeta_i$ is a $k \times 1$ vector of structural disturbances, assumed to be normally distributed with mean zero and covariance matrix $\Psi$. We also assume that $\text{cov}(\eta_i, \epsilon_i) = \text{cov}(\epsilon_i, \zeta_i) = 0$.
+
+<!-- $$ -->
+<!-- \epsilon \sim N(0, \Theta_\epsilon)\\ -->
+<!-- \zeta \sim N(0, \Psi)\\ -->
+<!-- $$ {#eq-sem} -->
 
 ## Estimation methods
 
 ### Maximum likelihood estimation
 
-{{< lipsum 1 >}}
+Parameter estimation in a SEM is typically performed using maximum likelihood estimation, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $p \times 1$ vector $\theta$, and define the model mean vector and covariance matrix as
+
+$$
+\mu(\theta) = \nu + \Lambda (I - B)^{-1} \alpha \\
+\Sigma(\theta) = \Gamma (I - B)^{-1} \Psi (I-B)^{-T} \Lambda^T + \Phi,
+$$
+where for an invertible matrix $A$, $A^{-T} = (A^{-1})^T$.
+
+
+Then given independent and identically distributed data $Y = \{y_1, \dots, y_n \}$ sampled from $N(\mu(\theta), \Sigma(\theta))$, parameter estimation is achieved by maximising the multivariate normal log likelihood defined as
+
+$$
+l(\theta|Y) = \frac{-nm}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n(y_i - \mu(\theta))^T \Sigma(\theta)^{-1}(y_i - \mu(\theta)).
+$${#eq-sem_lik}
+
+
+Maximising @eq-sem_lik with respect to $\theta$ gives the maximum likelihood estimator of $\theta$, which we denote by $\hat{\theta}$. Equivalently, we can solve the equations $\nabla l(\theta) = 0_p$, where here $\nabla$ denotes gradient with respect to $\theta$, $0_p$ is a $p-$vector of zeroes.
 
 ### Reduced-bias estimation
 
-- Explain how the reduced-bias estimation works.
+We apply the method of Reduced-bias M-estimation of @kosmidis2024empirical. The method works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $l(\theta)$, we instead maximise
 
-{{< lipsum 1 >}}
+$$
+l(\theta) + P(\theta)
+$$
+
+for an appropriate penalty term $P(\theta)$. The penalty term is chosen such that the resulting estimator, denoted $\tilde{\theta}$ has asymptotically reduced bias compared to $\hat{\theta}$, while still retaining the same asymptotic properties. This concept started in @firth1993bias for regular maximum likelihood estimators, by adding a bias-reducing adjustment term to the score equations, the derivative of the log likelihood. When estimating the canonical parameter of an exponential family model, @jeffreys1946prior invariant prior can be added as a penalty term to the log-likelihood to achieve the same result.
+
+@kosmidis2024empirical generalised this adjustment to generic M-estimators, which also has the significant advantage of giving rise to a penalised likelihood for any M-estimator estimated by maximising an objective function, rather than only when estimating canonical parameters in an exponential family model.
+
+The penalty term $P(\theta)$ is defined as
+
+$$
+P(\theta) = -\frac{1}{2}\text{trace}\{j(\theta)^{-1} e(\theta)\},
+$$
+where $j(\theta)$ is the negative Hessian matrix $-\nabla \nabla^T l(\theta)$ and $e(\theta)$ is the first order information, which we can write as $e(\theta) = E(\theta)^T E(\theta)$ where $E(\theta)$ is an $n \times p$ matrix with $t-$th column $\frac{\partial}{\partial \theta_t} \nabla l(\theta)$.
+
+
+Solving this penalised SEM likelihood function results in implicit RBM-estimation. However, we can also define an explicit form of RBM-estimation by obtaining an explicit expression for the bias and subtracting this from the original maximum likelihood estimator. The explicit estimator is
+
+$$
+\theta^{ex} = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}),
+$$
+where $A(\theta) = \nabla P(\theta)$. Both implicit and explicit RBM-estimators are to be investigated throughout this paper.
+
+### Jackknife, Bootstrap, Ozenne...?
+
+aaa
+
 
