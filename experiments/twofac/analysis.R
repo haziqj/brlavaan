@@ -1,6 +1,6 @@
 library(tidyverse)
 library(brlavaan)
-here::i_am("experiments/LATEST/analysis.R")
+here::i_am("experiments/twofac/analysis.R")
 load(here::here("experiments/simu_res_twofac_MP1.RData"))
 simu_res_MP1 <- simu_res_twofac
 load(here::here("experiments/simu_res_twofac_MP2.RData"))

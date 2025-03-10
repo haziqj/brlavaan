@@ -1,0 +1,176 @@
+---
+title: "Simulation Results for Two-Factor Models"
+format: 
+  pdf: 
+    fig-width: 7
+    fig-height: 5
+execute:
+  echo: false
+  freeze: auto
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(brlavaan)
+library(gt)
+library(semPlot)
+library(semptools)
+here::i_am("experiments/LATEST/2024-02-13.qmd")
+
+load(here::here("experiments/LATEST/simrestwofac.RData"))
+
+# Two factor graph
+mod <- txt_mod_twofac(0.8)
+dat <- gen_data_twofac(n = 1000, rel = 0.8)
+fit <- sem(mod, dat)
+fit@ParTable$est[fit@ParTable$free > 0] <- truth(dat)
+
+p_twofac_path <- semPlot::semPaths(
+  fit, 
+  whatLabels = "est",
+  node.width = 1,
+  sizeLat = 10, 
+  sizeMan = 6,
+  label.cex = 1.2,
+  edge.label.cex = 1,
+  # style = "ram",
+  mar = c(-5, -1, 5, -1)
+)
+```
+
+<!-- ```{r} -->
+<!-- #| label: analysis -->
+<!-- #| include: false -->
+<!-- #| cache: true -->
+<!-- #| eval: true  -->
+<!-- #| file: analysis.R -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- #| label: comparedr -->
+<!-- #| include: false -->
+<!-- #| cache: true -->
+<!-- #| eval: true  -->
+<!-- #| file: comparedr.R -->
+<!-- ``` -->
+
+## Model
+
+```{r}
+#| label: fig-graph-twofac
+#| out-width: 100%
+
+indicator_order <- c(
+  "x1", "x2", "x3",
+  "y1", "y2", "y3"
+)
+indicator_factor <- c(
+  "fx", "fx", "fx",
+  "fy", "fy", "fy"
+)
+factor_layout <- matrix(c("fx", "fy"), byrow = TRUE, nrow = 1)
+factor_point_to <- matrix(c("up", "up"), byrow = TRUE, nrow = 1)
+plot(set_sem_layout(
+  p_twofac_path,
+  indicator_order = indicator_order,
+  indicator_factor = indicator_factor,
+  factor_layout = factor_layout,
+  factor_point_to = factor_point_to
+))
+```
+
+
+{{< pagebreak >}}
+
+## Convergence check
+
+```{r}
+#| label: tbl-conv-twofac
+#| tbl-cap: 'Total number of runs required to reach 1,000 converged iterations.'
+#| tbl-pos: p
+tab_conv |>
+  select(-model) |>
+  group_by(dist) |>
+  gt() |>
+  cols_label(
+    rel = "Reliability",
+    n = "Sample size"
+  ) |>
+  fmt_auto(columns = ML:iRBM)
+```
+
+```{r}
+#| label: fig-conv-succ
+#| out-width: 100%
+#| fig-cap: 'Convergence and success rate for two-factor model simulations.'
+p_conv_succ
+```
+
+
+{{< pagebreak >}}
+
+## Results
+
+### Bias distribution
+
+```{r}
+#| label: fig-dist-n50
+#| fig-cap: 'Bias distribution of ML, eRBM and iRBM methods when $n = 50$ for different parameter types.'
+#| fig-width: 8
+cowplot::plot_grid(
+  p2, p1,
+  rel_widths = c(3, 1)
+)
+```
+
+```{r}
+#| label: fig-dist-n50-all
+#| fig-cap: 'Bias distribution of ML, eRBM and iRBM methods when $n = 50$ for all estimated parameters.'
+#| fig-height: 8
+p_dist_n50_all
+```
+
+{{< pagebreak >}}
+
+### Performance plots
+
+```{r}
+#| label: fig-perf-n50-all
+#| fig-cap: 'Performance of ML, eRBM and iRBM methods  for all estimated parameters when $n = 50$ and normally distributed latent variables.'
+#| fig-height: 6.5
+p_perf_n50_all
+```
+
+
+```{r}
+#| label: fig-perf-n50-type
+#| fig-cap: 'Performance of ML, eRBM and iRBM methods for different parameter types when $n = 50$ and normally distributed latent variables.'
+#| fig-height: 7
+p_perf_n50_type
+```
+
+{{< pagebreak >}}
+
+### Bias vs sample size
+
+```{r}
+#| label: fig-bias-samplesize-ours
+#| fig-cap: 'Bias of ML, eRBM and iRBM methods for different sample sizes.'
+#| fig-height: 5
+#| fig-width: 7
+p_biassampsize_ours
+```
+
+```{r}
+#| label: fig-bias-samplesize-all
+#| fig-cap: 'Bias of ML, eRBM, iRBM and all methods considered in D&R paper, for different sample sizes.'
+#| fig-height: 5
+#| fig-width: 7
+p_biassamplesize_all
+```
+

@@ -24,6 +24,7 @@
 #' @param info_pen Should be `"observed"`
 #' @param info_bias Should be `"observed"`
 #' @param info_se Should be `"observed"`
+#' @param bounds Bounded estimation?
 #' @param keep_going If `TRUE`, the simulation will continue until the desired
 #'   `nsimu` runs are obtained.
 #' @param data_scale A scaling factor for the data. Default is `1`. Usefor for
@@ -42,6 +43,7 @@ sim_fun <- function(
     nsimu = 1,
     lavsim = FALSE,
     whichsims = c("ML", "eRBM", "iRBM"),
+    bounds = "none",
     info_pen = "observed",
     info_bias = "observed",
     info_se = "observed",
@@ -109,7 +111,7 @@ sim_fun <- function(
       maxgrad = TRUE,
       nearPD = FALSE,
 
-      bounds = "standard",
+      bounds = bounds,
       start = true_vals
     )
 
@@ -183,6 +185,7 @@ sim_fun <- function(
           } else {
             out <- all(y)
           }
+          if (is.na(out)) out <- FALSE
           return(out)
         }
       }))
