@@ -20,7 +20,8 @@ editor_options:
 library(tidyverse)
 library(brlavaan)
 library(gt)
-here::i_am("experiments/growth/analysis.R")
+library(glue)
+here::i_am("experiments/growth/growth.qmd")
 load(here::here("experiments/simu_res_growth_MP2.RData"))
 simu_res <- simu_res_growth
 
@@ -542,85 +543,140 @@ res_dr <-
 ```{r}
 #| html-table-processing: none
 #| column: page
-bind_rows(
-  res,
-  res_dr
-) |>
-  # mutate(converged = all(converged), .by = c(simid, seed)) |>
-  # filter(converged) |>
-  filter(dist != "Kurtosis", param %in% growthpars, abs(relbias) < 5) |>
-  summarise(
-    mean_bias = mean(relbias, na.rm = TRUE, trim = 0.05),
-    med_bias = median(relbias, na.rm = TRUE),
-    rmse = sqrt(mean(relbias ^ 2, na.rm = TRUE, trim = 0.05)),
-    coverage = mean(covered, na.rm = TRUE),
-    .by = c(dist:method, param)
-  ) |>
-  select(-model) |>
-  mutate(param = factor(param, levels = growthpars)) |>
-  arrange(dist, rel, n, param, desc(method)) |> 
-  select(-coverage) |>
-  pivot_wider(
-    names_from = c(dist, n),
-    values_from = c(mean_bias, med_bias, rmse)
-  ) |>
-  group_by(rel) |>
-  gt() |>
-  fmt_number(decimals = 2) |>
-  tab_spanner(
-    columns = starts_with("mean_bias"),
-    label = "Relative mean bias"
-  ) |>
-  tab_spanner(
-    columns = starts_with("med_bias"),
-    label = "Relative median bias"
-  ) |>
-  tab_spanner(
-    columns = starts_with("rmse"),
-    label = "Relative RMSE"
-  ) |>
+#| label: tbl-bias-growth-80
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.80'
+tab_bias_growth <- function(rel) {
+  ress <- bind_rows(res, res_dr)
+  i <- ress$rel == glue("Rel = {rel}")
+  
+  ress |>
+    # mutate(converged = all(converged), .by = c(simid, seed)) |>
+    # filter(converged) |>
+    filter(dist != "Kurtosis", param %in% growthpars, i) |>
+    filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+    summarise(
+      mean_bias = mean(relbias, na.rm = TRUE, trim = 0.05),
+      med_bias = median(relbias, na.rm = TRUE),
+      rmse = sqrt(mean(relbias ^ 2, na.rm = TRUE, trim = 0.05)),
+      coverage = mean(covered, na.rm = TRUE),
+      .by = c(dist:method, param)
+    ) |>
+    arrange(dist, rel, n, param, desc(method)) |>
+    select(-model, -coverage, -rel) |>
+    pivot_wider(
+      names_from = c(dist, n),
+      values_from = c(mean_bias, med_bias, rmse)
+    ) |>
+    group_by(param) |>
+    gt(rowname_col = "method") |>
+    fmt_number(decimals = 2) |>
+    fmt_markdown(param) |>
     tab_spanner(
-    columns = contains("_Normal"),
-    label = "Normal data"
-  ) |>
-  tab_spanner(
-    columns = contains("_Non-Normal"),
-    label = "Non-normal data"
-  ) |>  
-  cols_label(
-    ends_with("_15") ~ "15",
-    ends_with("_20") ~ "20",
-    ends_with("_50") ~ "50",
-    ends_with("_100") ~ "100",
-    ends_with("_1000") ~ "1000"
-  )
+      columns = matches("mean_bias_Normal_"),
+      label = "Normal data"
+    ) |>
+    tab_spanner(
+      columns = matches("mean_bias_Non-Normal_"),
+      label = "Non-normal data"
+    ) |>
+    tab_spanner(
+      columns = starts_with("mean_bias"),
+      label = "Relative mean bias"
+    ) |>
+    tab_spanner(
+      columns = matches("med_bias_Normal_"),
+      label = "Normal data", 
+      id = "med_bias_normal"
+    ) |>
+    tab_spanner(
+      columns = matches("med_bias_Non-Normal_"),
+      label = "Non-normal data", 
+      id = "med_bias_nonnormal"
+    ) |>  
+    tab_spanner(
+      columns = starts_with("med_bias"),
+      label = "Relative median bias"
+    ) |>
+    tab_spanner(
+      columns = matches("rmse_Normal_"),
+      label = "Normal data", 
+      id = "rmse_normal"
+    ) |>
+    tab_spanner(
+      columns = matches("rmse_Non-Normal_"),
+      label = "Non-normal data", 
+      id = "rmse_nonnormal"
+    ) |>  
+    tab_spanner(
+      columns = starts_with("rmse"),
+      label = "Relative RMSE"
+    ) |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{1,2}$"), rows = param == "i~~s") |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{2,2}$"), rows = param == "s~~s") |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{1,1}$"), rows = param == "i~~i") |>
+    tab_row_group(label = md("$\\theta$"), rows = param == "v") |>
+    cols_label(
+      ends_with("_15") ~ "15",
+      ends_with("_20") ~ "20",
+      ends_with("_50") ~ "50",
+      ends_with("_100") ~ "100",
+      ends_with("_1000") ~ "1000"
+    ) |>
+    tab_options(table.font.size = "10px")
+}
+tab_bias_growth(0.8)
 ```
-
-NEED TO RERUN SIMS WITHOUT BOUNDS!!!
 
 
 ```{r}
-bind_rows(
-  res,
-  res_dr
-) |>
-  filter(param %in% growthpars, dist != "Kurtosis", abs(bias) < 10) |>
-  summarise(
-    bias = mean(relbias, na.rm = TRUE, trim = 0.05),
-    .by = c(dist:param)
+#| html-table-processing: none
+#| column: page
+#| label: tbl-bias-growth-50
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.50'
+
+tab_bias_growth(0.5)
+```
+
+
+```{r}
+#| out-width: 100%
+plot_bias_growth <- function(FUN = mean, YLIM = c(-0.4, 0.3)) {
+  bind_rows(
+    res,
+    res_dr
   ) |>
-  mutate(n = as.numeric(factor(n))) |>
+  filter(param %in% growthpars, dist != "Kurtosis") |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    bias = FUN(relbias, na.rm = TRUE, trim = 0.05),
+    .by = c(dist:param)
+  ) |> 
+  mutate(
+    n = as.numeric(factor(n)),
+    param = factor(param, levels = growthpars, labels = c(
+      expression(theta),
+      expression(Psi["1,1"]),
+      expression(Psi["2,2"]),
+      expression(Psi["1,2"])
+    )),
+    rel = factor(rel, labels = c(
+      expression(Reliability~"="~0.8),
+      expression(Reliability~"="~0.5)
+    ))
+  ) |>
   ggplot(aes(n, bias, col = method)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 0.9, alpha = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
   scale_color_manual(values = mycols) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
   scale_y_continuous(labels = scales::percent) +
-  coord_cartesian(ylim = c(-0.4, 0.2)) +
+  coord_cartesian(ylim = YLIM) +
   guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
   theme_bw() +
-  labs(x = "Sample size (n)", y = "Relative bias", col = NULL) 
-
+  labs(x = "Sample size (n)", y = glue("Relative {deparse(substitute(FUN))} bias"), col = NULL) 
+} 
+plot_bias_growth(mean, NULL)
+plot_bias_growth(median, NULL)
 ```
 
