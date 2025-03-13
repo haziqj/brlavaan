@@ -93,12 +93,11 @@ res_filtered <-
   filter(!is.na(se), abs(se) < 10, abs(bias) < 7, converged) 
 ```
 
-
-## RBM Methods
-
-### Convergence statistics
+## Estimation success rates
 
 ```{r}
+#| label: tbl-convsucc-growth
+#| tbl-cap: 'Success rates for estimation of the growth model for the ML, eBR, and iBR methods.'
 #| html-table-processing: none
 res_nested |>
   summarise(count = sum(converged), .by = dist:method) |>
@@ -109,11 +108,11 @@ res_nested |>
   gt() |>
   tab_spanner(
     columns = ends_with("0.8"),
-    label = "Rel = 0.8"
+    label = "Reliability = 0.8"
   ) |>
   tab_spanner(
     columns = ends_with("0.5"),
-    label = "Rel = 0.5"
+    label = "Reliability = 0.5"
   ) |>
   fmt_percent(contains("0."), decimals = 1) |>
   cols_label(
@@ -123,276 +122,116 @@ res_nested |>
   ) 
 ```
 
+## Centred distributions for parameters
 
 ```{r}
-res_nested |>
-  summarise(
-    count = sum(converged),
-    .by = dist:method
-  ) |>
+#| label: fig-centdist-growth
+#| fig-cap: 'Centred distributions of the estimates for the growth model. Extreme estimate values are trimmed. The number of estimates used for the calculation of summaries is shown in the right panel.'
+#| fig-height: 7.5
+#| fig-width: 6
+#| out-width: 100%
+plot_df <- 
+  res |> 
+  filter(sim <= 1000) |>
+  filter(dist == "Normal", rel == "Rel = 0.8", param %in% growthpars) |>
+  filter(abs(se) < 10, abs(bias) < 7, converged) |>
   mutate(
-    count = count / max(count),
-    .by = dist:n
-  ) |>
-  mutate(
-    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
-    method = factor(method, levels = rev(names(mycols))),
-    n = factor(n)
-  ) |>
-  ggplot(aes(n, count, fill = method)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-  geom_hline(yintercept = 1, linetype = "dashed") +
-  facet_grid(rel ~ dist) +
-  scale_fill_manual(values = mycols) +
-  scale_y_continuous(labels = scales::percent) +
-  theme_bw() +
-  labs(x = "Sample size (n)", y = "Success prop.", fill = NULL) +
-  theme(legend.position = "none")
-```
+    across(c(est, truth, bias), \(x) x * 100),  # rescale back
+    param = factor(param, levels = rev(growthpars)),
+    n = factor(n, labels = paste0("n = ", c(15, 20, 50, 100, 1000))),
+  ) 
 
-### Centred distributions
-
-```{r}
-# Completion plot
-p1 <-
-  res_nested |>
-  summarise(
-    count = sum(converged),
-    .by = dist:method
-  ) |>
-  mutate(
-    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
-    method = factor(method, levels = rev(names(mycols)))
-  ) |>
-  filter(n == 50, dist != "Kurtosis") |>
-  ggplot(aes(count, method, fill = method)) +
-  geom_bar(stat = "identity", width = 0.75) +
-  geom_vline(xintercept = 1000, linetype = "dashed") +
-  ggh4x::facet_nested(dist + rel ~ .) +
-  scale_fill_manual(values = mycols) +
-  scale_x_continuous(labels = scales::label_number(scale = 1/1000, suffix = "K")) +
-  theme_bw() +
-  labs(x = "Simulations", y = NULL, fill = NULL, title = " ") +
-  theme(legend.position = "none")
-
-# Bias distribution plot
-p2 <-
-  res_filtered |>
-  filter(n == 50, dist != "Kurtosis") |>
-  ggplot(aes(bias, type, fill = method)) +
-  geom_boxplot(alpha = 0.8, outlier.size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
+p1 <- 
+  ggplot(plot_df, aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
   scale_fill_manual(values = mycols) +
   scale_y_discrete(labels = rev(c(
-    expression(Theta),
-    expression(Psi),
-    expression(alpha)
+    expression(theta["1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
   ))) +
-  ggh4x::facet_nested(dist + rel ~ .) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
   theme_bw() +
-  labs(x = "Bias", y = NULL, fill = NULL, title = "Sample size n = 50") +
-  theme(legend.position = "none")
+  theme(legend.position.inside = c(0.88, 0.1), legend.background = element_rect(fill = NA), legend.text = element_text(size = 8), legend.title = element_text(size = 9)) +
+  labs(x = "Bias", y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
 
-cowplot::plot_grid(
-  p2, p1,
-  rel_widths = c(4, 1)
-)
-```
-
-```{r}
-p_dist_n50_all <-
-  res_filtered |>
-  filter(n == 50, dist == "Normal") |>
-  mutate(param = factor(param, levels = c("i~1", "s~1", "v", "i~~i", "s~~s", "i~~s"))) |>
-  ggplot(aes(bias, param, fill = method)) +
-  geom_boxplot(alpha = 0.8, outlier.size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = mycols) +
-  scale_y_discrete(
-    limits = rev,
-    labels = rev(c(
-      expression(alpha[1]),
-      expression(alpha[2]),
-      expression(theta[1,1]),
-      expression(Psi[1,1]),
-      expression(Psi[2,2]),
-      expression(Psi[1,2])
-    ))
-  ) +
-  facet_grid(rel ~ .) +
-  theme_bw() +
-  labs(x = "Bias", y = NULL, fill = NULL, title = "Sample size n = 50, normal dist.") +
-  theme(legend.position = "bottom"); p_dist_n50_all
-```
-
-### Performance plots
-
-```{r}
-p_perf_n50_all <-
-  res_filtered |>
-  filter(n == 50, dist == "Normal", abs(bias) < 2) |>
+p2 <- 
   summarise(
-    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
-    meanbias = mean(bias, trim = 0.05),
-    pu = mean(bias < 0),
-    coverage = mean(covered, na.rm = TRUE),
-    .by = c(dist:param, type)
+    plot_df,
+    count = n(),
+    .by = dist:param
   ) |>
-  pivot_longer(rmse:coverage, names_to = "metric", values_to = "value") |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0,0,0,100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.text.x = element_text(size = 7.5), legend.position = "none") +
+  labs(x = "Count", y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+## Performance plots
+
+```{r}
+#| label: fig-perf-growth
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the growth model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 6
+#| fig-width: 6
+#| out-width: 100%
+plot_df |>
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
   mutate(
     metric = factor(
       metric,
-      levels = c("meanbias", "rmse", "pu", "coverage"),
-      labels = c("Mean~bias", "RMSE", "Prob.~underest.",  "Coverage")
-    ),
-    rel = factor(rel, labels = c("Rel == 0.8", "Rel == 0.5")),
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
   ) |>
   ggplot(aes(value, param, fill = method)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  geom_col(position = "dodge", width = 0.75) +
   geom_vline(
     data = tibble(
-      metric = factor(c("Mean~bias", "RMSE", "Prob.~underest.",  "Coverage")),
-      value = c(0, 0, 0.5, 0.95),
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
     ),
     aes(xintercept = value),
     linetype = "dashed"
-  ) +
+  ) +  
   scale_fill_manual(values = mycols) +
-  ggh4x::facet_nested(rel * type ~ metric, scales = "free", space = "free_y",
-                      labeller = label_parsed) +
+  facet_grid(n ~ metric, scales = "free_x") +
   ggh4x::facetted_pos_scales(
     x = list(
-      scale_x_continuous(limits = c(-0.2, 0.2)),
-      scale_x_continuous(),
-      scale_x_continuous(limits = c(0.35, 0.65), labels = scales::percent),
-      scale_x_continuous(limits = c(0.7, 1), labels = scales::percent)
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
     )
-  ) +
-  theme_bw() +
-  labs(x = NULL, y = NULL, fill = NULL, title = "Normal dist., n = 50") +
-  theme(legend.position = "bottom"); p_perf_n50_all
-```
-
-
-```{r}
-p_perf_n50_type <-
-  res_filtered |>
-  filter(n == 50, abs(bias) < 2) |>
-  summarise(
-    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
-    meanbias = mean(bias, na.rm = TRUE, trim = 0.05),
-    pu = mean(bias < 0),
-    coverage = mean(covered, na.rm = TRUE),
-    .by = c(dist:method, type)
-  ) |>
-  pivot_longer(rmse:coverage, names_to = "metric", values_to = "value") |>
-  mutate(
-    metric = factor(
-      metric,
-      levels = c("meanbias", "rmse", "pu", "coverage"),
-      labels = c("Bias", "RMSE", "Prob. underest.", "Coverage")
-    )
-  ) |>
-  ggplot(aes(value, type, fill = method)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-  geom_vline(
-    data = tibble(
-      metric = factor(c("Bias", "RMSE", "Prob. underest.", "Coverage")),
-      value = c(0, 0, 0.5, 0.95),
-    ),
-    aes(xintercept = value),
-    linetype = "dashed"
-  ) +
-  scale_fill_manual(values = mycols) +
-  ggh4x::facet_nested(rel + dist ~ metric, scales = "free", space = "free_y") +
-  ggh4x::facetted_pos_scales(
-    x = list(
-      scale_x_continuous(limits = c(-0.3, 0.1)),
-      scale_x_continuous(),
-      scale_x_continuous(limits = c(0.35, 0.65), labels = scales::percent),
-      scale_x_continuous(limits = c(0.7, 1), labels = scales::percent)
-    )
-  ) +
-  theme_bw() +
-  labs(x = NULL, y = NULL, fill = NULL, title = "n = 50") +
+  ) +  
   scale_y_discrete(labels = rev(c(
-    expression(Theta),
-    expression(Psi),
-    expression(alpha)
-  ))) +
-  theme(legend.position = "bottom"); p_perf_n50_type
-```
-
-### Bias vs sample size
-
-```{r}
-p_biassampsize_ours <-
-  res_filtered |>
-  filter(abs(bias) < 10) |>
-  summarise(
-    bias = mean(bias, trim = 0),
-    .by = c(dist:method, type)
-  ) |>
-  mutate(
-    n = as.numeric(factor(n)),
-    rel = factor(rel, labels = c("Rel == 0.8", "Rel == 0.5"))
-  ) |>
-  ggplot(aes(n, bias, col = method)) +
-  geom_line(linewidth = 0.8) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(type ~ rel + dist, labeller = label_parsed, scales = "free_y") +
-  scale_colour_manual(values = mycols) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = "Sample size (n)", y = "Rel. mean bias", col = NULL) +
-  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+    expression(theta["1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +  
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)); p_biassampsize_ours
+  theme(axis.text.x = element_text(size = 7.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8") 
 ```
-
-```{r}
-res |>
-  filter(abs(bias) < 10) |>
-  summarise(
-    bias = mean(bias, na.rm = TRUE, trim = 0.05),
-    .by = c(dist:param)
-  ) |>
-  mutate(n = as.numeric(factor(n))) |>
-  ggplot(aes(n, bias, col = method)) +
-  geom_line(linewidth = 1) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist, scales = "free_y") +
-  scale_color_manual(values = mycols) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  scale_y_continuous() +
-  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
-  theme_bw() +
-  labs(x = "Sample size (n)", y = "Bias", col = NULL) 
-```
-
-```{r}
-res |>
-  filter(param %in% growthpars, abs(bias) < 10) |>
-  summarise(
-    bias = mean(relbias, na.rm = TRUE, trim = 0.05),
-    .by = c(dist:param)
-  ) |>
-  mutate(n = as.numeric(factor(n))) |>
-  ggplot(aes(n, bias, col = method)) +
-  geom_line(linewidth = 1) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist) +
-  scale_color_manual(values = mycols) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  scale_y_continuous(labels = scales::percent) +
-  coord_cartesian(ylim = c(-0.4, 0.2)) +
-  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
-  theme_bw() +
-  labs(x = "Sample size (n)", y = "Relative bias", col = NULL) 
-```
-
 
 ## Comparison to other methods
 
@@ -536,9 +375,96 @@ res_dr <-
     relbias = bias / truth,
     covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
   )
+
+plot_bias_growth <- function(FUN = mean, YLIM = c(-0.4, 0.3)) {
+  bind_rows(
+    res,
+    res_dr
+  ) |>
+  filter(param %in% growthpars, dist != "Kurtosis") |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    bias = FUN(relbias, na.rm = TRUE, trim = 0.05),
+    .by = c(dist:param)
+  ) |> 
+  mutate(
+    n = as.numeric(factor(n)),
+    param = factor(param, levels = growthpars, labels = c(
+      expression(theta["1"]),
+      expression(Psi["1,1"]),
+      expression(Psi["2,2"]),
+      expression(Psi["1,2"])
+    )),
+    rel = factor(rel, labels = c(
+      expression(Reliability~"="~0.8),
+      expression(Reliability~"="~0.5)
+    ))
+  ) |>
+  ggplot(aes(n, bias, col = method)) +
+  geom_line(linewidth = 0.9, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_cartesian(ylim = YLIM) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative {deparse(substitute(FUN))} bias"), col = NULL) 
+} 
 ```
 
-### Tables
+```{r}
+#| label: fig-meanbias-growth
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth model.'
+#| fig-height: 6
+#| fig-width: 7.5
+#| out-width: 100%
+
+plot_bias_growth(mean, NULL)
+```
+
+
+```{r}
+#| label: fig-rmse-growth
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth model.'
+#| out-width: 100%
+bind_rows(
+    mutate(res, across(c(est, truth, bias), \(x) x * 100)),
+    res_dr
+  ) |>
+  filter(param %in% growthpars, dist != "Kurtosis") |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    .by = c(dist:param)
+  ) |>
+  mutate(
+    n = as.numeric(factor(n)),
+    param = factor(param, levels = growthpars, labels = c(
+      expression(theta["1"]),
+      expression(Psi["1,1"]),
+      expression(Psi["2,2"]),
+      expression(Psi["1,2"])
+    )),
+    rel = factor(rel, labels = c(
+      expression(Reliability~"="~0.8),
+      expression(Reliability~"="~0.5)
+    )),
+    method = factor(method, levels = (names(mycols)))
+  ) |>  
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge") +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed, scales = "free") +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 280)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+## Tables
 
 ```{r}
 #| html-table-processing: none
@@ -614,7 +540,7 @@ tab_bias_growth <- function(rel) {
     tab_row_group(label = md("$\\mathbf\\Psi_{1,2}$"), rows = param == "i~~s") |>
     tab_row_group(label = md("$\\mathbf\\Psi_{2,2}$"), rows = param == "s~~s") |>
     tab_row_group(label = md("$\\mathbf\\Psi_{1,1}$"), rows = param == "i~~i") |>
-    tab_row_group(label = md("$\\theta$"), rows = param == "v") |>
+    tab_row_group(label = md("$\\theta_{1}$"), rows = param == "v") |>
     cols_label(
       ends_with("_15") ~ "15",
       ends_with("_20") ~ "20",
@@ -629,54 +555,71 @@ tab_bias_growth(0.8)
 
 
 ```{r}
-#| html-table-processing: none
-#| column: page
 #| label: tbl-bias-growth-50
 #| tbl-cap: 'Results (trimmed) growth curve model reliability 0.50'
+#| column: page
+#| html-table-processing: none
 
 tab_bias_growth(0.5)
 ```
 
-
 ```{r}
-#| out-width: 100%
-plot_bias_growth <- function(FUN = mean, YLIM = c(-0.4, 0.3)) {
-  bind_rows(
-    res,
-    res_dr
-  ) |>
-  filter(param %in% growthpars, dist != "Kurtosis") |>
+#| label: tbl-covr-growth
+#| tbl-cap: 'Coverage rates 95% confidence interval for the growth model.'
+#| column: page
+#| html-table-processing: none
+
+bind_rows(res, res_dr) |>
+  filter(dist != "Kurtosis", method != "REML", param %in% growthpars) |>
   filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
   summarise(
-    bias = FUN(relbias, na.rm = TRUE, trim = 0.05),
-    .by = c(dist:param)
-  ) |> 
-  mutate(
-    n = as.numeric(factor(n)),
-    param = factor(param, levels = growthpars, labels = c(
-      expression(theta),
-      expression(Psi["1,1"]),
-      expression(Psi["2,2"]),
-      expression(Psi["1,2"])
-    )),
-    rel = factor(rel, labels = c(
-      expression(Reliability~"="~0.8),
-      expression(Reliability~"="~0.5)
-    ))
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:method, param)
   ) |>
-  ggplot(aes(n, bias, col = method)) +
-  geom_line(linewidth = 0.9, alpha = 0.8) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
-  scale_color_manual(values = mycols) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  scale_y_continuous(labels = scales::percent) +
-  coord_cartesian(ylim = YLIM) +
-  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
-  theme_bw() +
-  labs(x = "Sample size (n)", y = glue("Relative {deparse(substitute(FUN))} bias"), col = NULL) 
-} 
-plot_bias_growth(mean, NULL)
-plot_bias_growth(median, NULL)
+  select(-model) |>
+  pivot_wider(
+    names_from = c(dist, rel, n),
+    values_from = covr
+  ) |>
+  group_by(param) |>
+  gt(rowname_col = "method") |>
+  fmt_number() |>
+  tab_spanner(
+    columns = matches("Normal_Rel = 0.8", ignore.case = FALSE),
+    label = "Reliability = 0.8"
+  ) |>
+  tab_spanner(
+    columns = matches("Normal_Rel = 0.5", ignore.case = FALSE),
+    label = "Reliability = 0.5"
+  ) |>
+  tab_spanner(
+    columns = matches("Normal_", ignore.case = FALSE),
+    label = "Normal data"
+  ) |>  
+  tab_spanner(
+    columns = matches("Non-normal_Rel = 0.8", ignore.case = FALSE),
+    label = "Reliability = 0.8",
+    id = "nonnormal80"
+  ) |>
+  tab_spanner(
+    columns = matches("Non-normal_Rel = 0.5", ignore.case = FALSE),
+    label = "Reliability = 0.5",
+    id = "nonnormal50"
+  ) |>
+  tab_spanner(
+    columns = matches("Non-normal_", ignore.case = FALSE),
+    label = "Non-Normal data"
+  ) |>    
+  tab_row_group(label = md("$\\mathbf\\Psi_{1,2}$"), rows = param == "i~~s") |>
+  tab_row_group(label = md("$\\mathbf\\Psi_{2,2}$"), rows = param == "s~~s") |>
+  tab_row_group(label = md("$\\mathbf\\Psi_{1,1}$"), rows = param == "i~~i") |>
+  tab_row_group(label = md("$\\theta_{1}$"), rows = param == "v") |>
+  cols_label(
+    ends_with("_15") ~ "15",
+    ends_with("_20") ~ "20",
+    ends_with("_50") ~ "50",
+    ends_with("_100") ~ "100",
+    ends_with("_1000") ~ "1000"
+  ) 
 ```
 
