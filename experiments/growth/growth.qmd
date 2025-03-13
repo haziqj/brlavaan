@@ -22,7 +22,7 @@ library(brlavaan)
 library(gt)
 library(glue)
 here::i_am("experiments/growth/growth.qmd")
-load(here::here("experiments/simu_res_growth_MP2.RData"))
+load(here::here("experiments/simu_res_growth_keepgoing.RData"))
 simu_res <- simu_res_growth
 
 # Simulation id data frame
