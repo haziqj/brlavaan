@@ -1,0 +1,711 @@
+---
+title: 'Simulation Results'
+format: 
+  html: 
+    embed-resources: true
+    toc: true
+    lightbox: true
+    fig-width: 7.5
+    fig-height: 6
+  # pdf: 
+  #   fig-width: 7.5
+  #   fig-height: 6
+execute:
+  echo: false
+  freeze: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(brlavaan)
+library(gt)
+library(glue)
+library(semPlot)
+library(semptools)
+here::i_am("experiments/results/results.qmd")
+load(here::here("experiments/results.RData"))
+```
+
+## Write-up
+
+On success rates
+
+- Success rate is determined as optimiser reporting convergence and an estimate that makes sense.
+  - For two-factor models, this is when absolute values of the estimates are less than 4 (~400% relative) and se is less than 10.
+  - For the growth curve model, this is when absolute values of the estimates are less than 700 (~40% relative) and se is less than 1000.
+  - The eRBM estimates for growth curve model needed aggressive trimming due to poor performance.
+- eRBM and iRBM face numerical issues particularly in low sample size (n=15,20) settings. 
+- Reliability = 0.8 is "easier" to estimate.
+- eRBM methods uses ML estimates and adjusts them, so the numerical issue lies in the gradient of the bias function (and not convergence rate)
+
+Two-factor model
+
+- For normal distribution and rel = 0.8, about 25% of iRBM estimates were used for n =15, and about 50% for n = 20. For n>=50 then this is nearly 100%.
+- Increasing sample size also reduced the variability of estimates. We see that all methods perform well where the centred distributions are averaged at 0.
+- The performance plots indicate a clear advantage of the eBR and iBR methods over ML especially at small sample size (n=15,20), where both variance parameters Theta and Psi as well as loadings Lambda and latent regression coefficient beta are reduced by as high as 12%.
+- iBR gives the lowest variability in terms of RMSE, again in small samples.
+- For all methods, there is a tendency to underestimate the variance parameters, and this is more pronounced in the ML method. This speaks to the median bias being negative. However, our proposed methods consistently give smaller chance of this happening.
+- In terms of coverage, the ML is seen to under cover, especially in small samples. On the other hand, we see that iBR and eBR improve on this, giving a better coverage rate for 95% confidence intervals.
+- Comparing to the D&R methods, our methods (the iBR especially) matches or outperforms the bias reducing properties, as shown by the relative mean bias and RMSE plots. 
+
+Growth model
+
+- Similar performance for the growth model. However eBR suffer from numerical problems causing the bias term to explode and give non-sensical estimates.
+
+
+## Success rates
+
+```{r}
+#| label: tbl-convsucc
+#| tbl-cap: 'Success rates for estimation of the two-factor model for the ML, eBR, and iBR methods. Highlighted in red are the scenarios which produced success rates below 50%.'
+#| html-table-processing: none
+
+gt(res_conv) |>
+  tab_spanner(
+    columns = matches("twofac.*0\\.8"),
+    label = "Reliability = 0.8",
+    id = "twofac80"
+  ) |>
+  tab_spanner(
+    columns = matches("twofac.*0\\.5"),
+    label = "Reliability = 0.5",
+    id = "twofac50"
+  ) |>
+  tab_spanner(
+    columns = starts_with("twofac"),
+    label = "Two-factor model"
+  ) |>
+  tab_spanner(
+    columns = matches("growth.*0\\.8"),
+    label = "Reliability = 0.8",
+    id = "growth80"
+  ) |>
+  tab_spanner(
+    columns = matches("growth.*0\\.5"),
+    label = "Reliability = 0.5",
+    id = "growth50"
+  ) |>
+  tab_spanner(
+    columns = starts_with("growth"),
+    label = "Growth curve model"
+  ) |>
+  fmt_percent(contains("0."), decimals = 1) |>
+  cols_label(
+    contains("ML") ~ "ML",
+    contains("eRBM") ~ "eRBM",
+    contains("iRBM") ~ "iRBM"
+  ) |>
+  data_color(
+    columns = -all_of("n"),
+    domain = c(0, 1),
+    palette = c("red3", "white",  "white")
+  ) |>
+  tab_options(table.font.size = "11px")
+```
+
+## Two-factor model
+
+### Path diagram
+
+::: {#fig-path-growth}
+```{r pathtwofac, engine = "tikz", out.width = "90%"}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,
+  auto,
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm}
+]
+
+% --------------------------------------------------------
+% 1) LATENT VARIABLES
+% --------------------------------------------------------
+\node[latent] (eta1) at (-1.5, -2) {$\eta_{1}$};
+\node[latent] (eta2) at ( 3, -2) {$\eta_{2}$};
+
+% --------------------------------------------------------
+% 2) OBSERVED VARIABLES + ERROR TERMS
+%    Place y1..y3 (for eta1) on the left, y4..y6 (for eta2) on the right.
+% --------------------------------------------------------
+\node[obs] (y1) at (-3, 0) {$y_{1}$};
+\node[obs] (y2) at (-1.5, 0) {$y_{2}$};
+\node[obs] (y3) at ( 0, 0) {$y_{3}$};
+
+\node[obs] (y4) at ( 1.5, 0) {$y_{4}$};
+\node[obs] (y5) at ( 3, 0) {$y_{5}$};
+\node[obs] (y6) at ( 4.5, 0) {$y_{6}$};
+
+% Error terms above each observed variable
+\node[error] (e1) at (-3, 1.5) {$\epsilon_{1}$};
+\node[error] (e2) at (-1.5, 1.5) {$\epsilon_{2}$};
+\node[error] (e3) at ( 0, 1.5) {$\epsilon_{3}$};
+\node[error] (e4) at ( 1.5, 1.5) {$\epsilon_{4}$};
+\node[error] (e5) at ( 3, 1.5) {$\epsilon_{5}$};
+\node[error] (e6) at ( 4.5, 1.5) {$\epsilon_{6}$};
+
+% --------------------------------------------------------
+% 3) PATHS FROM ERROR TERMS TO OBSERVED VARIABLES
+% --------------------------------------------------------
+\draw[->] (e1) -- (y1);
+\draw[->] (e2) -- (y2);
+\draw[->] (e3) -- (y3);
+\draw[->] (e4) -- (y4);
+\draw[->] (e5) -- (y5);
+\draw[->] (e6) -- (y6);
+
+% --------------------------------------------------------
+% 4) FACTOR LOADINGS
+%    \eta_1 -> y1, y2, y3
+%    \eta_2 -> y4, y5, y6
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{11}$} (y1);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{21}$} (y2);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{31}$} (y3);
+
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{42}$} (y4);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{52}$} (y5);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{62}$} (y6);
+
+% --------------------------------------------------------
+% 5) REGRESSION BETWEEN LATENT VARIABLES
+%    \eta_1 -> \eta_2, labeled beta
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[midway, above] {$\beta$} (eta2);
+
+% --------------------------------------------------------
+% 6) VARIANCES OF LATENT VARIABLES
+%    Double-headed arrows for psi_{11} and psi_{22}
+% --------------------------------------------------------
+\draw[<->] (eta1) to[out=200, in=230, looseness=4] 
+  node[left] {$\Psi_{11}$} (eta1);
+
+\draw[<->] (eta2) to[out=-50, in=-20, looseness=4] 
+  node[right] {$\Psi_{22}$} (eta2);
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+A structural equation model featuring two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables ($y_{1}$, $y_{2}$, $y_{3}$) for $\eta_{1}$ and ($y_{4}$, $y_{5}$, $y_{6}$) for $\eta_{2}$. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
+:::
+
+```{r}
+#| label: tbl-truth-twofac
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_twofac(0.8), truth_twofac(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |> 
+  mutate(param = case_when(
+    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
+    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
+    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
+    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
+    param == "fy~fx"  ~ "$\\beta$",
+    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
+    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
+    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
+    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
+    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
+    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
+    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
+    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
+  )) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
+```
+
+### Centred distributions for parameters
+
+```{r}
+#| label: fig-centdist-twofac
+#| fig-cap: 'Centered distributions of estimates for the two-factor model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-height: 7.5
+#| out-width: 100%
+
+p1 <-
+  plot_df |>
+  filter(param %in% twofacpars) |> 
+  ggplot(aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
+  scale_fill_manual(values = mycols) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(beta),
+    expression(Lambda["2,1"])
+  ))) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
+  theme_bw() +
+  theme(
+    legend.position.inside = c(0.88, 0.095), 
+    legend.background = element_rect(fill = NA), 
+    legend.text = element_text(size = 8), 
+    legend.title = element_text(size = 9)
+  ) +
+  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+
+p2 <-
+  plot_df |>
+  filter(param %in% twofacpars) |> 
+  summarise(count = n(), .by = dist:param) |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(width = 0.8, position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0, 0, 0, 100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), 
+    axis.text.x = element_text(size = 7.5), 
+    legend.position = "none"
+  ) +
+  labs(x = NULL, y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+### Performance plots
+
+```{r}
+#| label: fig-perf-twofac
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the two-factor model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 7
+#| out-width: 100%
+plot_df2 |> 
+  filter(param %in% twofacpars) |> 
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
+  mutate(
+    metric = factor(
+      metric,
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
+  ) |>
+  ggplot(aes(value, param, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  geom_vline(
+    data = tibble(
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
+    ),
+    aes(xintercept = value),
+    linetype = "dashed"
+  ) +
+  scale_fill_manual(values = mycols) +
+  facet_grid(n ~ metric, scales = "free_x") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
+    )
+  ) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(beta),
+    expression(Lambda["2,1"])
+  ))) +
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 7.5),
+    legend.key.height = unit(1, "pt"), 
+    legend.key.width = unit(9, "pt")
+  ) +
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+```
+
+### Comparison to other methods
+
+```{r}
+#| label: fig-meanbias-twofac
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "twofac") |>
+  ggplot(aes(n, relbias, col = method)) +
+  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  # coord_cartesian(ylim = c(-0.25, 0.25)) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+```
+
+```{r}
+#| label: fig-rmse-twofac
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "twofac") |>
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 1.5)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+## Growth curve model
+
+### Path diagram
+
+::: {#fig-path-growth}
+```{r pathgrowth, engine = "tikz"}
+\usetikzlibrary{shapes.geometric,arrows,calc,positioning}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,              % for arrow tips
+  auto,                   % automatic label positioning
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm},
+intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt, minimum size=6mm}
+  ]
+
+%-------------------------------------------------------
+% 1) LATENT FACTORS (intercept i, slope s)
+%-------------------------------------------------------
+\node[latent] (i) at (-2,-3) {$i$};
+\node[latent] (s) at ( 2,-3) {$s$};
+\node[intercept] (int1) at (-2,-4.2) {\footnotesize 1};
+\node[intercept] (int2) at (2,-4.2) {\footnotesize 1};
+
+%-------------------------------------------------------
+% 2) COVARIANCES AMONG LATENT FACTORS
+%    - psi_{11} on i
+%    - psi_{22} on s
+%    - psi_{21} between i and s
+%-------------------------------------------------------
+% i <-> s
+\draw[<->] (i) to[out=-45, in=225] node[below] {$\Psi_{12}$} (s);
+
+% Variance of i
+\draw[<->] (i) to[out=190, in=220, looseness=4] 
+  node[left] {$\Psi_{11}$} (i);
+
+% Variance of s
+\draw[<->] (s) to[out=-40, in=-10, looseness=4] 
+  node[right] {$\Psi_{22}$} (s);
+
+\draw[->] (int1) -- node[right,pos=0.3] {$\alpha_1$} (i);
+\draw[->] (int2) -- node[right,pos=0.3] {$\alpha_2$} (s);
+
+%-------------------------------------------------------
+% 3) OBSERVED VARIABLES (y1..y10) + ERRORS (eps1..eps10)
+%    Arrange them in a horizontal row above i and s.
+%-------------------------------------------------------
+\foreach \j in {1,...,10} {
+  % X-position for y_j (shift them so they are roughly centered)
+  \pgfmathsetmacro{\x}{(\j*1.3 - 6.5)}
+
+  % Observed variable y_j
+  \node[obs] (y\j) at (\x,0) {$y_{\j}$};
+
+  % Error term epsilon_j above y_j
+  \node[error] (e\j) at (\x,1.5) {$\epsilon_{\j}$};
+
+  % Arrow from error to observed
+  \draw[->] (e\j) -- (y\j);
+
+  % Intercept factor loadings: all = 1
+  \draw[->] (i) -- node[pos=0.45,right] {\footnotesize 1} (y\j);
+
+  % Slope factor loadings: 0..9
+  \pgfmathtruncatemacro{\loading}{\j - 1}
+  \draw[->] (s) -- node[pos=0.7,right] {\footnotesize\loading} (y\j);
+}
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+A schematic of a univariate latent growth curve model with intercept ($i$) and slope ($s$) factors measured over 10 time points ($y_1$--$y_{10}$). Each observed measure has an associated error term ($\epsilon_j\sim\operatorname{N}(0,\theta)$). The intercept factor loadings are fixed to 1, while slope factor loadings increment from 0 to 9, and $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$ denote the variances and covariance of the latent factors.
+:::
+
+```{r}
+#| label: tbl-truth-growth
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_growth(0.8), truth_growth(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |>
+  distinct(rel, truth, param, .keep_all = TRUE) |>
+  mutate(param = case_when(
+    param == "v" ~ "$\\theta$",
+    param == "i~~i" ~ "$\\Psi_{1,1}$",
+    param == "s~~s" ~ "$\\Psi_{2,2}$",
+    param == "i~~s" ~ "$\\Psi_{1,2}$",
+    param == "i~1" ~ "$\\alpha_1$",
+    param == "s~1" ~ "$\\alpha_2$",
+  )) |>
+  mutate(ord = case_when(
+    grepl("Psi", param) ~ 3,
+    grepl("alpha", param) ~ 1,
+    grepl("theta", param) ~ 2
+  )) |>
+  arrange(ord) |>
+  select(-ord) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
+```
+
+### Centred distributions for parameters
+
+```{r}
+#| label: fig-centdist-growth
+#| fig-cap: 'Centered distributions of estimates for the growth curve model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-height: 7.5
+#| out-width: 100%
+
+p1 <-
+  plot_df |>
+  filter(param %in% growthpars) |> 
+  ggplot(aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
+  scale_fill_manual(values = mycols) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
+  theme_bw() +
+  theme(
+    legend.position.inside = c(0.88, 0.095), 
+    legend.background = element_rect(fill = NA), 
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9)
+  ) +
+  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+
+p2 <-
+  plot_df |>
+  filter(param %in% growthpars) |> 
+  summarise(count = n(), .by = dist:param) |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(width = 0.8, position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0, 0, 0, 100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), 
+    axis.text.x = element_text(size = 7.5), 
+    legend.position = "none"
+  ) +
+  labs(x = NULL, y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+### Performance plots
+
+```{r}
+#| label: fig-perf-growth
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the growth curve model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 7
+#| out-width: 100%
+plot_df |>
+  filter(param %in% growthpars) |> 
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
+  mutate(
+    metric = factor(
+      metric,
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
+  ) |>
+  ggplot(aes(value, param, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  geom_vline(
+    data = tibble(
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
+    ),
+    aes(xintercept = value),
+    linetype = "dashed"
+  ) +
+  scale_fill_manual(values = mycols) +
+  facet_grid(n ~ metric, scales = "free_x") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
+    )
+  ) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 7.5),
+    legend.key.height = unit(1, "pt"), 
+    legend.key.width = unit(9, "pt")
+  ) +  
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+```
+
+### Comparison to other methods
+
+```{r}
+#| label: fig-meanbias-growth
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "growth") |>
+  ggplot(aes(n, relbias, col = method)) +
+  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  # coord_cartesian(ylim = c(-0.25, 0.25)) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+```
+
+```{r}
+#| label: fig-rmse-growth
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "growth") |>
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 280)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+## Tables
+
+```{r}
+#| label: tbl-bias-twofac-80
+#| tbl-cap: 'Results (trimmed) two-factor model reliability 0.80.'
+#| html-table-processing: none
+#| column: page
+
+tab_bias(bias_twofac_80_df, "twofac")
+```
+
+```{r}
+#| label: tbl-bias-twofac-50
+#| tbl-cap: 'Results (trimmed) two-factor model reliability 0.50.'
+#| column: page
+#| html-table-processing: none
+
+tab_bias(bias_twofac_50_df, "twofac")
+```
+
+```{r}
+#| label: tbl-covr-twofac
+#| tbl-cap: 'Coverage rates 95% confidence interval for the two-factor model.'
+#| column: page
+#| html-table-processing: none
+
+tab_covr(covr_twofac_df, "twofac")
+```
+
+```{r}
+#| label: tbl-bias-growth-80
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.80.'
+#| html-table-processing: none
+#| column: page
+
+tab_bias(bias_growth_80_df, "growth")
+```
+
+```{r}
+#| label: tbl-bias-growth-50
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.50.'
+#| column: page
+#| html-table-processing: none
+
+tab_bias(bias_growth_50_df, "growth")
+```
+
+```{r}
+#| label: tbl-covr-growth
+#| tbl-cap: 'Coverage rates 95% confidence interval for the growth curve model.'
+#| column: page
+#| html-table-processing: none
+
+tab_covr(covr_growth_df, "growth")
+```
