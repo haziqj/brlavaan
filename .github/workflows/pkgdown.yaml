@@ -54,6 +54,7 @@ jobs:
             any::semptools
             any::magick
             any::pdftools
+            any::cowplot
           needs: website
 
       - name: Build site
