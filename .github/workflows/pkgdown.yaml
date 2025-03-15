@@ -52,6 +52,7 @@ jobs:
             any::pkgdepR
             any::semPlot
             any::semptools
+            any::magick
           needs: website
 
       - name: Build site
