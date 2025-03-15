@@ -1,14 +1,3 @@
----
-execute:
-  echo: false
-  message: false
-  warning: false
-html-table-processing: none
-lightbox: true
-bibliography: 
-  - refs-HJ.bib
----
-
 ::: {#fig-path-growth}
 ```{r pathtwofac, engine = "tikz", out.width = "90%"}
 \begin{tikzpicture}

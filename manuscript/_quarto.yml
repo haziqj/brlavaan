@@ -37,12 +37,11 @@ execute:
   cache: true
   echo: false
 
-# notebook-links: false
-
 bibliography: 
   - refs-HJ.bib
   - refs-OK.bib
-csl: apa.csl
+
+# csl: apa.csl
 
 citation:
   type: article-journal
