@@ -30,6 +30,8 @@ format:
 
 execute:
   freeze: auto
+  cache: true
+  echo: false
 
 # notebook-links: false
 
@@ -37,6 +39,9 @@ bibliography:
   - refs-HJ.bib
   - refs-OK.bib
 csl: apa.csl
+
+filters:
+  - highlight-text
 
 citation:
   type: article-journal

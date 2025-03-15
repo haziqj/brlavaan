@@ -60,6 +60,19 @@ keywords:
   - Bias Reduction
 ---
 
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(brlavaan)
+library(gt)
+library(glue)
+library(semPlot)
+library(semptools)
+here::i_am("experiments/results/results.qmd")
+load(here::here("experiments/results.RData"))
+```
+
 ## Introduction
 
 {{< include _intro.qmd >}}
@@ -71,6 +84,10 @@ keywords:
 ## Simulation Study
 
 {{< include _simulation.qmd >}}
+
+## Results
+
+{{< include _results.qmd >}}
 
 ## Discussion
 
