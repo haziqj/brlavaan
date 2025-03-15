@@ -51,6 +51,7 @@ jobs:
             any::ggh4x
             any::pkgdepR
             any::semPlot
+            any::semptools
           needs: website
 
       - name: Build site
