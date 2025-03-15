@@ -53,6 +53,7 @@ jobs:
             any::semPlot
             any::semptools
             any::magick
+            any::pdftools
           needs: website
 
       - name: Build site
