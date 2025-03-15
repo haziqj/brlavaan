@@ -10,8 +10,8 @@ format:
     number-sections: true
     comments:
       hypothesis: true
-  docx:
-    output-file: jamil2025bias
+  # docx:
+  #   output-file: jamil2025bias
   tandf-pdf:
     link-citations: true
     keep-tex: true
