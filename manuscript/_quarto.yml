@@ -5,11 +5,15 @@ project:
 manuscript:
   article: index.qmd
 
+notebook-links: false
+
 format:
   html:
     number-sections: true
-    comments:
-      hypothesis: true
+    other-links:
+      - text: PRELIM RESULTS
+        icon: database      
+        href: results.html       
   # docx:
   #   output-file: jamil2025bias
   tandf-pdf:
@@ -35,13 +39,10 @@ execute:
 
 # notebook-links: false
 
-bibliography:
+bibliography: 
   - refs-HJ.bib
   - refs-OK.bib
 csl: apa.csl
-
-filters:
-  - highlight-text
 
 citation:
   type: article-journal

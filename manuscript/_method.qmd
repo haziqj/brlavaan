@@ -1,15 +1,3 @@
----
-#execute:
-#  echo: false
-#  message: false
-#  warning: false
-#html-table-processing: none
-#lightbox: true
-bibliography: 
-  - refs-HJ.bib
-  - refs-OK.bib
----
-
 ## Structural Equation Models
 
 A Structural equation model has two parts, a measurement part and a structural part. For observation $i$, the measurement part of the model is defined as 
