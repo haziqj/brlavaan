@@ -50,6 +50,7 @@ jobs:
             any::flextable
             any::ggh4x
             any::pkgdepR
+            anu::semPlot
           needs: website
 
       - name: Build site
