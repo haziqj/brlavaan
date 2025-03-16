@@ -51,6 +51,10 @@ jobs:
             any::ggh4x
             any::pkgdepR
             any::semPlot
+            any::semptools
+            any::magick
+            any::pdftools
+            any::cowplot
           needs: website
 
       - name: Build site
