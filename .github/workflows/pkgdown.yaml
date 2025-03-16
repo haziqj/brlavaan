@@ -55,6 +55,8 @@ jobs:
             any::magick
             any::pdftools
             any::cowplot
+            any::tictoc
+            any::mvtnorm
           needs: website
 
       - name: Build site
