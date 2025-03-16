@@ -1,4 +1,9 @@
+# This script only works for the growth model. It is a manual implementation of
+# the eBR and iBR methods. Useful for understanding the inner workings and
+# debugging.
+
 make_matrices <- function(x, uselavaan = FALSE, model, data) {
+  # model and data arguments used only for creating fit0
   if (isTRUE(uselavaan)) {
     fit0 <- lavaan::growth(model = model, data = data, do.fit = FALSE, ceq.simple = TRUE)
     lavmodel <- lavaan::lav_model_set_parameters(fit0@Model, x)
@@ -28,68 +33,65 @@ make_matrices <- function(x, uselavaan = FALSE, model, data) {
     Sigma <- lambda %*% psi %*% t(lambda) + theta
   }
 
-  list(alpha = alpha, lambda = lambda, nu = nu, psi = psi, theta = theta, mu = mu, Sigma = Sigma)
+  list(alpha = alpha, lambda = lambda, nu = nu, psi = psi, theta = theta,
+       mu = mu, Sigma = Sigma)
 }
 
-LOGLIK <- function(x, model = mod, data = dat) {
-  list2env(make_matrices(x), environment())
-  sum(mvtnorm::dmvnorm(dat, mean = mu, sigma = Sigma, log = TRUE))
+LOGLIK <- function(x, model, data) {
+  with(make_matrices(x), {
+    sum(mvtnorm::dmvnorm(data, mean = mu, sigma = Sigma, log = TRUE))
+  })
 }
 
-GRAD <- function(x, model = mod, data = dat) {
-  list2env(make_matrices(x), environment())
-  Sigma_inv <- solve(Sigma)
+GRAD <- function(x, model, data) {
+  with(make_matrices(x), {
+    Sigma_inv <- solve(Sigma)
+    Y <- as.matrix(data)
+    n <- nrow(Y)
 
-  Y <- as.matrix(dat)
-  n <- nrow(Y)
-  p <- nrow(lambda)
-  q <- ncol(lambda)
+    # sample moments
+    Ybar <- colMeans(Y)
+    res <- sweep(Y, 2, as.vector(mu), "-")
+    S <- crossprod(res) / n
 
-  # sample moments
-  Ybar <- colMeans(Y)
-  res <- sweep(Y, 2, as.vector(mu), "-")
-  S <- crossprod(res) / n
+    # mean components for gradient
+    grad_mu <- (n / 2) * Sigma_inv %*% (Ybar - mu)
+    grad_alpha <- t(lambda) %*% grad_mu
 
-  # mean components for gradient
-  grad_mu <- Sigma_inv %*% (n * (Ybar - mu) / 2)
-  grad_alpha <- t(lambda) %*% grad_mu
+    # variance components for gradient
+    E <- (n / 2) * Sigma_inv %*% (S - Sigma) %*% Sigma_inv
+    grad_Psi <- t(lambda) %*% E %*% lambda
+    grad_v <- sum(diag(E))
 
-  # variance components for gradient
-  E <- (n / 2) * Sigma_inv %*% (S - Sigma) %*% Sigma_inv
-  grad_Psi <- t(lambda) %*% E %*% lambda
-  grad_theta <- sum(diag(E))
-
-  c(grad_Psi[1, 1], grad_alpha[1], grad_Psi[2, 2], grad_alpha[2], grad_Psi[1, 2], grad_theta)
+    c(grad_Psi[1, 1], grad_alpha[1], grad_Psi[2, 2], grad_alpha[2],
+      grad_Psi[1, 2], grad_v)
+  })
 }
 
-EMAT <- function(x, model = mod, data = dat) {
-  tcrossprod(sapply(seq_len(nrow(dat)), \(i) GRAD(x, model, data)))
+EMAT <- function(x, model, data) {
+  tcrossprod(sapply(seq_len(nrow(data)), \(i) GRAD(x, model, data)))
 }
 
-JMAT <- function(x, model = mod, data = dat) {
+JMAT <- function(x, model, data) {
   -numDeriv::hessian(LOGLIK, x, model = model, data = data)
 }
 
-PENALTY <- function(x, model = mod, data = dat) {
+PENALTY <- function(x, model, data) {
   e <- EMAT(x, model, data)
-  jinv <- try(solve(JMAT(x, model, data)))
-  if (inherits(jinv, "try-error")) {
-    return(NA)
-  } else {
-    return(-sum(jinv * e) / 2)
-  }
+  jinv <- solve(JMAT(x, model, data))
+  -sum(jinv * e) / 2
 }
 
-BIAS <- function(x, model = mod, data = dat) {
+BIAS <- function(x, model, data) {
   jinv <- solve(JMAT(x, model, data))
   A <- numDeriv::grad(PENALTY, x, model = model, data = data)
-  -drop(jinv %*% A)
+  drop(jinv %*% A)
 }
-
 
 #' Fit growth curve models using lavaan syntax manually
 #'
 #' @inherit fit_sem params return
+#' @param start A numeric vector of starting values
 #'
 #' @return A list with the following components:
 #' \item{coefficients}{The estimated coefficients}
@@ -114,10 +116,8 @@ fit_growth <- function(
     obj_fun <- function(x) -1 * LOGLIK(x, model, data)
     grad_fun <- function(x) -1 * GRAD(x, model, data)
   } else if (rbm == "implicit") {
-    obj_fun <- function(x) {
-      LOGLIK(x, model = model, data = data) +
-        PENALTY(x, model = model, data = data)
-    }
+    obj_fun <- function(x)
+      -1 * (LOGLIK(x, model, data) + PENALTY(x, model, data))
     grad_fun <- NULL
   }
 
@@ -125,7 +125,7 @@ fit_growth <- function(
 
   res <- nlminb(start = start, objective = obj_fun, gradient = grad_fun)
   b <- if (rbm == "explicit") BIAS(res$par, model, data) else 0
-  est <- res$par - b
+  est <- res$par + b
 
   elapsed_time <- proc.time() - start_time
   elapsed_time <- elapsed_time["elapsed"]
