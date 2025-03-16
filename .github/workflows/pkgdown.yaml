@@ -57,6 +57,7 @@ jobs:
             any::cowplot
             any::tictoc
             any::mvtnorm
+            any::katex
           needs: website
 
       - name: Build site
