@@ -61,3 +61,4 @@ experiments/2FSEM_est_combined_final.RData
 manuscript/*_files*
 manuscript/_*.html
 */dhaene_rosseel/*
+vignettes/articles/*_files/*

@@ -15,7 +15,7 @@ fit_sem(
   debug = FALSE,
   lavfun = "sem",
   maxgrad = FALSE,
-  nearPD = TRUE,
+  nearPD = FALSE,
   fn.scale = 1,
   ...
 )
