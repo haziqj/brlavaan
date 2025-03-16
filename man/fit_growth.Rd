@@ -19,6 +19,8 @@ treat them as ordinal variables.}
 \item{rbm}{The type of RBM method to use. One of \code{"none"}, \code{"explicit"}, or
 \code{"implicit"} (although, short forms are accepted, e.g. \code{"exp"}, \verb{"iRBM},
 etc.)}
+
+\item{start}{A numeric vector of starting values}
 }
 \value{
 A list with the following components:
