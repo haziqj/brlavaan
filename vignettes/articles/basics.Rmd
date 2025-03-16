@@ -2,25 +2,18 @@
 title: The basics
 description: | 
   Coding the explicit and implicit bias reduction methods from scratch.
-vignette: |
-  %\VignetteIndexEntry{quarto vignettes}
-  %\VignetteEngine{quarto::html}
-  %\VignetteEncoding{UTF-8}
-knitr:
-  opts_chunk: 
-    collapse: true
-    comment: '#>'
-    echo: false
-    fig-align: center
 ---
 
-```{r}
-#| include: false
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
 library(tidyverse)
 library(brlavaan)
 library(gt)
 ```
-
 
 ## Structural equation models
 
@@ -111,11 +104,11 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 \draw[<->] (i) to[out=-45, in=225] node[below] {$\Psi_{12}$} (s);
 
 % Variance of i
-\draw[<->] (i) to[out=190, in=220, looseness=4] 
+\draw[<->] (i) to[out=190, in=220, looseness=4]
   node[left] {$\Psi_{11}$} (i);
 
 % Variance of s
-\draw[<->] (s) to[out=-40, in=-10, looseness=4] 
+\draw[<->] (s) to[out=-40, in=-10, looseness=4]
   node[right] {$\Psi_{22}$} (s);
 
 \draw[->] (int1) -- node[right,pos=0.3] {$\alpha_1$} (i);
@@ -195,8 +188,10 @@ The implementation in R code is also straightforward (see R/40-manual_growth.R).
 Compare the behaviour of the eBR and iBR methods using lavaan's internals (via `fit_sem()`) and using manual functions (via `fit_growth()`).
 
 ```{r}
+#| echo: true
+#| warning: false
 library(tictoc)
-set.seed(8)
+set.seed(26)
 dat <- gen_data_growth(n = 15, rel = 0.5, dist = "Normal", scale = 1 / 10)
 mod <- txt_mod_growth(0.5)
 tru <- truth(dat)
@@ -229,7 +224,7 @@ fit$iBRman <- fit_growth(mod, dat, "implicit", start = tru[1:6])
 toc(log = TRUE)
 
 # Compare
-c(list(truth = tru[1:6]), lapply(fit, \(x) round(coef(x)[1:6], 3)))
+c(list(truth = tru[1:6]), lapply(fit, \(x) round(coef(x)[1:6], 5)))
 sapply(fit, \(x) if (inherits(x, "lavaan")) x@optim$converged else x$converged)
 ```
 
