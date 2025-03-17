@@ -12,6 +12,7 @@ sim_fun(
   nsimu = 1,
   lavsim = FALSE,
   whichsims = c("ML", "eRBM", "iRBM"),
+  bounds = "none",
   info_pen = "observed",
   info_bias = "observed",
   info_se = "observed",
@@ -37,6 +38,8 @@ function.}
 
 \item{whichsims}{A character vector with the estimators to use. Possible
 values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
+
+\item{bounds}{Bounded estimation?}
 
 \item{info_pen}{Should be \code{"observed"}}
 

@@ -1,0 +1,625 @@
+---
+title: "Simulation Results for Growth Models"
+format: 
+  html: 
+    embed-resources: true
+    toc: true
+    lightbox: true
+  # pdf: 
+  #   fig-width: 7
+  #   fig-height: 5
+execute:
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(brlavaan)
+library(gt)
+library(glue)
+here::i_am("experiments/growth/growth.qmd")
+load(here::here("experiments/simu_res_growth_keepgoing.RData"))
+simu_res <- simu_res_growth
+
+# Simulation id data frame
+simu_id <-
+  expand_grid(
+    dist = c("Normal", "Kurtosis", "Non-normal"),
+    model = "growth",
+    rel = c(0.8, 0.5),
+    n = c(15, 20, 50, 100, 1000)
+  ) |>
+  rownames_to_column(var = "simid")
+
+growthpars <- c("v", "i~~i", "s~~s", "i~~s")
+mycols <- c(
+  ML = "#E31A1C",
+  eRBM = "#A6CEE3",
+  iRBM = "#1F78B4",
+  Jackknife = "#B2DF8A",
+  Bootstrap = "#33A02C",
+  `Ozenne et al.` = "#FDBF6F",
+  REML = "#FF7F00"
+)
+```
+
+```{r}
+#| label: prep-results
+
+# Create (nested) results data frame, used for counting convergences etc.
+res_nested <-
+  simu_res |>
+  imap(\(x, idx) bind_cols(simid = idx, x$simu_res)) |>
+  bind_rows() |>
+  drop_na() |>
+  select(-starts_with("info")) |>
+  mutate(
+    super_converged = converged & max_loglik < 0 & Sigma_OK &
+      unlist(lapply(scaled_grad, \(x) abs(max(x)) < 1e-2))
+  )
+
+# This is the full (raw) results data frame
+res <-
+  res_nested |>
+  mutate(param = lapply(truth, names), .before = est) |>
+  unnest(param:truth) |>
+  select(!starts_with("info")) |>
+  # For the growth model, keep the first instance of param == "v"
+  distinct(simid, sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>
+  mutate(type = case_when(
+    grepl("~1", param) ~ "alpha",
+    grepl("~~", param) ~ "Psi",
+    param == "v" ~ "Theta",
+    TRUE ~ NA
+  )) |>
+  mutate(
+    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
+    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
+    method = factor(method, levels = rev(names(mycols))),
+    bias = est - truth,
+    relbias = bias / truth,
+    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
+  ) 
+
+# Filter out bad estimates
+res_filtered <-
+  res |>
+  # mutate(converged = all(converged), .by = c(simid, sim)) |>
+  # filter(converged) |>
+  filter(!is.na(se), abs(se) < 10, abs(bias) < 7, converged) 
+```
+
+## Estimation success rates
+
+```{r}
+#| label: tbl-convsucc-growth
+#| tbl-cap: 'Success rates for estimation of the growth model for the ML, eBR, and iBR methods.'
+#| html-table-processing: none
+res_nested |>
+  summarise(count = sum(converged), .by = dist:method) |>
+  mutate(count = count / max(count), .by = dist:n) |>
+  pivot_wider(names_from = c(method, rel), values_from = count) |>
+  select(-starts_with("info"), -model) |>
+  group_by(dist) |>
+  gt() |>
+  tab_spanner(
+    columns = ends_with("0.8"),
+    label = "Reliability = 0.8"
+  ) |>
+  tab_spanner(
+    columns = ends_with("0.5"),
+    label = "Reliability = 0.5"
+  ) |>
+  fmt_percent(contains("0."), decimals = 1) |>
+  cols_label(
+    starts_with("ML") ~ "ML",
+    starts_with("eRBM") ~ "eRBM",
+    starts_with("iRBM") ~ "iRBM"
+  ) 
+```
+
+## Centred distributions for parameters
+
+```{r}
+#| label: fig-centdist-growth
+#| fig-cap: 'Centred distributions of the estimates for the growth model. Extreme estimate values are trimmed. The number of estimates used for the calculation of summaries is shown in the right panel.'
+#| fig-height: 7.5
+#| fig-width: 6
+#| out-width: 100%
+plot_df <- 
+  res |> 
+  filter(sim <= 1000) |>
+  filter(dist == "Normal", rel == "Rel = 0.8", param %in% growthpars) |>
+  filter(abs(se) < 10, abs(bias) < 7, converged) |>
+  mutate(
+    across(c(est, truth, bias), \(x) x * 100),  # rescale back
+    param = factor(param, levels = rev(growthpars)),
+    n = factor(n, labels = paste0("n = ", c(15, 20, 50, 100, 1000))),
+  ) 
+
+p1 <- 
+  ggplot(plot_df, aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
+  scale_fill_manual(values = mycols) +
+  scale_y_discrete(labels = rev(c(
+    expression(theta["1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
+  theme_bw() +
+  theme(legend.position.inside = c(0.88, 0.1), legend.background = element_rect(fill = NA), legend.text = element_text(size = 8), legend.title = element_text(size = 9)) +
+  labs(x = "Bias", y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+
+p2 <- 
+  summarise(
+    plot_df,
+    count = n(),
+    .by = dist:param
+  ) |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0,0,0,100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), axis.text.x = element_text(size = 7.5), legend.position = "none") +
+  labs(x = "Count", y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+## Performance plots
+
+```{r}
+#| label: fig-perf-growth
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the growth model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 6
+#| fig-width: 6
+#| out-width: 100%
+plot_df |>
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
+  mutate(
+    metric = factor(
+      metric,
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
+  ) |>
+  ggplot(aes(value, param, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  geom_vline(
+    data = tibble(
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
+    ),
+    aes(xintercept = value),
+    linetype = "dashed"
+  ) +  
+  scale_fill_manual(values = mycols) +
+  facet_grid(n ~ metric, scales = "free_x") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
+    )
+  ) +  
+  scale_y_discrete(labels = rev(c(
+    expression(theta["1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +  
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 7.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8") 
+```
+
+## Comparison to other methods
+
+```{r}
+#| label: dr-sims-growth
+#| include: false
+
+# Ours
+load(here::here("experiments/simu_id.RData"))
+load(here::here("experiments/simu_res_growth.RData"))
+simu_res <- simu_res_growth
+
+res <-
+  simu_res |>
+  imap(\(x, idx) bind_cols(simid = idx, x$simu_res)) |>
+  bind_rows() |>
+  drop_na() |>
+  select(-starts_with("info")) |>
+  mutate(param = lapply(truth, names), .before = est) |>
+  unnest(param:truth) |>
+  # For the growth model, keep the first instance of param == "v"
+  distinct(simid, sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>    
+  mutate(type = case_when(
+    grepl("~1", param) ~ "alpha",
+    grepl("~~", param) ~ "Psi",
+    param == "v" ~ "Theta",
+    TRUE ~ NA
+  )) |>
+  mutate(
+    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
+    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
+    method = factor(method, levels = rev(names(mycols))),
+    bias = est - truth,
+    relbias = bias / truth,
+    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
+  ) 
+
+truth <-
+  expand_grid(
+    model = "growth",
+    rel = factor(c("Rel = 0.8", "Rel = 0.5"), levels = c("Rel = 0.8", "Rel = 0.5")),
+    param = c("i~~i", "i~1", "s~~s", "s~1", "i~~s", "v")
+  ) |> 
+  mutate(truth = c(truth_growth(0.8)[1:6], truth_growth(0.5)[1:6])) |>
+  select(model, param, rel, truth)
+
+# Others
+dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
+if (!file.exists(dr_file1))
+  download.file("https://osf.io/vjq5m/download", destfile = dr_file1)
+
+load(here::here("experiments/GCM_est_combined_final.RData"))
+res_dr_growth <-
+  as_tibble(Results) |>
+  unite("simu", jobid, iteration, sep = ".") |>
+  mutate(
+    simu = as.integer(factor(simu)),
+    convergence = convergence == 1
+  ) |>
+  select(
+    seed,
+    sim = simu,
+    method,
+    dist,
+    n = nobs,
+    converged = convergence,
+    rel,
+    `est_v` = `est_Day0~~Day0`,
+    `est_i~~i`,
+    `est_i~1`,
+    `est_s~~s`,
+    `est_s~1`,
+    `est_i~~s`,
+    `se_v` = `se_Day0~~Day0`,
+    `se_i~~i`,
+    `se_i~1`,
+    `se_s~~s`,
+    `se_s~1`,
+    `se_i~~s`
+  ) |>
+  pivot_longer(
+    cols = c(starts_with("est_"), starts_with("se_")),
+    names_to = c(".value", "param"),
+    names_sep = "_"
+  ) |>
+  filter(method %in% c("JB", "BB", "Ozenne", "REML")) |>
+  distinct(sim, seed, method, dist, n, rel, param, est, se, converged) |>
+  mutate(model = "growth")
+
+res_dr <- res_dr_growth
+
+# Clean up
+res_dr$dist <- factor(
+  res_dr$dist,
+  levels = c("Normal", "Kurtosis", "NonNormal"),
+  labels = c("Normal", "Kurtosis", "Non-normal")
+)
+res_dr$dist <- as.character(res_dr$dist)
+
+res_dr$rel <- factor(
+  res_dr$rel,
+  levels = c("REL80", "REL50"),
+  labels = c(0.8, 0.5)
+)
+res_dr$rel <- as.numeric(as.character(res_dr$rel))
+
+res_dr$n <- as.numeric(as.character(res_dr$n))
+
+tmp_lev <- levels(res_dr$method)
+tmp_lev <- gsub("JB", "Jackknife", tmp_lev)
+tmp_lev <- gsub("BB", "Bootstrap", tmp_lev)
+tmp_lev <- gsub("Ozenne", "Ozenne et al.", tmp_lev)
+tmp_lev <- gsub("REML", "REML", tmp_lev)
+levels(res_dr$method) <- tmp_lev
+
+# Add truth and simid
+levels(truth$rel) <- c(0.8, 0.5)
+truth$rel <- as.numeric(as.character(truth$rel))
+res_dr <- left_join(res_dr, truth)
+res_dr <- left_join(res_dr, select(simu_id, -seed))
+
+# Rearrange columns
+res_dr <-
+  res_dr |>
+  mutate(timing = NA, scaled_grad = NA, max_loglik = NA, optim_message = NA, Sigma_OK = NA, super_converged = NA) |>
+  select(simid, seed, sim, dist, model, rel, n, method, param, est, se, truth,
+         timing, converged, optim_message, super_converged) |>
+  arrange(simid, sim, dist, model, rel, n, method, param) |>
+  mutate(type = case_when(
+    grepl("~1", param) ~ "alpha",
+    grepl("~~", param) ~ "Psi",
+    param == "v" ~ "Theta",
+    TRUE ~ NA
+  )) |>
+  mutate(
+    simid = as.integer(simid),
+    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
+    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
+    method = factor(method, levels = rev(names(mycols))),
+    bias = est - truth,
+    relbias = bias / truth,
+    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
+  )
+
+plot_bias_growth <- function(FUN = mean, YLIM = c(-0.4, 0.3)) {
+  bind_rows(
+    res,
+    res_dr
+  ) |>
+  filter(param %in% growthpars, dist != "Kurtosis") |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    bias = FUN(relbias, na.rm = TRUE, trim = 0.05),
+    .by = c(dist:param)
+  ) |> 
+  mutate(
+    n = as.numeric(factor(n)),
+    param = factor(param, levels = growthpars, labels = c(
+      expression(theta["1"]),
+      expression(Psi["1,1"]),
+      expression(Psi["2,2"]),
+      expression(Psi["1,2"])
+    )),
+    rel = factor(rel, labels = c(
+      expression(Reliability~"="~0.8),
+      expression(Reliability~"="~0.5)
+    ))
+  ) |>
+  ggplot(aes(n, bias, col = method)) +
+  geom_line(linewidth = 0.9, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_cartesian(ylim = YLIM) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative {deparse(substitute(FUN))} bias"), col = NULL) 
+} 
+```
+
+```{r}
+#| label: fig-meanbias-growth
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth model.'
+#| fig-height: 6
+#| fig-width: 7.5
+#| out-width: 100%
+
+plot_bias_growth(mean, NULL)
+```
+
+
+```{r}
+#| label: fig-rmse-growth
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth model.'
+#| out-width: 100%
+bind_rows(
+    mutate(res, across(c(est, truth, bias), \(x) x * 100)),
+    res_dr
+  ) |>
+  filter(param %in% growthpars, dist != "Kurtosis") |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    .by = c(dist:param)
+  ) |>
+  mutate(
+    n = as.numeric(factor(n)),
+    param = factor(param, levels = growthpars, labels = c(
+      expression(theta["1"]),
+      expression(Psi["1,1"]),
+      expression(Psi["2,2"]),
+      expression(Psi["1,2"])
+    )),
+    rel = factor(rel, labels = c(
+      expression(Reliability~"="~0.8),
+      expression(Reliability~"="~0.5)
+    )),
+    method = factor(method, levels = (names(mycols)))
+  ) |>  
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge") +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed, scales = "free") +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 280)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+## Tables
+
+```{r}
+#| html-table-processing: none
+#| column: page
+#| label: tbl-bias-growth-80
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.80'
+tab_bias_growth <- function(rel) {
+  ress <- bind_rows(res, res_dr)
+  i <- ress$rel == glue("Rel = {rel}")
+  
+  ress |>
+    # mutate(converged = all(converged), .by = c(simid, seed)) |>
+    # filter(converged) |>
+    filter(dist != "Kurtosis", param %in% growthpars, i) |>
+    filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+    summarise(
+      mean_bias = mean(relbias, na.rm = TRUE, trim = 0.05),
+      med_bias = median(relbias, na.rm = TRUE),
+      rmse = sqrt(mean(relbias ^ 2, na.rm = TRUE, trim = 0.05)),
+      coverage = mean(covered, na.rm = TRUE),
+      .by = c(dist:method, param)
+    ) |>
+    arrange(dist, rel, n, param, desc(method)) |>
+    select(-model, -coverage, -rel) |>
+    pivot_wider(
+      names_from = c(dist, n),
+      values_from = c(mean_bias, med_bias, rmse)
+    ) |>
+    group_by(param) |>
+    gt(rowname_col = "method") |>
+    fmt_number(decimals = 2) |>
+    fmt_markdown(param) |>
+    tab_spanner(
+      columns = matches("mean_bias_Normal_"),
+      label = "Normal data"
+    ) |>
+    tab_spanner(
+      columns = matches("mean_bias_Non-Normal_"),
+      label = "Non-normal data"
+    ) |>
+    tab_spanner(
+      columns = starts_with("mean_bias"),
+      label = "Relative mean bias"
+    ) |>
+    tab_spanner(
+      columns = matches("med_bias_Normal_"),
+      label = "Normal data", 
+      id = "med_bias_normal"
+    ) |>
+    tab_spanner(
+      columns = matches("med_bias_Non-Normal_"),
+      label = "Non-normal data", 
+      id = "med_bias_nonnormal"
+    ) |>  
+    tab_spanner(
+      columns = starts_with("med_bias"),
+      label = "Relative median bias"
+    ) |>
+    tab_spanner(
+      columns = matches("rmse_Normal_"),
+      label = "Normal data", 
+      id = "rmse_normal"
+    ) |>
+    tab_spanner(
+      columns = matches("rmse_Non-Normal_"),
+      label = "Non-normal data", 
+      id = "rmse_nonnormal"
+    ) |>  
+    tab_spanner(
+      columns = starts_with("rmse"),
+      label = "Relative RMSE"
+    ) |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{1,2}$"), rows = param == "i~~s") |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{2,2}$"), rows = param == "s~~s") |>
+    tab_row_group(label = md("$\\mathbf\\Psi_{1,1}$"), rows = param == "i~~i") |>
+    tab_row_group(label = md("$\\theta_{1}$"), rows = param == "v") |>
+    cols_label(
+      ends_with("_15") ~ "15",
+      ends_with("_20") ~ "20",
+      ends_with("_50") ~ "50",
+      ends_with("_100") ~ "100",
+      ends_with("_1000") ~ "1000"
+    ) |>
+    tab_options(table.font.size = "10px")
+}
+tab_bias_growth(0.8)
+```
+
+
+```{r}
+#| label: tbl-bias-growth-50
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.50'
+#| column: page
+#| html-table-processing: none
+
+tab_bias_growth(0.5)
+```
+
+```{r}
+#| label: tbl-covr-growth
+#| tbl-cap: 'Coverage rates 95% confidence interval for the growth model.'
+#| column: page
+#| html-table-processing: none
+
+bind_rows(res, res_dr) |>
+  filter(dist != "Kurtosis", method != "REML", param %in% growthpars) |>
+  filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  summarise(
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:method, param)
+  ) |>
+  select(-model) |>
+  pivot_wider(
+    names_from = c(dist, rel, n),
+    values_from = covr
+  ) |>
+  group_by(param) |>
+  gt(rowname_col = "method") |>
+  fmt_number() |>
+  tab_spanner(
+    columns = matches("Normal_Rel = 0.8", ignore.case = FALSE),
+    label = "Reliability = 0.8"
+  ) |>
+  tab_spanner(
+    columns = matches("Normal_Rel = 0.5", ignore.case = FALSE),
+    label = "Reliability = 0.5"
+  ) |>
+  tab_spanner(
+    columns = matches("Normal_", ignore.case = FALSE),
+    label = "Normal data"
+  ) |>  
+  tab_spanner(
+    columns = matches("Non-normal_Rel = 0.8", ignore.case = FALSE),
+    label = "Reliability = 0.8",
+    id = "nonnormal80"
+  ) |>
+  tab_spanner(
+    columns = matches("Non-normal_Rel = 0.5", ignore.case = FALSE),
+    label = "Reliability = 0.5",
+    id = "nonnormal50"
+  ) |>
+  tab_spanner(
+    columns = matches("Non-normal_", ignore.case = FALSE),
+    label = "Non-Normal data"
+  ) |>    
+  tab_row_group(label = md("$\\mathbf\\Psi_{1,2}$"), rows = param == "i~~s") |>
+  tab_row_group(label = md("$\\mathbf\\Psi_{2,2}$"), rows = param == "s~~s") |>
+  tab_row_group(label = md("$\\mathbf\\Psi_{1,1}$"), rows = param == "i~~i") |>
+  tab_row_group(label = md("$\\theta_{1}$"), rows = param == "v") |>
+  cols_label(
+    ends_with("_15") ~ "15",
+    ends_with("_20") ~ "20",
+    ends_with("_50") ~ "50",
+    ends_with("_100") ~ "100",
+    ends_with("_1000") ~ "1000"
+  ) 
+```
+

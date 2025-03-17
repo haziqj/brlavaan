@@ -1,190 +1,226 @@
----
-execute:
-  echo: false
-  message: false
-  warning: false
-html-table-processing: none
-lightbox: true
-bibliography: 
-  - refs-HJ.bib
----
+::: {#fig-path-growth}
+```{r pathtwofac, engine = "tikz", out.width = "90%"}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,
+  auto,
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm}
+]
+
+% --------------------------------------------------------
+% 1) LATENT VARIABLES
+% --------------------------------------------------------
+\node[latent] (eta1) at (-1.5, -2) {$\eta_{1}$};
+\node[latent] (eta2) at ( 3, -2) {$\eta_{2}$};
+
+% --------------------------------------------------------
+% 2) OBSERVED VARIABLES + ERROR TERMS
+%    Place y1..y3 (for eta1) on the left, y4..y6 (for eta2) on the right.
+% --------------------------------------------------------
+\node[obs] (y1) at (-3, 0) {$y_{1}$};
+\node[obs] (y2) at (-1.5, 0) {$y_{2}$};
+\node[obs] (y3) at ( 0, 0) {$y_{3}$};
+
+\node[obs] (y4) at ( 1.5, 0) {$y_{4}$};
+\node[obs] (y5) at ( 3, 0) {$y_{5}$};
+\node[obs] (y6) at ( 4.5, 0) {$y_{6}$};
+
+% Error terms above each observed variable
+\node[error] (e1) at (-3, 1.5) {$\epsilon_{1}$};
+\node[error] (e2) at (-1.5, 1.5) {$\epsilon_{2}$};
+\node[error] (e3) at ( 0, 1.5) {$\epsilon_{3}$};
+\node[error] (e4) at ( 1.5, 1.5) {$\epsilon_{4}$};
+\node[error] (e5) at ( 3, 1.5) {$\epsilon_{5}$};
+\node[error] (e6) at ( 4.5, 1.5) {$\epsilon_{6}$};
+
+% --------------------------------------------------------
+% 3) PATHS FROM ERROR TERMS TO OBSERVED VARIABLES
+% --------------------------------------------------------
+\draw[->] (e1) -- (y1);
+\draw[->] (e2) -- (y2);
+\draw[->] (e3) -- (y3);
+\draw[->] (e4) -- (y4);
+\draw[->] (e5) -- (y5);
+\draw[->] (e6) -- (y6);
+
+% --------------------------------------------------------
+% 4) FACTOR LOADINGS
+%    \eta_1 -> y1, y2, y3
+%    \eta_2 -> y4, y5, y6
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{11}$} (y1);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{21}$} (y2);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{31}$} (y3);
+
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{42}$} (y4);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{52}$} (y5);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{62}$} (y6);
+
+% --------------------------------------------------------
+% 5) REGRESSION BETWEEN LATENT VARIABLES
+%    \eta_1 -> \eta_2, labeled beta
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[midway, above] {$\beta$} (eta2);
+
+% --------------------------------------------------------
+% 6) VARIANCES OF LATENT VARIABLES
+%    Double-headed arrows for psi_{11} and psi_{22}
+% --------------------------------------------------------
+\draw[<->] (eta1) to[out=200, in=230, looseness=4] 
+  node[left] {$\Psi_{11}$} (eta1);
+
+\draw[<->] (eta2) to[out=-50, in=-20, looseness=4] 
+  node[right] {$\Psi_{22}$} (eta2);
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+A structural equation model featuring two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables ($y_{1}$, $y_{2}$, $y_{3}$) for $\eta_{1}$ and ($y_{4}$, $y_{5}$, $y_{6}$) for $\eta_{2}$. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
+:::
 
 ```{r}
-library(tidyverse)
-library(gt)
-theme_set(theme_bw())
-
-here::i_am("manuscript/_simulation.qmd")
-load(here::here("experiments/tables_figures.RData"))
+#| label: tbl-truth-twofac
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_twofac(0.8), truth_twofac(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |> 
+  mutate(param = case_when(
+    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
+    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
+    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
+    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
+    param == "fy~fx"  ~ "$\\beta$",
+    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
+    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
+    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
+    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
+    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
+    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
+    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
+    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
+  )) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
 ```
 
+::: {#fig-path-growth}
+```{r pathgrowth, engine = "tikz"}
+\usetikzlibrary{shapes.geometric,arrows,calc,positioning}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,              % for arrow tips
+  auto,                   % automatic label positioning
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm},
+intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt, minimum size=6mm}
+  ]
 
-### Simulation setup
+%-------------------------------------------------------
+% 1) LATENT FACTORS (intercept i, slope s)
+%-------------------------------------------------------
+\node[latent] (i) at (-2,-3) {$i$};
+\node[latent] (s) at ( 2,-3) {$s$};
+\node[intercept] (int1) at (-2,-4.2) {\footnotesize 1};
+\node[intercept] (int2) at (2,-4.2) {\footnotesize 1};
 
-- Describe the two models: growth curve and two-factor model
-- Outcomes of interest: bias, RMSE, coverage
+%-------------------------------------------------------
+% 2) COVARIANCES AMONG LATENT FACTORS
+%    - psi_{11} on i
+%    - psi_{22} on s
+%    - psi_{21} between i and s
+%-------------------------------------------------------
+% i <-> s
+\draw[<->] (i) to[out=-45, in=225] node[below] {$\Psi_{12}$} (s);
 
-### Results
+% Variance of i
+\draw[<->] (i) to[out=190, in=220, looseness=4] 
+  node[left] {$\Psi_{11}$} (i);
 
-For the growth curve model, virtually no convergence issues.
-In the two factor SEM, convergence issues in small sample sizes ($n\leq 20$) in the low reliability setting [WHY??], with as much as 30% failure and had to be removed from the analysis.
+% Variance of s
+\draw[<->] (s) to[out=-40, in=-10, looseness=4] 
+  node[right] {$\Psi_{22}$} (s);
 
-The implicit and explicit bias reduction methods took only a few seconds to run, even for the largest sample sizes. 
-This offers a significant advantage over the resampling methods.
+\draw[->] (int1) -- node[right,pos=0.3] {$\alpha_1$} (i);
+\draw[->] (int2) -- node[right,pos=0.3] {$\alpha_2$} (s);
 
-<!-- - Trim outliers (upper and lower 2.5%) -->
+%-------------------------------------------------------
+% 3) OBSERVED VARIABLES (y1..y10) + ERRORS (eps1..eps10)
+%    Arrange them in a horizontal row above i and s.
+%-------------------------------------------------------
+\foreach \j in {1,...,10} {
+  % X-position for y_j (shift them so they are roughly centered)
+  \pgfmathsetmacro{\x}{(\j*1.3 - 6.5)}
 
-### Growth Curve Model
+  % Observed variable y_j
+  \node[obs] (y\j) at (\x,0) {$y_{\j}$};
+
+  % Error term epsilon_j above y_j
+  \node[error] (e\j) at (\x,1.5) {$\epsilon_{\j}$};
+
+  % Arrow from error to observed
+  \draw[->] (e\j) -- (y\j);
+
+  % Intercept factor loadings: all = 1
+  \draw[->] (i) -- node[pos=0.45,right] {\footnotesize 1} (y\j);
+
+  % Slope factor loadings: 0..9
+  \pgfmathtruncatemacro{\loading}{\j - 1}
+  \draw[->] (s) -- node[pos=0.7,right] {\footnotesize\loading} (y\j);
+}
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+A schematic of a univariate latent growth curve model with intercept ($i$) and slope ($s$) factors measured over 10 time points ($y_1$--$y_{10}$). Each observed measure has an associated error term ($\epsilon_j\sim\operatorname{N}(0,\theta)$). The intercept factor loadings are fixed to 1, while slope factor loadings increment from 0 to 9, and $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$ denote the variances and covariance of the latent factors.
+:::
 
 ```{r}
-#| label: fig-growth-medbias
-#| fig-cap: 'Median bias relative to truth for various simulation scenarios in the growth curve model.'
-#| out-width: 100%
-fig3
+#| label: tbl-truth-growth
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_growth(0.8), truth_growth(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |>
+  distinct(rel, truth, param, .keep_all = TRUE) |>
+  mutate(param = case_when(
+    param == "v" ~ "$\\theta$",
+    param == "i~~i" ~ "$\\Psi_{1,1}$",
+    param == "s~~s" ~ "$\\Psi_{2,2}$",
+    param == "i~~s" ~ "$\\Psi_{1,2}$",
+    param == "i~1" ~ "$\\alpha_1$",
+    param == "s~1" ~ "$\\alpha_2$",
+  )) |>
+  mutate(ord = case_when(
+    grepl("Psi", param) ~ 3,
+    grepl("alpha", param) ~ 1,
+    grepl("theta", param) ~ 2
+  )) |>
+  arrange(ord) |>
+  select(-ord) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
 ```
-
-The results highlight several notable patterns regarding the performance of bias reduction methods under varying conditions of sample size, reliability, and data distribution.
-Residual variances ($\theta_{1,1}$) displayed negligible bias across all methods, sample sizes, and data distributions, consistent with the findings reported by @dhaene2022resampling.
-Factor variances estimated using Maximum Likelihood (ML) showed substantial underestimation for small to moderate sample sizes. 
-In general, all bias reduction methods were able to correct this issue, including both our proposed explicit and implicit bias reduction methods (eRBM and iRBM, respectively).
-The factor covariance ($\theta_{1,2}$) also sees consistent bias reduction across methods, but smaller sample sizes and non-normal data lead to noticeable variability, particularly for implicit bias correction methods.
-As expected, all methods converged toward expected bias values, demonstrating improved accuracy as sample size increased.
-
-In high-reliability settings (Rel = 0.8), both eRBM and iRBM effectively reduced median bias for variance parameters, particularly for smaller sample sizes ($n\leq 50$), compared to ML estimation. 
-Among the methods, iRBM outperformed all others, while eRBM showed similar performance to other sampling-based methods and the Ozenne method. 
-This pattern persisted across different data distributions but changed in the presence of non-normal data, where iRBM appeared sensitive to deviations from normality. 
-Low-reliability (Rel = 0.5) settings further impacted median bias, causing iRBM and all other methods to struggle in maintaining unbiasedness.
-
-
-```{r}
-#| label: fig-growth-perf
-#| fig-cap: 'Performance of bias-corrected estimators in small sample sizes ($n=50$) for the growth curve model.'
-#| out-width: 100%
-fig_growth_perf
-```
-
-
-Mean bias analysis revealed a different pattern. 
-iRBM exhibited larger mean bias, suggesting that it produced more outliers, pulling the mean estimate away from the truth.
-In contrast, eRBM showed negligible mean bias, providing more stable estimates. 
-This was further reflected in the RMSE results, where iRBM showed higher values, and thus higher variability of estimates around the true values, compared to ML and eRBM. 
-
-Coverage rates were most accurate in normal data scenarios under both reliability settings, where iRBM achieved nominal coverage rates for all parameters. 
-However, in more challenging conditions, particularly non-normal data, the corrective methods did not show significant improvement over ML. 
-Simulation-based methods performed better in achieving accurate coverage under these conditions.
-
-<!-- Overall, while both explicit and implicit methods showed strengths, eRBM demonstrated more consistent performance in reducing mean bias and RMSE, whereas iRBM excelled in median bias reduction but was more sensitive to outliers and non-normal data.  -->
-
-### Two-Factor Model
-
-```{r}
-#| label: fig-twofac-medbias
-#| fig-cap: 'Median bias relative to truth for various simulation scenarios in the two-factor model.'
-#| out-width: 100%
-#| fig-height: 5.5
-fig6
-```
-
-
-The phenomenon of maximum likelihood (ML) underestimating variance components persist in the two-factor model, with additionally the latent regression coefficient suffering from downward bias especially in non-normal, low reliability small sample scenarios.
-On the other hand, factor loadings don't seem to suffer from a lot of bias, so not interesting to compare.
-
-For relative median bias, the iRBM demonstrated notable improvements over ML in estimating factor variances ($\Psi_{2,2}$ and $\Psi_{2,2}$) and the latent regression coefficient ($\beta$), although low reliability and non-normality impacted performance somewhat. 
-In these scenarios, iRBM outperformed eRBM  but exhibited higher sensitivity to deviations in normality, with increased variability under non-normal data distributions. 
-In fact, Under low reliability settings (Rel = 0.5), all methods showed increased bias, with the exception of the Ozenne method which maintained consistent performance across all conditions.
-
-
-```{r}
-#| label: fig-twofac-perf
-#| fig-cap: 'Performance of bias-corrected estimators in small sample sizes ($n=50$) for the two-factor model.'
-#| out-width: 100%
-fig_twofac_perf
-```
-
-Relative mean bias results show a pattern of positive bias for the iRBM method, with the bias being as severe as 5-15% in some cases, especially in the small sample setting.
-In contrast, eRBM did not show positive bias, but instead improvement in fixing the underestimation of the ML method.
-Similar to the results of the previous growth curve model, it seems the iRBM method produces more outlier estimates, which pull the mean estimate upwards.
-On the bright side, the residual variance $\theta$ and coefficient $\beta$ benefitted most from the iRBM method, even if the iRBM struggles to maintain unbiasedness for the factor variances.
-
-Coverage results for 95% confidence intervals revealed strong performance by eRBM and iRBM under normal data conditions, with both methods achieving nominal coverage rates for most parameters. 
-However, under non-normal data, coverage rates for iRBM and eRBM showed limited improvement over ML.
-As for the RMSE, not much to be said as variability of all methods seem to be on par with each other.
-
-### EXTRA RESULTS TO PUT IN APPENDIX
-
-#### Growth Curve Model
-
-```{r}
-#| label: fig-growth-dis
-#| fig-cap: 'Distribution of bias values (relative to truth) for various estimation methods under small sample size ($n=50$).'
-#| fig-width: 8
-#| fig-height: 5
-#| out-width: 100%
-fig_growth_dis
-```
-
-
-```{r}
-#| label: fig-growth-meanbias
-#| fig-cap: Mean bias
-#| out-width: 100%
-fig4
-```
-
-
-```{r}
-#| label: fig-growth-rmse
-#| fig-cap: RMSE relative to ML
-fig5
-```
-
-
-
-```{r}
-#| tbl-cap: 'Results (trimmed) for the growth curve model simulations (Reliability = 0.80)'
-tab2
-```
-
-
-```{r}
-#| tbl-cap: 'Results (trimmed) for the growth curve model simulations (Reliability = 0.50)'
-tab3
-```
-
-
-
-```{r}
-#| tbl-cap: 'Coverage'
-tab4
-```
-
-
-#### Two-Factor Model
-
-```{r}
-#| fig-width: 8
-#| fig-height: 5
-#| out-width: 100%
-fig_twofac_dis
-```
-
-```{r}
-fig7
-```
-
-```{r}
-fig8
-```
-
-```{r}
-tab5
-```
-
-```{r}
-tab6
-```
-
-```{r}
-tab7
-```
-

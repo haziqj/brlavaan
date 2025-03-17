@@ -2,6 +2,59 @@
 
 {{< lipsum 1 >}}
 
-### B Others {.unnumbered}
+### B Tables {.unnumbered}
 
-{{< lipsum 1 >}}
+
+```{r}
+#| label: tbl-bias-twofac-80
+#| tbl-cap: 'Results (trimmed) two-factor model reliability 0.80.'
+#| html-table-processing: none
+#| column: page
+
+tab_bias(bias_twofac_80_df, "twofac")
+```
+
+```{r}
+#| label: tbl-bias-twofac-50
+#| tbl-cap: 'Results (trimmed) two-factor model reliability 0.50.'
+#| column: page
+#| html-table-processing: none
+
+tab_bias(bias_twofac_50_df, "twofac")
+```
+
+```{r}
+#| label: tbl-covr-twofac
+#| tbl-cap: 'Coverage rates 95% confidence interval for the two-factor model.'
+#| column: page
+#| html-table-processing: none
+
+tab_covr(covr_twofac_df, "twofac")
+```
+
+```{r}
+#| label: tbl-bias-growth-80
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.80.'
+#| html-table-processing: none
+#| column: page
+
+tab_bias(bias_growth_80_df, "growth")
+```
+
+```{r}
+#| label: tbl-bias-growth-50
+#| tbl-cap: 'Results (trimmed) growth curve model reliability 0.50.'
+#| column: page
+#| html-table-processing: none
+
+tab_bias(bias_growth_50_df, "growth")
+```
+
+```{r}
+#| label: tbl-covr-growth
+#| tbl-cap: 'Coverage rates 95% confidence interval for the growth curve model.'
+#| column: page
+#| html-table-processing: none
+
+tab_covr(covr_growth_df, "growth")
+```

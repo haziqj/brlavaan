@@ -1,6 +1,5 @@
 ---
 title: 'Plugin penalties [NOT INCLUDED IN PAPER 1]'
-author: Haziq Jamil
 grid:
   sidebar-width: 0px
 ---

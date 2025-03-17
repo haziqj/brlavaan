@@ -50,6 +50,14 @@ jobs:
             any::flextable
             any::ggh4x
             any::pkgdepR
+            any::semPlot
+            any::semptools
+            any::magick
+            any::pdftools
+            any::cowplot
+            any::tictoc
+            any::mvtnorm
+            any::katex
           needs: website
 
       - name: Build site

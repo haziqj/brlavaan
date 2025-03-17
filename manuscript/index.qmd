@@ -48,7 +48,6 @@ authors:
     orcid: 0000-0003-1556-0302
     affiliations:
       - ref: warwick
-date: "31 January 2025"
 date-modified: last-modified
 nocite: |
   @*
@@ -59,6 +58,19 @@ keywords:
   - Growth Curve Models
   - Bias Reduction
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(brlavaan)
+library(gt)
+library(glue)
+library(semPlot)
+library(semptools)
+here::i_am("experiments/results/results.qmd")
+load(here::here("experiments/results.RData"))
+```
 
 ## Introduction
 
@@ -71,6 +83,10 @@ keywords:
 ## Simulation Study
 
 {{< include _simulation.qmd >}}
+
+## Results
+
+{{< include _results.qmd >}}
 
 ## Discussion
 

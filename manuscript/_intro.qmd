@@ -4,4 +4,4 @@
 - Limitations of previous studies.
 - What we want to do: Empirical bias reducing adjustments to the ML estimation procedure. Briefly, what are the advantages?
 
-{{< lipsum 1 >}}
+<!-- [ADD TIMING FOR BOOTSTRAP AND JACKKNIFE, AND COMPARE TIMING FOR OURS]{fg="primary" bg="yellow"} -->

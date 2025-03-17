@@ -1,0 +1,391 @@
+On success rates
+
+- Success rate is determined as optimiser reporting convergence and an estimate that makes sense.
+  - For two-factor models, this is when absolute values of the estimates are less than 4 (~400% relative) and se is less than 10.
+  - For the growth curve model, this is when absolute values of the estimates are less than 700 (~40% relative) and se is less than 1000.
+  - The eRBM estimates for growth curve model needed aggressive trimming due to poor performance.
+- eRBM and iRBM face numerical issues particularly in low sample size (n=15,20) settings. 
+- Reliability = 0.8 is "easier" to estimate.
+- eRBM methods uses ML estimates and adjusts them, so the numerical issue lies in the gradient of the bias function (and not convergence rate)
+
+Two-factor model
+
+- For normal distribution and rel = 0.8, about 25% of iRBM estimates were used for n =15, and about 50% for n = 20. For n>=50 then this is nearly 100%.
+- Increasing sample size also reduced the variability of estimates. We see that all methods perform well where the centred distributions are averaged at 0.
+- The performance plots indicate a clear advantage of the eBR and iBR methods over ML especially at small sample size (n=15,20), where both variance parameters Theta and Psi as well as loadings Lambda and latent regression coefficient beta are reduced by as high as 12%.
+- iBR gives the lowest variability in terms of RMSE, again in small samples.
+- For all methods, there is a tendency to underestimate the variance parameters, and this is more pronounced in the ML method. This speaks to the median bias being negative. However, our proposed methods consistently give smaller chance of this happening.
+- In terms of coverage, the ML is seen to under cover, especially in small samples. On the other hand, we see that iBR and eBR improve on this, giving a better coverage rate for 95% confidence intervals.
+- Comparing to the D&R methods, our methods (the iBR especially) matches or outperforms the bias reducing properties, as shown by the relative mean bias and RMSE plots. 
+
+Growth model
+
+- Similar performance for the growth model. However eBR suffer from numerical problems causing the bias term to explode and give non-sensical estimates.
+
+
+### Success rates
+
+```{r}
+#| label: tbl-convsucc
+#| tbl-cap: 'Success rates for estimation of the two-factor model for the ML, eBR, and iBR methods. Highlighted in red are the scenarios which produced success rates below 50%.'
+#| html-table-processing: none
+
+gt(res_conv) |>
+  tab_spanner(
+    columns = matches("twofac.*0\\.8"),
+    label = "Reliability = 0.8",
+    id = "twofac80"
+  ) |>
+  tab_spanner(
+    columns = matches("twofac.*0\\.5"),
+    label = "Reliability = 0.5",
+    id = "twofac50"
+  ) |>
+  tab_spanner(
+    columns = starts_with("twofac"),
+    label = "Two-factor model"
+  ) |>
+  tab_spanner(
+    columns = matches("growth.*0\\.8"),
+    label = "Reliability = 0.8",
+    id = "growth80"
+  ) |>
+  tab_spanner(
+    columns = matches("growth.*0\\.5"),
+    label = "Reliability = 0.5",
+    id = "growth50"
+  ) |>
+  tab_spanner(
+    columns = starts_with("growth"),
+    label = "Growth curve model"
+  ) |>
+  fmt_percent(contains("0."), decimals = 1) |>
+  cols_label(
+    contains("ML") ~ "ML",
+    contains("eRBM") ~ "eRBM",
+    contains("iRBM") ~ "iRBM"
+  ) |>
+  data_color(
+    columns = -all_of("n"),
+    domain = c(0, 1),
+    palette = c("red3", "white",  "white")
+  ) |>
+  tab_options(table.font.size = "11px")
+```
+
+### Two-factor model
+
+#### Centred distributions for parameters
+
+```{r}
+#| label: fig-centdist-twofac
+#| fig-cap: 'Centered distributions of estimates for the two-factor model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-height: 7.5
+#| out-width: 100%
+
+p1 <-
+  plot_df |>
+  filter(param %in% twofacpars) |> 
+  ggplot(aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
+  scale_fill_manual(values = mycols) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(beta),
+    expression(Lambda["2,1"])
+  ))) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
+  theme_bw() +
+  theme(
+    legend.position.inside = c(0.88, 0.095), 
+    legend.background = element_rect(fill = NA), 
+    legend.text = element_text(size = 8), 
+    legend.title = element_text(size = 9)
+  ) +
+  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+
+p2 <-
+  plot_df |>
+  filter(param %in% twofacpars) |> 
+  summarise(count = n(), .by = dist:param) |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(width = 0.8, position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0, 0, 0, 100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), 
+    axis.text.x = element_text(size = 7.5), 
+    legend.position = "none"
+  ) +
+  labs(x = NULL, y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+#### Performance plots
+
+```{r}
+#| label: fig-perf-twofac
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the two-factor model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 7
+#| out-width: 100%
+plot_df2 |> 
+  filter(param %in% twofacpars) |> 
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
+  mutate(
+    metric = factor(
+      metric,
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
+  ) |>
+  ggplot(aes(value, param, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  geom_vline(
+    data = tibble(
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
+    ),
+    aes(xintercept = value),
+    linetype = "dashed"
+  ) +
+  scale_fill_manual(values = mycols) +
+  facet_grid(n ~ metric, scales = "free_x") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
+    )
+  ) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(beta),
+    expression(Lambda["2,1"])
+  ))) +
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 7.5),
+    legend.key.height = unit(1, "pt"), 
+    legend.key.width = unit(9, "pt")
+  ) +
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+```
+
+#### Comparison to other methods
+
+```{r}
+#| label: fig-meanbias-twofac
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "twofac") |>
+  ggplot(aes(n, relbias, col = method)) +
+  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  # coord_cartesian(ylim = c(-0.25, 0.25)) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+```
+
+```{r}
+#| label: fig-rmse-twofac
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "twofac") |>
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 1.5)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+### Growth curve model
+
+
+#### Centred distributions for parameters
+
+```{r}
+#| label: fig-centdist-growth
+#| fig-cap: 'Centered distributions of estimates for the growth curve model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-height: 7.5
+#| out-width: 100%
+
+p1 <-
+  plot_df |>
+  filter(param %in% growthpars) |> 
+  ggplot(aes(bias, param, fill = method)) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
+  scale_fill_manual(values = mycols) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +
+  facet_grid(n ~ .) +
+  guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
+  theme_bw() +
+  theme(
+    legend.position.inside = c(0.88, 0.095), 
+    legend.background = element_rect(fill = NA), 
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 9)
+  ) +
+  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+
+p2 <-
+  plot_df |>
+  filter(param %in% growthpars) |> 
+  summarise(count = n(), .by = dist:param) |>
+  ggplot(aes(count, param, fill = method)) +
+  geom_col(width = 0.8, position = position_dodge()) +
+  geom_vline(xintercept = 1000, linetype = "dashed") +
+  scale_fill_manual(values = mycols) +
+  scale_x_continuous(expand = c(0, 0, 0, 100)) +
+  facet_grid(n ~ .) +
+  theme_bw() +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(), 
+    axis.text.x = element_text(size = 7.5), 
+    legend.position = "none"
+  ) +
+  labs(x = NULL, y = NULL, subtitle = " ")
+
+cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
+```
+
+#### Performance plots
+
+```{r}
+#| label: fig-perf-growth
+#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the growth curve model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-height: 7
+#| out-width: 100%
+plot_df |>
+  filter(param %in% growthpars) |> 
+  summarise(
+    B = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    pu = mean(bias < 0),
+    covr = mean(covered, na.rm = TRUE),
+    .by = c(dist:param)
+  ) |>
+  pivot_longer(B:covr, names_to = "metric", values_to = "value") |>
+  mutate(
+    metric = factor(
+      metric,
+      levels = c("B", "rmse", "pu", "covr"),
+      labels = c("Relative bias", "RMSE", "Prob. underest.", "Coverage")
+    )
+  ) |>
+  ggplot(aes(value, param, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  geom_vline(
+    data = tibble(
+      metric = factor(c("Relative bias", "RMSE", "Prob. underest.", "Coverage")),
+      value = c(0, 0, 0.5, 0.95)
+    ),
+    aes(xintercept = value),
+    linetype = "dashed"
+  ) +
+  scale_fill_manual(values = mycols) +
+  facet_grid(n ~ metric, scales = "free_x") +
+  ggh4x::facetted_pos_scales(
+    x = list(
+      scale_x_continuous(labels = scales::percent),
+      scale_x_continuous(expand = c(0, 0, 0, 0.1)),
+      scale_x_continuous(limits = c(0.35, 0.7), labels = scales::percent),
+      scale_x_continuous(limits = c(0.6, 1), labels = scales::percent)
+    )
+  ) +
+  scale_y_discrete(labels = rev(c(
+    expression(Theta["1,1"]),
+    expression(Psi["1,1"]),
+    expression(Psi["2,2"]),
+    expression(Psi["1,2"])
+  ))) +
+  guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 7.5),
+    legend.key.height = unit(1, "pt"), 
+    legend.key.width = unit(9, "pt")
+  ) +  
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+```
+
+#### Comparison to other methods
+
+```{r}
+#| label: fig-meanbias-growth
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "growth") |>
+  ggplot(aes(n, relbias, col = method)) +
+  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  # coord_cartesian(ylim = c(-0.25, 0.25)) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+```
+
+```{r}
+#| label: fig-rmse-growth
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
+#| out-width: 100%
+
+plot_drcomp |>
+  filter(model == "growth") |>
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_fill_manual(values = mycols) +
+  coord_cartesian(ylim = c(0, 280)) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```

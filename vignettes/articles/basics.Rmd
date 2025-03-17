@@ -1,0 +1,230 @@
+---
+title: The basics
+description: | 
+  Coding the explicit and implicit bias reduction methods from scratch.
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidyverse)
+library(brlavaan)
+library(gt)
+```
+
+## Structural equation models
+
+Let $y_i\in \mathbb R^p$, $i=1,\dots,n$ be independent multivariate data observations.
+A general form for structural equation models is the following:
+$$
+y_i = \nu + \Lambda \eta_i + \epsilon_i,
+$$ {#eq-measurement}
+where the errors $\epsilon_i \sim \operatorname{N}(0,\Theta)$ are assumed to be normally distributed, and the latent factors $\eta_i$ are related to each other through the structural part of the model:
+$$
+\eta_i = \alpha + B \eta_i + \zeta_i,
+$$ {#eq-structural}
+where $\zeta_i \sim \operatorname{N}(0,\Psi)$ are the structural disturbances, and $B$ is a matrix of regression coefficients with 0 on the diagonals.
+The structural model can be rewritten as $\eta_i = (I - B)^{-1} \alpha + (I - B)^{-1} \zeta_i$.
+Plugging this into @eq-measurement, we get the reduced form of the model, where each $y_i \sim \operatorname{N}_p (\mu, \Sigma)$, with
+$$
+\begin{align}
+\mu &= \mu(\theta) = \nu + \Lambda\alpha \\
+\Sigma &= \Sigma(\theta) = \Lambda(I - B)^{-1} \Psi (I - B)^{-\top} \Lambda^\top + \Theta.
+\end{align}
+$$
+We have denoted by $\theta\in\mathbb R^m$ the collection of all free parameters (intercepts, loadings, regression coefficients, and variances) in the model.
+Evidently, the likelihood of the model is given by the multivariate normal density:
+$$
+\ell(\theta) = -\frac{np}{2}\log(2\pi) - \frac{n}{2}\log|\Sigma| - \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1} (y_i - \mu).
+$$
+
+The gradient of the log-likelihood function with respect to a component of $\theta$ appearing in the mean vector $\mu$ is given by
+$$
+\begin{align}
+\frac{\partial\ell}{\partial \theta_\mu} 
+&= \frac{\partial\ell}{\partial \mu} \frac{\partial \mu}{\partial \theta_\mu}  \\
+&= \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu} \\
+&= \frac{n}{2} (\bar y - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu}.
+\end{align}
+$$
+The gradient of the log-likelihood function with respect to a component of $\theta$ appearing in $\Sigma$ is given by
+$$
+\begin{align}
+\frac{\partial\ell}{\partial \theta_\sigma} 
+&= \left\langle \frac{\partial\ell}{\partial \Sigma}, \frac{\partial \Sigma}{\partial \theta_\sigma}  \right\rangle \\
+&= \left\langle -\frac{n}{2} \Sigma^{-1} + \frac{n}{2} \Sigma^{-1}S\Sigma^{-1}  , \frac{\partial \Sigma}{\partial \theta_\sigma} \right\rangle \\
+&= \left\langle \frac{n}{2} E , \frac{\partial \Sigma}{\partial \theta_\sigma} \right\rangle,
+\end{align}.
+$$
+where $S$ is the (biased) sample covariance matrix, and $E = \Sigma^{-1}(S-\Sigma)\Sigma^{-1}$.
+
+## Growth curve model
+
+For the growth curve model, we have a latent intercept $i$ and slope $s$ (so $q=2$).
+There are five parameters in the latent component: Two intercepts $\alpha_1$ and $\alpha_2$, and the three unique variances and covariances $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$.
+The loadings for the "intercept" latent variable are all fixed to 1, whereas the loadings for the "slope" latent variable increment from 0 to 9.
+Thus, $\Lambda$ is some fixed $10 \times 2$ matrix.
+Furthermore, the observed variables $y_j$, $j=1,\dots,p$ share a common residual error variance $v$.
+In total, there are six parameters to be estimated in the model (in this order):
+$\theta = (\Psi_{11}, \alpha_1, \Psi_{22}, \alpha_2, \Psi_{12}, v)$.
+
+```{r pathgrowth, engine = "tikz"}
+\usetikzlibrary{shapes.geometric,arrows,calc,positioning}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,              % for arrow tips
+  auto,                   % automatic label positioning
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm},
+intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt, minimum size=6mm}
+  ]
+
+%-------------------------------------------------------
+% 1) LATENT FACTORS (intercept i, slope s)
+%-------------------------------------------------------
+\node[latent] (i) at (-2,-3) {$i$};
+\node[latent] (s) at ( 2,-3) {$s$};
+\node[intercept] (int1) at (-2,-4.2) {\footnotesize 1};
+\node[intercept] (int2) at (2,-4.2) {\footnotesize 1};
+
+%-------------------------------------------------------
+% 2) COVARIANCES AMONG LATENT FACTORS
+%    - psi_{11} on i
+%    - psi_{22} on s
+%    - psi_{21} between i and s
+%-------------------------------------------------------
+% i <-> s
+\draw[<->] (i) to[out=-45, in=225] node[below] {$\Psi_{12}$} (s);
+
+% Variance of i
+\draw[<->] (i) to[out=190, in=220, looseness=4]
+  node[left] {$\Psi_{11}$} (i);
+
+% Variance of s
+\draw[<->] (s) to[out=-40, in=-10, looseness=4]
+  node[right] {$\Psi_{22}$} (s);
+
+\draw[->] (int1) -- node[right,pos=0.3] {$\alpha_1$} (i);
+\draw[->] (int2) -- node[right,pos=0.3] {$\alpha_2$} (s);
+
+%-------------------------------------------------------
+% 3) OBSERVED VARIABLES (y1..y10) + ERRORS (eps1..eps10)
+%    Arrange them in a horizontal row above i and s.
+%-------------------------------------------------------
+\foreach \j in {1,...,10} {
+  % X-position for y_j (shift them so they are roughly centered)
+  \pgfmathsetmacro{\x}{(\j*1.3 - 6.5)}
+
+  % Observed variable y_j
+  \node[obs] (y\j) at (\x,0) {$y_{\j}$};
+
+  % Error term epsilon_j above y_j
+  \node[error] (e\j) at (\x,1.5) {$\epsilon_{\j}$};
+
+  % Arrow from error to observed
+  \draw[->] (e\j) -- (y\j);
+
+  % Intercept factor loadings: all = 1
+  \draw[->] (i) -- node[pos=0.45,right] {\footnotesize 1} (y\j);
+
+  % Slope factor loadings: 0..9
+  \pgfmathtruncatemacro{\loading}{\j - 1}
+  \draw[->] (s) -- node[pos=0.7,right] {\footnotesize\loading} (y\j);
+}
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+
+```{r}
+#| label: tbl-truth-growth
+#| tbl-cap: 'True values for the growth curve model.'
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_growth(0.8), truth_growth(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |>
+  distinct(rel, truth, param, .keep_all = TRUE) |>
+  mutate(param = case_when(
+    param == "v" ~ "$v$",
+    param == "i~~i" ~ "$\\Psi_{1,1}$",
+    param == "s~~s" ~ "$\\Psi_{2,2}$",
+    param == "i~~s" ~ "$\\Psi_{1,2}$",
+    param == "i~1" ~ "$\\alpha_1$",
+    param == "s~1" ~ "$\\alpha_2$",
+  )) |>
+  mutate(ord = case_when(
+    grepl("Psi", param) ~ 3,
+    grepl("alpha", param) ~ 1,
+    grepl("theta", param) ~ 2
+  )) |>
+  arrange(ord) |>
+  select(-ord) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
+```
+
+For the growth curve model, the gradients are simplified somewhat:
+
+- $\frac{\partial\ell}{\partial \alpha} = \frac{n}{2} (\bar y - \mu)^\top \Sigma^{-1} \Lambda$.
+- $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$.
+- $\frac{\partial\ell}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
+
+The implementation in R code is also straightforward (see R/40-manual_growth.R).
+Compare the behaviour of the eBR and iBR methods using lavaan's internals (via `fit_sem()`) and using manual functions (via `fit_growth()`).
+
+```{r}
+#| echo: true
+#| warning: false
+library(tictoc)
+set.seed(26)
+dat <- gen_data_growth(n = 15, rel = 0.5, dist = "Normal", scale = 1 / 10)
+mod <- txt_mod_growth(0.5)
+tru <- truth(dat)
+
+tic.clearlog()
+fit <- list()
+
+tic("ML: lavaan")
+fit$lav <- growth(mod, dat, start = tru)
+toc(log = TRUE)
+
+tic("ML: brlavaan")
+fit$ML <- fit_sem(mod, dat, "none", lavfun = "growth", start = tru)
+toc(log = TRUE)
+tic("eBR: brlavaan")
+fit$eBR <- fit_sem(mod, dat, "explicit", lavfun = "growth", start = tru)
+toc(log = TRUE)
+tic("iBR: brlavaan")
+fit$iBR <- fit_sem(mod, dat, "implicit", lavfun = "growth", start = tru)
+toc(log = TRUE)
+
+tic("ML: manual")
+fit$MLman <- fit_growth(mod, dat, "none", start = tru[1:6])
+toc(log = TRUE)
+tic("eBR: manual")
+fit$eBRman <- fit_growth(mod, dat, "explicit", start = tru[1:6])
+toc(log = TRUE)
+tic("iBR: manual")
+fit$iBRman <- fit_growth(mod, dat, "implicit", start = tru[1:6])
+toc(log = TRUE)
+
+# Compare
+c(list(truth = tru[1:6]), lapply(fit, \(x) round(coef(x)[1:6], 5)))
+sapply(fit, \(x) if (inherits(x, "lavaan")) x@optim$converged else x$converged)
+```
+
