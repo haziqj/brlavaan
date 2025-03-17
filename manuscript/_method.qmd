@@ -41,7 +41,7 @@ Parameter estimation in a SEM is typically performed using maximum likelihood es
 
 $$
 \mu(\theta) = \nu + \Lambda (I - B)^{-1} \alpha \\
-\Sigma(\theta) = \Gamma (I - B)^{-1} \Psi (I-B)^{-T} \Lambda^T + \Phi,
+\Sigma(\theta) = \Lambda (I - B)^{-1} \Psi (I-B)^{-T} \Lambda^T + \Phi,
 $$
 where for an invertible matrix $A$, $A^{-T} = (A^{-1})^T$.
 
