@@ -55,7 +55,7 @@ GRAD <- function(x, model, data) {
     S <- crossprod(res) / n
 
     # mean components for gradient
-    grad_mu <- (n / 2) * Sigma_inv %*% (Ybar - mu)
+    grad_mu <- n * Sigma_inv %*% (Ybar - mu)
     grad_alpha <- t(lambda) %*% grad_mu
 
     # variance components for gradient
