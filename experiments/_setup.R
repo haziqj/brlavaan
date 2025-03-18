@@ -6,4 +6,4 @@ load(here::here("experiments/simu_id.RData"))
 
 ncores <- future::availableCores() - 1
 future::plan(multisession, workers = ncores)
-B <- 50  # Number of simulations
+B <- 2000  # Number of simulations

@@ -28,11 +28,11 @@ for (i in seq_len(nrow(simu_id))) {
   save(simu_res_growth, file = "experiments/simu_res_growth_new.RData")
 }
 
-# map(simu_res_growth, \(x) x$simu_res) |>
-#   bind_rows() |>
-#   summarise(
-#     count = sum(converged) / B * 100,
-#     .by = c(dist:method)
-#   ) |>
-#   pivot_wider(names_from = method, values_from = count) |>
-#   print(n = Inf)
+map(simu_res_growth, \(x) x$simu_res) |>
+  bind_rows() |>
+  summarise(
+    count = sum(converged, na.rm = TRUE) / B * 100,
+    .by = c(dist:method)
+  ) |>
+  pivot_wider(names_from = method, values_from = count) |>
+  print(n = Inf)
