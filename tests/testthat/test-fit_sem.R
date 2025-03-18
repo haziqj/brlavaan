@@ -110,7 +110,7 @@ test_that("Cross product of scores", {
     ntab <- unlist(lavdata@norig)
     ntot <- sum(ntab)
     npar <- length(x)
-    E1 <- lav_scores_ml(
+    E1 <- lavaan___lav_scores_ml(
       ntab = ntab,
       ntot = ntot,
       npar = npar,
