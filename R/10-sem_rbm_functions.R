@@ -493,7 +493,7 @@ fit_sem <- function(
   idx <- lavpartable$free[lavpartable$free > 0]
   est <- est[idx]
   sds <- sds[idx]
-  names(est) <- names(coef(fit0))
+  names(est) <- names(lavaan::coef(fit0))
 
   list(
     coefficients = est,
