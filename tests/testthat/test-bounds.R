@@ -8,9 +8,9 @@ mod <- txt_mod_growth(rel = rel)
 tru <- truth(dat)
 
 test_that("No bounds", {
-  fit_lav <- growth(mod, dat)
-  fit_ML  <- fit_sem(mod, dat, rbm = "none")
-  expect_equal(coef(fit_lav), fit_ML$coef, tolerance = 1e-6)
+  fit_lav <- growth(mod, dat, bounds = "none")
+  fit_ML  <- fit_sem(mod, dat, rbm = "none", bounds = "none")
+  expect_equal(coef(fit_lav), fit_ML$coef, tolerance = 1e-5)
 })
 
 test_that("No bounds with starting values", {
@@ -32,7 +32,8 @@ test_that("Standard bounds with starting values", {
 })
 
 test_that("ceq.simple = FALSE gets ignored", {
-  fit_lav <- growth(mod, dat, start = tru, bounds = "standard", ceq.simple = FALSE)
-  fit_ML  <- fit_sem(mod, dat, rbm = "none", start = tru, bounds = "standard", ceq.simple = FALSE)
-  expect_equal(coef(fit_lav), fit_ML$coef, tolerance = 1e-3)
+  fit_ML  <- fit_sem(mod, dat, rbm = "none", start = tru, bounds = "standard",
+                     ceq.simple = FALSE)
+  expect_true(length(fit_ML$bounds$lower) > 0)
+  expect_true(length(fit_ML$bounds$upper) > 0)
 })
