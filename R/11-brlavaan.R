@@ -154,7 +154,7 @@ create_lav_from_fitsem <- function(
   lavargs$data <- data
   lavargs$do.fit <- FALSE
   lavargs$method <- NULL  # if using old ways of specifying RBM method
-  lavargs$information <- fit$information$se
+  lavargs$information <- fit$information
   lavargs$start <- x
   lavargs$estimator.args <- list(
     rbm = fit$rbm,
