@@ -17,7 +17,6 @@ dr_file2 <- here::here("experiments/2FSEM_est_combined_final.RData")
 if (!file.exists(dr_file2))
   download.file("https://osf.io/cw5b7/download", destfile = dr_file2)
 
-
 # Two-factor SEM
 load(here::here("experiments/2FSEM_est_combined_final.RData"))
 simu_id <-
@@ -37,25 +36,3 @@ simu_id <-
   mutate(seed = map(seed, \(x) unlist(x, use.names = FALSE))) |>
   left_join(x = simu_id)
 save(simu_id, file = here::here("experiments/simu_id.RData"))
-
-# load(here::here("experiments/GCM_est_combined_final.RData"))
-# simu_id <-
-#   Results |>
-#   as_tibble() |>
-#   select(dist, rel, n = nobs, seed) |>
-#   mutate(
-#     dist = case_when(
-#       dist == "NonNormal" ~ "Non-normal",
-#       TRUE ~ as.character(dist)
-#     ),
-#     rel = as.numeric(gsub("REL", "", as.character(rel))) / 100,
-#     n = as.numeric(as.character(n))
-#   ) |>
-#   distinct(dist, rel, n, seed) |>
-#   nest(seed_growth = seed) |>
-#   mutate(seed_growth = map(seed_growth, \(x) unlist(x, use.names = FALSE))) |>
-#   left_join(x = simu_id)
-
-# tinytest::expect_equal(simu_id$seed_twofac, simu_id$seed_growth)
-# ----- PASSED      : <-->
-#   call| tinytest::expect_equal(simu_id$seed_twofac, simu_id$seed_growth)

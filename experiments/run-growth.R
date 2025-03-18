@@ -1,5 +1,7 @@
+source(here::here("experiments/_setup.R"))
+
 simu_res_growth <- vector("list", length = nrow(simu_id))
-for (i in 1:30) {  # seq_len(nrow(simu_id))
+for (i in seq_len(nrow(simu_id))) {
   dist  <- simu_id$dist[i]
   model <- "growth"
   rel   <- simu_id$rel[i]
@@ -16,14 +18,21 @@ for (i in 1:30) {  # seq_len(nrow(simu_id))
     nsimu = B,
     lavsim = FALSE,
     whichsims = c("ML", "eRBM", "iRBM"),
-    bounds = "none",
-    info_pen = "observed",
-    info_bias = "observed",
-    info_se = "observed",
-    seeds = seeds,
+    bounds = "standard",
     keep_going = FALSE,
-    data_scale = 1 / 10
+    data_scale = 1 / 10,
+    seeds = seeds,
+    maxgrad = FALSE
   )
   cat("\n")
-  save(simu_res_growth, file = "experiments/simu_res_growth.RData")
+  save(simu_res_growth, file = "experiments/simu_res_growth_new.RData")
 }
+
+# map(simu_res_growth, \(x) x$simu_res) |>
+#   bind_rows() |>
+#   summarise(
+#     count = sum(converged) / B * 100,
+#     .by = c(dist:method)
+#   ) |>
+#   pivot_wider(names_from = method, values_from = count) |>
+#   print(n = Inf)
