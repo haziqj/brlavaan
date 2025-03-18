@@ -61,9 +61,9 @@ mod <- "
 fit_lav <- sem(model = mod, data = PoliticalDemocracy)
 
 # Bias-reduced fit (by default, implicit method is performed)
-fit_iRBM <- brsem(model = mod, data = PoliticalDemocracy, start = coef(fit_lav)) 
+fit_iRBM <- brsem(model = mod, data = PoliticalDemocracy) 
 summary(fit_iRBM)
-#> brlavaan 0.1.1.9001 ended normally after 57 iterations
+#> brlavaan 0.1.1.9005 ended normally after 72 iterations
 #> 
 #>   Estimator                                         ML
 #>   Bias reduction method                       IMPLICIT
@@ -89,7 +89,7 @@ summary(fit_iRBM)
 #>   dem60 =~                                            
 #>     y1                1.000                           
 #>     y2                1.254    0.185    6.791    0.000
-#>     y3                1.050    0.148    7.092    0.000
+#>     y3                1.050    0.148    7.093    0.000
 #>     y4                1.254    0.150    8.374    0.000
 #>   dem65 =~                                            
 #>     y5                1.000                           
@@ -125,7 +125,7 @@ summary(fit_iRBM)
 #>    .x2                0.122    0.072    1.699    0.089
 #>    .x3                0.472    0.091    5.169    0.000
 #>    .y1                1.896    0.481    3.943    0.000
-#>    .y2                7.363    1.353    5.443    0.000
+#>    .y2                7.362    1.353    5.443    0.000
 #>    .y3                5.161    1.004    5.143    0.000
 #>    .y4                3.198    0.779    4.107    0.000
 #>    .y5                2.406    0.513    4.694    0.000
@@ -140,7 +140,7 @@ summary(fit_iRBM)
 tinytest::expect_equal(coef(fit_iRBM), coef(fit_lav))
 #> ----- FAILED[data]: <-->
 #>  call| tinytest::expect_equal(coef(fit_iRBM), coef(fit_lav))
-#>  diff| Mean relative difference: 0.01133601
+#>  diff| Mean relative difference: 0.01134476
 ```
 
 By default, the implicit reduced bias ML estimator is used. To switch to
