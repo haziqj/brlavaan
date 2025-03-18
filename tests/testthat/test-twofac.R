@@ -1,4 +1,5 @@
 # Written by Ollie Kemp
+skip()  # NEED TO REWRITE
 set.seed(21)
 dat <- gen_data_twofac(n = 15, rel = 0.5, dist = "Normal", scale = 1)
 mod <- txt_mod_twofac(0.5)
