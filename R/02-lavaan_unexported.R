@@ -12,5 +12,5 @@ lavaan___lav_model_information_observed <-
   utils::getFromNamespace("lav_model_information_observed", "lavaan")
 lavaan___lav_mvnorm_loglik_samplestats <-
   utils::getFromNamespace("lav_mvnorm_loglik_samplestats", "lavaan")
-# lavaan___lav_scores_ml <-
-#   utils::getFromNamespace("lav_scores_ml", "lavaan")
+lavaan___lav_scores_ml <-
+  utils::getFromNamespace("lav_scores_ml", "lavaan")
