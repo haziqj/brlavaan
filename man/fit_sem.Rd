@@ -9,13 +9,9 @@ fit_sem(
   data,
   rbm = c("implicit", "explicit", "none"),
   plugin_pen = NULL,
-  info_pen = "observed",
-  info_bias = "observed",
-  info_se = "observed",
   debug = FALSE,
   lavfun = "sem",
   maxgrad = FALSE,
-  nearPD = FALSE,
   fn.scale = 1,
   ...
 )
@@ -38,25 +34,12 @@ etc.)}
 or \code{"pen_ridge_bound"}. User-specified penalty functions are possible. See
 description for details.}
 
-\item{info_pen}{The type of information matrix to use for the penalty term.}
-
-\item{info_bias}{The type of information matrix to use for the bias term of
-the explicit reduced bias method.}
-
-\item{info_se}{The type of information matrix to use for calculation of
-standard errors.}
-
 \item{debug}{If TRUE, the function will return a list of intermediate results
 for debugging purposes.}
 
 \item{lavfun}{The lavaan function to use. Default is "sem".}
 
 \item{maxgrad}{If TRUE, the function will return the maximum gradient value.}
-
-\item{nearPD}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} If TRUE, the function will
-ensure the information matrix is positive definite (using
-\code{\link[Matrix:nearPD]{Matrix::nearPD()}}), which may resolve numerical issues in the bias
-reduction method and standard error calculations.}
 
 \item{fn.scale}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} A scaling factor for the
 log-likelihood function.}
