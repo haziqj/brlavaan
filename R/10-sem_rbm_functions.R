@@ -28,7 +28,7 @@ loglik <- function(
   }
 
   # Total log-likelihood value
-  loglik <- lav_mvnorm_loglik_samplestats(
+  loglik <- lavaan___lav_mvnorm_loglik_samplestats(
     sample.mean = lavsamplestats@mean[[1]],
     sample.cov  = lavsamplestats@cov[[1]],
     sample.nobs = lavsamplestats@nobs[[1]],
@@ -92,7 +92,7 @@ grad_loglik <- function(
   ) {
 
   # Gradient of fit function F_ML (not loglik yet)
-  grad_F <- lav_model_gradient(
+  grad_F <- lavaan___lav_model_gradient(
     lavmodel = lavaan::lav_model_set_parameters(lavmodel, x),
     lavsamplestats = lavsamplestats,
     lavdata = lavdata
@@ -124,7 +124,7 @@ information_matrix <- function(
     # FIXME: When is this needed?
     # Change to 'simplified' Hessian
     if (FALSE) lavoptions$observed.information <- c("h1", "h1")
-    out <- lav_model_information_observed(
+    out <- lavaan___lav_model_information_observed(
       lavmodel = lavmodel_x,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -132,7 +132,7 @@ information_matrix <- function(
     )
   }
   if (kind == "expected") {
-    out <- lav_model_information_expected(
+    out <- lavaan___lav_model_information_expected(
       lavmodel = lavmodel_x,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -140,7 +140,7 @@ information_matrix <- function(
     )
   }
   if (kind == "first.order") {
-    out <- lav_model_information_firstorder(
+    out <- lavaan___lav_model_information_firstorder(
       lavmodel = lavmodel_x,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
@@ -490,8 +490,7 @@ fit_sem <- function(
   }
 
   # Unpack estimators and se
-  pt <- partable(fit0)
-  idx <- pt$free[pt$free > 0]
+  idx <- lavpartable$free[lavpartable$free > 0]
   est <- est[idx]
   sds <- sds[idx]
   names(est) <- names(coef(fit0))

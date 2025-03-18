@@ -32,7 +32,6 @@ Imports:
     lifecycle,
     lme4,
     magrittr,
-    MASS,
     Matrix,
     matrixcalc,
     methods,
