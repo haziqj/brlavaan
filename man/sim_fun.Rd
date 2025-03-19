@@ -13,12 +13,10 @@ sim_fun(
   lavsim = FALSE,
   whichsims = c("ML", "eRBM", "iRBM"),
   bounds = "none",
-  info_pen = "observed",
-  info_bias = "observed",
-  info_se = "observed",
   keep_going = FALSE,
   data_scale = 1,
-  seeds = NULL
+  seeds = NULL,
+  maxgrad = FALSE
 )
 }
 \arguments{
@@ -41,12 +39,6 @@ values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
 
 \item{bounds}{Bounded estimation?}
 
-\item{info_pen}{Should be \code{"observed"}}
-
-\item{info_bias}{Should be \code{"observed"}}
-
-\item{info_se}{Should be \code{"observed"}}
-
 \item{keep_going}{If \code{TRUE}, the simulation will continue until the desired
 \code{nsimu} runs are obtained.}
 
@@ -54,6 +46,9 @@ values are \code{ML}, \code{eRBM}, and \code{iRBM} for now}
 the growth curve simulations that this is set to \code{1/10}.}
 
 \item{seeds}{A vector of seeds to use for the simulation study.}
+
+\item{maxgrad}{Logical. If \code{TRUE} then compute the scaled gradients at maxima
+to assess convergence.}
 }
 \value{
 A list with two elements. The first element is a data frame with the

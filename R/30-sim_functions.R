@@ -21,15 +21,14 @@
 #' @param nsimu The number of replications to run.
 #' @param whichsims A character vector with the estimators to use. Possible
 #'   values are `ML`, `eRBM`, and `iRBM` for now
-#' @param info_pen Should be `"observed"`
-#' @param info_bias Should be `"observed"`
-#' @param info_se Should be `"observed"`
 #' @param bounds Bounded estimation?
 #' @param keep_going If `TRUE`, the simulation will continue until the desired
 #'   `nsimu` runs are obtained.
 #' @param data_scale A scaling factor for the data. Default is `1`. Usefor for
 #'   the growth curve simulations that this is set to `1/10`.
 #' @param seeds A vector of seeds to use for the simulation study.
+#' @param maxgrad Logical. If `TRUE` then compute the scaled gradients at maxima
+#'   to assess convergence.
 #'
 #' @return A list with two elements. The first element is a data frame with the
 #'   results of the simulation study. The second element is a list with the
@@ -44,12 +43,10 @@ sim_fun <- function(
     lavsim = FALSE,
     whichsims = c("ML", "eRBM", "iRBM"),
     bounds = "none",
-    info_pen = "observed",
-    info_bias = "observed",
-    info_se = "observed",
     keep_going = FALSE,
     data_scale = 1,
-    seeds = NULL
+    seeds = NULL,
+    maxgrad = FALSE
   ) {
   dist <- match.arg(dist, c("Normal", "Kurtosis", "Non-normal"))
   model <- match.arg(model, c("growth", "twofac"))
@@ -103,14 +100,10 @@ sim_fun <- function(
       data = dat,
       rbm = "none",
       plugin_pen = NULL,
-      info_pen = info_pen,
-      info_bias = info_bias,
-      info_se = info_se,
       debug = FALSE,
       lavfun = lavfun,
-      maxgrad = TRUE,
-      nearPD = FALSE,
-
+      maxgrad = maxgrad,
+      fn.scale = 1,
       bounds = bounds,
       start = true_vals
     )
@@ -140,9 +133,6 @@ sim_fun <- function(
       model = model,
       rel = rel,
       n = n,
-      info_pen = substr(info_pen, 1, 3),
-      info_bias = substr(info_bias, 1, 3),
-      info_se = substr(info_se, 1, 3),
       method = names(fit_list),
       est = lapply(fit_list, purrr::possibly(\(x) x$coefficients, NA)),
       se = lapply(fit_list, purrr::possibly(\(x) x$stderr, NA)),
@@ -151,10 +141,7 @@ sim_fun <- function(
       converged = sapply(fit_list, purrr::possibly(\(x) x$converged, NA)),
       scaled_grad = lapply(fit_list, purrr::possibly(\(x) x$scaled_grad, NA)),
       max_loglik = sapply(fit_list, purrr::possibly(\(x) -1 * x$optim$objective, NA)),
-      Sigma_OK = sapply(fit_list, purrr::possibly(\(x) {
-        EV <- eigen(x$Sigma, only.values = TRUE)$values
-        all(EV > 0)
-      }, NA)),
+      Sigma_OK = sapply(fit_list, purrr::possibly(\(x) !check_mat(x)), NA),
       optim_message = sapply(fit_list, purrr::possibly(\(x) x$optim$message, NA))
     )
   }

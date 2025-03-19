@@ -1,3 +1,10 @@
+check_mat <- function(mat) {
+  eig <- eigen(mat, TRUE, TRUE)$values
+  mat_is_neg_def <- any(eig < -1e-06 * eig[1])
+  mat_has_na <- any(is.na(mat))
+  mat_is_neg_def || mat_has_na
+}
+
 validate_rbm <- function(x) {
   valid_rbm <- c("none", "explicit", "implicit")
 

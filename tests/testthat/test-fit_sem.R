@@ -12,143 +12,125 @@ data(HolzingerSwineford1939, package = "lavaan")
 fit_lav   <- lavaan::cfa(HS.model, HolzingerSwineford1939, information = "observed")
 fit_ML    <- fit_sem(HS.model, HolzingerSwineford1939, rbm = "none")
 
-list2env(get_lav_stuff(fit_lav), environment())
-
-# Packed version of coefficients
-z.unpack <- coef(fit_lav)
-if (lavmodel@eq.constraints) {
-  z.pack <- as.numeric(
-    (z.unpack - lavmodel@eq.constraints.k0) %*% lavmodel@eq.constraints.K
-  )
-} else {
-  z.pack <- z.unpack
-}
-
-# DEBUG ------------------------------------------------------------------------
-# lavInspect(fit_lav, "free")
-# tmp <- fit_sem(HS.model, HolzingerSwineford1939, debug = TRUE)
-
-test_that(
-  "Log-likelihood value matches lavaan::logLik()",
-  {
-    loglik_val <- loglik(
-      theta = z.pack,
+test_that("Log-likelihood value matches lavaan::logLik()", {
+  loglik_val <- with(get_lav_stuff(fit_lav), {
+    loglik(
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions,
       bias_reduction = FALSE,
-      kind = "observed",
       plugin_pen = NULL,
       verbose = FALSE
     )
-    expect_equal(loglik_val, as.numeric(logLik(fit_lav)), tolerance = 1e-4)
-  }
-)
+  })
+  expect_equal(loglik_val, as.numeric(logLik(fit_lav)), tolerance = 1e-4)
+})
 
-# Test maximum likelihood estimation -------------------------------------------
-test_that(
-  "Maximum likelihood estimation matches lavaan::sem()",
-  {
-    est_lav <- coef(fit_lav)
-    class(est_lav) <- "numeric"
-    est_ML <- coef(fit_ML)
-    expect_equal(est_lav, est_ML, tolerance = 1e-4, ignore_attr = FALSE)
+test_that("Maximum likelihood estimation matches lavaan::sem()", {
+  est_lav <- coef(fit_lav)
+  class(est_lav) <- "numeric"
+  est_ML <- coef(fit_ML)
+  expect_equal(est_lav, est_ML, tolerance = 1e-4, ignore_attr = FALSE)
 
-    sd_lav <- unname(sqrt(diag(vcov(fit_lav))))
-    sd_ML <- fit_ML$stderr
-    expect_equal(sd_lav, sd_ML, tolerance = 1e-4, ignore_attr = FALSE)
-  }
-)
+  sd_lav <- unname(sqrt(diag(vcov(fit_lav))))
+  sd_ML <- fit_ML$stderr
+  expect_equal(sd_lav, sd_ML, tolerance = 1e-4, ignore_attr = FALSE)
+})
 
-# Test gradient ----------------------------------------------------------------
-test_that(
-  "Gradient matches numDeriv::grad()",
-  {
-    grad.lav <- grad_loglik(
-      theta = z.pack,
+test_that("Gradient matches numDeriv::grad()", {
+  with(get_lav_stuff(fit_lav), {
+    grad_lav <<- grad_loglik(
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions
     )
-    grad.num <- numDeriv::grad(
+    grad_num <<- numDeriv::grad(
       func = loglik,
-      x = z.pack,
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions,
       bias_reduction = FALSE,
-      kind = "observed",
       plugin_pen = NULL,
       verbose = FALSE
     )
-    expect_equal(grad.lav, rep(0, length(grad.lav)), tolerance = 1e-4)
-    expect_equal(grad.lav, grad.num, tolerance = 1e-4)
-    expect_equal(sign(grad.lav), sign(grad.num))
-  }
-)
+  })
 
-# Test Hessian -----------------------------------------------------------------
-test_that(
-  "Hessian matches numDeriv::hessian()",
-  {
-    hessian.lav <- hessian_loglik(
-      theta = z.pack,
+  expect_equal(grad_lav, rep(0, length(grad_lav)), tolerance = 1e-4)
+  expect_equal(grad_lav, grad_num, tolerance = 1e-4)
+  expect_equal(sign(grad_lav), sign(grad_num))
+})
+
+test_that("Hessian matches numDeriv::hessian()", {
+  with(get_lav_stuff(fit_lav), {
+    hessian_lav <<- -1 * information_matrix(
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavoptions = lavoptions,
+      kind = "observed"
     )
-    if (lavmodel@eq.constraints) {
-      hessian.lav <- t(lavmodel@eq.constraints.K) %*% hessian.lav %*%
-        lavmodel@eq.constraints.K
-    }
-    hessian.num1 <- numDeriv::hessian(
+    hessian_num1 <<- numDeriv::hessian(
       func = loglik,
-      x = z.pack,
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions,
       bias_reduction = FALSE,
-      kind = "observed",
       plugin_pen = NULL,
       verbose = FALSE
     )
-    hessian.num2 <- numDeriv::jacobian(
+    hessian_num2 <<- numDeriv::jacobian(
       func = grad_loglik,
-      x = z.pack,
+      x = coef(fit_lav),
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
       lavoptions = lavoptions
     )
-    expect_equal(hessian.lav, hessian.num1, tolerance = 1e-5)
-    expect_equal(hessian.lav, hessian.num2, tolerance = 1e-5)
-  }
-)
+  })
 
-# Test cross product of scores -------------------------------------------------
-test_that(
-  "Cross product of scores matches lavaan:::crossprod(scores_loglik())",
-  {
-    scores.lav <- scores_loglik(
-      theta = z.pack,
-      lavmodel = lavmodel,
-      lavsamplestats = lavsamplestats,
+  expect_equal(hessian_lav, hessian_num1, tolerance = 1e-5)
+  expect_equal(hessian_lav, hessian_num2, tolerance = 1e-5)
+})
+
+test_that("Cross product of scores", {
+  with(get_lav_stuff(fit_lav), {
+    x <- lavaan::lav_model_get_parameters(lavmodel)
+    lavimplied <- lavaan::lav_model_implied(lavmodel)
+    moments <- list(cov = lavimplied$cov[[1]])
+    if(lavmodel@meanstructure) moments$mean <- lavimplied$mean[[1]]
+    ntab <- unlist(lavdata@norig)
+    ntot <- sum(ntab)
+    npar <- length(x)
+    E1 <- lavaan___lav_scores_ml(
+      ntab = ntab,
+      ntot = ntot,
+      npar = npar,
+      moments = moments,
       lavdata = lavdata,
-      lavoptions = lavoptions
+      lavsamplestats = lavsamplestats,
+      lavmodel = lavmodel,
+      lavoptions = lavoptions,
+      scaling = FALSE
     )
-    crossprod.lav <- crossprod(scores.lav)
-    crossprod.num <- crossprod(scores_loglik(
-      theta = z.pack,
+    E1 <<- crossprod(E1)
+    E2 <<- information_matrix(
+      x = x,
       lavmodel = lavmodel,
       lavsamplestats = lavsamplestats,
       lavdata = lavdata,
-      lavoptions = lavoptions
-    ))
-    expect_equal(crossprod.lav, crossprod.num, tolerance = 1e-5)
-  }
-)
+      lavoptions = lavoptions,
+      kind = "first.order"
+    )
+  })
+
+  expect_equal(E1, E2, tolerance = 1e-5)
+})
