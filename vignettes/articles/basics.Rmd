@@ -31,7 +31,7 @@ The structural model can be rewritten as $\eta_i = (I - B)^{-1} \alpha + (I - B)
 Plugging this into @eq-measurement, we get the reduced form of the model, where each $y_i \sim \operatorname{N}_p (\mu, \Sigma)$, with
 $$
 \begin{align}
-\mu &= \mu(\theta) = \nu + \Lambda\alpha \\
+\mu &= \mu(\theta) = \nu + \Lambda (I - B)^{-1} \alpha \\
 \Sigma &= \Sigma(\theta) = \Lambda(I - B)^{-1} \Psi (I - B)^{-\top} \Lambda^\top + \Theta.
 \end{align}
 $$
@@ -46,8 +46,8 @@ $$
 \begin{align}
 \frac{\partial\ell}{\partial \theta_\mu} 
 &= \frac{\partial\ell}{\partial \mu} \frac{\partial \mu}{\partial \theta_\mu}  \\
-&= \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu} \\
-&= \frac{n}{2} (\bar y - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu}.
+&= \sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu} \\
+&= n (\bar y - \mu)^\top \Sigma^{-1} \cdot \frac{\partial \mu}{\partial \theta_\mu}.
 \end{align}
 $$
 The gradient of the log-likelihood function with respect to a component of $\theta$ appearing in $\Sigma$ is given by
