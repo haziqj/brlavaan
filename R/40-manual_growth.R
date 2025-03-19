@@ -55,7 +55,7 @@ GRAD <- function(x, model, data) {
     S <- crossprod(res) / n
 
     # mean components for gradient
-    grad_mu <- (n / 2) * Sigma_inv %*% (Ybar - mu)
+    grad_mu <- n * Sigma_inv %*% (Ybar - mu)
     grad_alpha <- t(lambda) %*% grad_mu
 
     # variance components for gradient
@@ -63,13 +63,14 @@ GRAD <- function(x, model, data) {
     grad_Psi <- t(lambda) %*% E %*% lambda
     grad_v <- sum(diag(E))
 
+    # FIXME: numerical gradient says this should be multipled by 2. WHY?
     c(grad_Psi[1, 1], grad_alpha[1], grad_Psi[2, 2], grad_alpha[2],
-      grad_Psi[1, 2], grad_v)
+      2 * grad_Psi[1, 2], grad_v)
   })
 }
 
 EMAT <- function(x, model, data) {
-  tcrossprod(sapply(seq_len(nrow(data)), \(i) GRAD(x, model, data)))
+  tcrossprod(sapply(seq_len(nrow(data)), \(i) GRAD(x, model, data[i, ])))
 }
 
 JMAT <- function(x, model, data) {
@@ -85,7 +86,7 @@ PENALTY <- function(x, model, data) {
 BIAS <- function(x, model, data) {
   jinv <- solve(JMAT(x, model, data))
   A <- numDeriv::grad(PENALTY, x, model = model, data = data)
-  drop(jinv %*% A)
+  -drop(jinv %*% A)
 }
 
 #' Fit growth curve models using lavaan syntax manually
@@ -125,7 +126,7 @@ fit_growth <- function(
 
   res <- nlminb(start = start, objective = obj_fun, gradient = grad_fun)
   b <- if (rbm == "explicit") BIAS(res$par, model, data) else 0
-  est <- res$par + b
+  est <- res$par - b
 
   elapsed_time <- proc.time() - start_time
   elapsed_time <- elapsed_time["elapsed"]
