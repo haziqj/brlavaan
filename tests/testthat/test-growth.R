@@ -1,3 +1,4 @@
+skip()  # see test-growth2.R
 ## IK + OK, 29 Oct 2024
 set.seed(111224)
 dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal", scale = 1 / 10)
