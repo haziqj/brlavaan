@@ -180,7 +180,7 @@ tibble(
 
 For the growth curve model, the gradients are simplified somewhat:
 
-- $\frac{\partial\ell}{\partial \alpha} = \frac{n}{2} (\bar y - \mu)^\top \Sigma^{-1} \Lambda$.
+- $\frac{\partial\ell}{\partial \alpha} = n (\bar y - \mu)^\top \Sigma^{-1} \Lambda$.
 - $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$.
 - $\frac{\partial\ell}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
 
