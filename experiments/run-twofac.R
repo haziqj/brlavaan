@@ -25,14 +25,27 @@ for (i in seq_len(nrow(simu_id))) {
     maxgrad = FALSE
   )
   cat("\n")
-  save(simu_res_twofac, file = "experiments/simu_res_twofac.RData")
+  save(simu_res_twofac, file = "experiments/simu_res_twofac_new.RData")
 }
 
 # map(simu_res_twofac, \(x) x$simu_res) |>
 #   bind_rows() |>
 #   summarise(
-#     count = sum(converged) / B * 100,
+#     count = sum(converged, na.rm = TRUE) / B * 100,
 #     .by = c(dist:method)
 #   ) |>
 #   pivot_wider(names_from = method, values_from = count) |>
 #   print(n = Inf)
+#
+# simu_res_twofac[[1]]$simu_res |>
+#   mutate(param = map(est, names), .before = est) |>
+#   unnest(c(param, est, se, truth)) |>
+#   drop_na(param) |>
+#   filter(abs(est) < 10) |>
+#   summarise(
+#     bias = mean((est - truth) / truth, na.rm = TRUE),
+#     .by = dist:param
+#   ) |>
+#   mutate(method = factor(method, levels = c("ML", "eRBM", "iRBM"))) |>
+#   ggplot(aes(param, bias, fill = method)) +
+#   geom_col(position = "dodge")
