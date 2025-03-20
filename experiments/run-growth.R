@@ -28,11 +28,24 @@ for (i in seq_len(nrow(simu_id))) {
   save(simu_res_growth, file = "experiments/simu_res_growth_new.RData")
 }
 
-map(simu_res_growth, \(x) x$simu_res) |>
-  bind_rows() |>
-  summarise(
-    count = sum(converged, na.rm = TRUE) / B * 100,
-    .by = c(dist:method)
-  ) |>
-  pivot_wider(names_from = method, values_from = count) |>
-  print(n = Inf)
+# map(simu_res_growth, \(x) x$simu_res) |>
+#   bind_rows() |>
+#   summarise(
+#     count = sum(converged, na.rm = TRUE) / B * 100,
+#     .by = c(dist:method)
+#   ) |>
+#   pivot_wider(names_from = method, values_from = count) |>
+#   print(n = Inf)
+#
+# simu_res_growth[[1]]$simu_res |>
+#   mutate(param = map(est, names), .before = est) |>
+#   unnest(c(param, est, se, truth)) |>
+#   drop_na(param) |>
+#   filter(converged, !is.na(se)) |>
+#   summarise(
+#     bias = mean((est - truth) / truth, na.rm = TRUE),
+#     .by = dist:param
+#   ) |>
+#   mutate(method = factor(method, levels = c("ML", "eRBM", "iRBM"))) |>
+#   ggplot(aes(param, bias, fill = method)) +
+#   geom_col(position = "dodge")
