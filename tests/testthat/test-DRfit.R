@@ -16,8 +16,8 @@ test_that("Growth curve model results are similar with D&R", {
   DR_Res <-
     Results |>
     filter(method == "MLB") |>
-    filter(seed == 1235, dist == "Normal", rel == "REL80", nobs == 15) |>
-    # slice_sample(n = 10) |>
+    # filter(seed == 1235, dist == "Normal", rel == "REL80", nobs == 15) |>
+    slice_sample(n = 10) |>
     select(rel, dist, method, nobs, seed, starts_with("est")) |>
     nest(est = starts_with("est")) |>
     mutate(est = map(est, \(x) {
@@ -29,18 +29,18 @@ test_that("Growth curve model results are similar with D&R", {
     n <- as.numeric(as.character(DR_Res$nobs[i]))
     rel <- as.numeric(sub("REL", "", DR_Res$rel[i])) / 100
     dist <- as.character(DR_Res$dist[i])
-    dist <- "Normal"
+    # dist <- "Normal"
     if (dist == "NonNormal") dist <- "Non-normal"
     seed <- DR_Res$seed[i]
     estDR <- unlist(DR_Res$est[i])
 
     dat <- gen_data_growth(n = n, rel = rel, dist = dist, seed = seed)
     mod <- txt_mod_growth(rel)
-    fit <- growth(mod, dat, start = truth_growth(rel), bounds = "standard", meanstructure = TRUE)
+    fit <- growth(mod, dat, bounds = "standard")
     est <- coef(fit)
     class(est) <- "numeric"
 
-    expect_equal(est, estDR, tolerance = 1e-2, ignore_attr = TRUE)
+    expect_equal(est, estDR, tolerance = 1e-4, ignore_attr = TRUE)
   }
 })
 
@@ -68,8 +68,7 @@ test_that("Two factor results are similar with D&R", {
     if (dist == "NonNormal") dist <- "Non-normal"
     seed <- DR_Res$seed[i]
 
-    set.seed(seed)
-    dat <- gen_data_twofac(n = n, rel = rel, dist = dist)
+    dat <- gen_data_twofac(n = n, rel = rel, dist = dist, seed = seed)
     mod <- txt_mod_twofac(rel)
     fit <- sem(mod, dat, start = truth_twofac(rel, meanstructure = TRUE),
                bounds = "standard", meanstructure = TRUE)
