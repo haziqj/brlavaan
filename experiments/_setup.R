@@ -6,7 +6,7 @@ load(here::here("experiments/simu_id.RData"))
 
 ncores <- future::availableCores() - 1
 future::plan(multisession, workers = ncores)
-B <- 500  # Number of simulations
+B <- 2000  # Number of simulations
 
 ## ----- Simulation function ---------------------------------------------------
 sim_fun <- function(
@@ -80,7 +80,6 @@ sim_fun <- function(
       start = true_vals
     )
 
-    nsimtypes <- length(whichsims) + 1  # to account for lav below, which will always be fit
     fit_list <- list()
 
     # OUR SIMS -----------------------------------------------------------------
@@ -98,9 +97,10 @@ sim_fun <- function(
 
     # D&R SIMS -----------------------------------------------------------------
     if (model == "growth") {
-      fit_lav <- try(growth(mod, dat, start = true_vals, bounds = bounds, ceq.simple = TRUE))
+      fit_lav <- try(growth(mod, dat, start = true_vals, bounds = bounds,
+                            ceq.simple = TRUE))
     } else if (model == "twofac") {
-      fit_lav <- try(sem(mod, dat, start = true_vals, bounds = bounds))
+      fit_lav <- try(sem(mod, dat, bounds = bounds, meanstructure = TRUE))
     }
     if (!inherits(fit_lav, "try-error")) {
       out <- list()
@@ -118,8 +118,13 @@ sim_fun <- function(
     if ("Ozenne" %in% whichsims) {
       if (lavok) {
         start_time <- proc.time()
-        out <- try(brlavaan:::yr_ozenne_bcs_growth(fit_lav, return.se = TRUE),
-                   silent = TRUE)
+        if (model == "growth") {
+          out <- try(brlavaan:::yr_ozenne_bcs_growth(fit_lav, return.se = TRUE),
+                     silent = TRUE)
+        } else if (model == "twofac") {
+          out <- try(brlavaan:::yr_ozenne_bcs_twofac(fit_lav, return.se = TRUE),
+                     silent = TRUE)
+        }
         elapsed_time <- proc.time() - start_time
         elapsed_time <- elapsed_time["elapsed"]
       } else{
@@ -195,6 +200,22 @@ sim_fun <- function(
       }
     }
 
+    # True values
+    trulist <-
+      names(fit_list) |>
+      map(function(x) {
+        if (x %in% c("ML", "eRBM", "iRBM"))
+          return(true_vals)
+        else {
+          if (model == "growth")
+            return(brlavaan:::truth_growth(rel, scale = data_scale))
+          else if (model == "twofac")
+            return(brlavaan:::truth_twofac(rel, meanstructure = TRUE,
+                                           scale = data_scale))
+        }
+      })
+
+
     tibble::tibble(
       seed = seeds[j],
       sim = j,
@@ -205,7 +226,8 @@ sim_fun <- function(
       method = names(fit_list),
       est = lapply(fit_list, purrr::possibly(\(x) x$coefficients, NA_real_)),
       se = lapply(fit_list, purrr::possibly(\(x) x$stderr, NA_real_)),
-      truth = rep(list(true_vals), nsimtypes),
+      # truth = rep(list(true_vals), length(fit_list)),
+      truth = trulist,
       timing = sapply(fit_list, purrr::possibly(\(x) x$timing, NA_real_)),
       converged = sapply(fit_list, purrr::possibly(\(x) x$converged, NA)),
       Sigma_OK = sapply(fit_list, purrr::possibly(\(x) !brlavaan:::check_mat(x$Sigma), NA))

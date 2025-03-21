@@ -1,7 +1,7 @@
 source(here::here("experiments/_setup.R"))
 
 simu_res_growth <- vector("list", length = nrow(simu_id))
-for (i in c(1, 6)) {
+for (i in seq_len(nrow(simu_id))) {
   dist  <- simu_id$dist[i]
   model <- "growth"
   rel   <- simu_id$rel[i]
@@ -19,32 +19,19 @@ for (i in c(1, 6)) {
     nboot = 500L,
     lavsim = FALSE,
     whichsims = c("ML", "eRBM", "iRBM", "Ozenne", "REML", "JB", "BB"),
-    bounds = "standard",
+    bounds = "none",
     data_scale = 1 / 10,
     seeds = seeds
   )
   cat("\n")
-  # save(simu_res_growth, file = "experiments/simu_res_growth.RData")
+  save(simu_res_growth, file = here::here("experiments/simu_res_growth.RData"))
 }
 
-bind_rows(simu_res_growth) |>
-  summarise(
-    count = sum(converged, na.rm = TRUE) / B * 100,
-    .by = c(dist:method)
-  ) |>
-  pivot_wider(names_from = method, values_from = count) |>
-  print(n = Inf)
-
-p_bstand <- bind_rows(simu_res_growth) |>
-  mutate(param = map(truth, names), .before = est) |>
-  unnest(c(param, est, se, truth)) |>
-  filter(converged, !is.na(se)) |>
-  summarise(
-    bias = mean((est - truth) / truth, na.rm = TRUE),
-    .by = dist:param
-  ) |>
-  mutate(method = factor(method, levels = names(mycols))) |>
-  ggplot(aes(param, abs(bias), fill = method)) +
-  geom_col(position = "dodge") +
-  facet_grid(rel ~ .) +
-  scale_fill_brewer(palette = "Paired")
+# bind_rows(simu_res_growth) |>
+#   mutate(seOK = map_lgl(se, ~!any(is.na(.x)))) |>
+#   summarise(
+#     count = sum(converged & seOK & Sigma_OK, na.rm = TRUE) / B * 100,
+#     .by = c(dist:method)
+#   ) |>
+#   pivot_wider(names_from = method, values_from = count) |>
+#   print(n = Inf)

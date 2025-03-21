@@ -16,28 +16,28 @@ for (i in seq_len(nrow(simu_id))) {
     rel = rel,
     n = n,
     nsimu = B,
+    nboot = 500L,
     lavsim = FALSE,
-    whichsims = c("ML", "eRBM", "iRBM"),
-    bounds = "standard",
-    keep_going = FALSE,
+    whichsims = c("ML", "eRBM", "iRBM", "Ozenne", "REML", "JB", "BB"),
+    bounds = "none",
     data_scale = 1,
-    seeds = seeds,
-    maxgrad = FALSE
+    seeds = seeds
   )
   cat("\n")
-  save(simu_res_twofac, file = "experiments/simu_res_twofac_new.RData")
+  save(simu_res_growth, file = here::here("experiments/simu_res_twofac.RData"))
 }
 
-# map(simu_res_twofac, \(x) x$simu_res) |>
-#   bind_rows() |>
+# bind_rows(simu_res_growth) |>
+#   mutate(seOK = map_lgl(se, ~!any(is.na(.x)))) |>
 #   summarise(
-#     count = sum(converged, na.rm = TRUE) / B * 100,
+#     count = sum(converged & seOK & Sigma_OK, na.rm = TRUE) / B * 100,
 #     .by = c(dist:method)
 #   ) |>
 #   pivot_wider(names_from = method, values_from = count) |>
 #   print(n = Inf)
 #
-# simu_res_twofac[[1]]$simu_res |>
+#
+# simu_res_twofac[[1]] |>
 #   mutate(param = map(est, names), .before = est) |>
 #   unnest(c(param, est, se, truth)) |>
 #   drop_na(param) |>
