@@ -93,6 +93,13 @@ is_iRBMp <- function(x, quietly = FALSE) {
   out
 }
 
+get_Sigma <- function(x, lavobject) {
+  lavmodel <- lavobject@Model
+  lavmodel_x <- lavaan::lav_model_set_parameters(lavmodel, x)
+  lavimplied <- lavaan::lav_model_implied(lavmodel_x)
+  lavimplied$cov[[1]]
+}
+
 # # I thought it would be useful to have functions for each kind of information
 #
 # # Observed information

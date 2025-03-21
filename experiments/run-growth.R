@@ -1,7 +1,7 @@
 source(here::here("experiments/_setup.R"))
 
 simu_res_growth <- vector("list", length = nrow(simu_id))
-for (i in seq_len(nrow(simu_id))) {
+for (i in c(1, 6)) {
   dist  <- simu_id$dist[i]
   model <- "growth"
   rel   <- simu_id$rel[i]
@@ -16,36 +16,35 @@ for (i in seq_len(nrow(simu_id))) {
     rel = rel,
     n = n,
     nsimu = B,
+    nboot = 500L,
     lavsim = FALSE,
-    whichsims = c("ML", "eRBM", "iRBM"),
+    whichsims = c("ML", "eRBM", "iRBM", "Ozenne", "REML", "JB", "BB"),
     bounds = "standard",
-    keep_going = FALSE,
     data_scale = 1 / 10,
-    seeds = seeds,
-    maxgrad = FALSE
+    seeds = seeds
   )
   cat("\n")
-  save(simu_res_growth, file = "experiments/simu_res_growth_new.RData")
+  # save(simu_res_growth, file = "experiments/simu_res_growth.RData")
 }
 
-# map(simu_res_growth, \(x) x$simu_res) |>
-#   bind_rows() |>
-#   summarise(
-#     count = sum(converged, na.rm = TRUE) / B * 100,
-#     .by = c(dist:method)
-#   ) |>
-#   pivot_wider(names_from = method, values_from = count) |>
-#   print(n = Inf)
-#
-# simu_res_growth[[1]]$simu_res |>
-#   mutate(param = map(est, names), .before = est) |>
-#   unnest(c(param, est, se, truth)) |>
-#   drop_na(param) |>
-#   filter(converged, !is.na(se)) |>
-#   summarise(
-#     bias = mean((est - truth) / truth, na.rm = TRUE),
-#     .by = dist:param
-#   ) |>
-#   mutate(method = factor(method, levels = c("ML", "eRBM", "iRBM"))) |>
-#   ggplot(aes(param, bias, fill = method)) +
-#   geom_col(position = "dodge")
+bind_rows(simu_res_growth) |>
+  summarise(
+    count = sum(converged, na.rm = TRUE) / B * 100,
+    .by = c(dist:method)
+  ) |>
+  pivot_wider(names_from = method, values_from = count) |>
+  print(n = Inf)
+
+p_bstand <- bind_rows(simu_res_growth) |>
+  mutate(param = map(truth, names), .before = est) |>
+  unnest(c(param, est, se, truth)) |>
+  filter(converged, !is.na(se)) |>
+  summarise(
+    bias = mean((est - truth) / truth, na.rm = TRUE),
+    .by = dist:param
+  ) |>
+  mutate(method = factor(method, levels = names(mycols))) |>
+  ggplot(aes(param, abs(bias), fill = method)) +
+  geom_col(position = "dodge") +
+  facet_grid(rel ~ .) +
+  scale_fill_brewer(palette = "Paired")

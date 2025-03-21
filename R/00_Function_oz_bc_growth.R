@@ -73,6 +73,13 @@ yr_ozenne_bcs_growth <- function(lavobject,
   Delta.mu.k <- Delta.mu <- lav_model_dmu_dtheta(lavobject@Model)
   old.k <- lavaan::lav_matrix_vech(Sigma.k)
 
+  # HJ: fix for ceq.simple = TRUE
+  if (ncol(Delta.mu.k) < 15) {
+    nncc <- 15 - ncol(Delta.mu.k)
+    nnrr <- nrow(Delta.mu.k)
+    Delta.mu.k <- cbind(Delta.mu.k, matrix(0, nnrr, nncc))
+  }
+
   for(k in seq_len(max.iter)) {
 
     if(verbose) {
@@ -125,6 +132,10 @@ yr_ozenne_bcs_growth <- function(lavobject,
     Delta.mu.k <- lavaan___computeDelta(lavmodel.k)[[1]][1:nvar, ,drop = FALSE]
 
   } # iterations
+
+  # HJ: Return full length theta vector
+  idx <- lavpartable$free[lavpartable$free > 0]
+  theta.updated <- theta.updated[idx]
 
   cor.se <- ifelse(test = grepl("~1", names(lavaan::coef(lavobject))),
                    yes = sqrt(diag(VCOV.k)/N),

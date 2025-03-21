@@ -30,6 +30,9 @@ sd_lav.extract.vector <- function(fit = NULL, extras = FALSE){
   PE <- lavaan::parameterEstimates(fit)[as.numeric(rownames(PT)), ] %>%
     tidyr::unite("param", c("lhs", "op", "rhs"), remove = TRUE, sep = "")
 
+  # HJ: acount for bounds = "none"
+  if (length(hit.bound) == 0) hit.bound <- rep(NA, nrow(PE))
+
   if(extras == TRUE) {
 
     info <- c(lavaan::lavInspect(fit, what = "converged"),

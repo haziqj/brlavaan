@@ -8,7 +8,7 @@ growthpars <- c("v", "i~~i", "s~~s", "i~~s")
 
 mycols <- c(
   ML = "#E31A1C",
-  MLB = "#FB9A99",
+  lav = "#FB9A99",
   eRBM = "#A6CEE3",
   iRBM = "#1F78B4",
   Jackknife = "#B2DF8A",
