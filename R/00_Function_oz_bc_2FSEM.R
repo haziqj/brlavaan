@@ -29,15 +29,15 @@ yr_ozenne_bcs_twofac <- function(lavobject,
 
   # create selection matrix (assuming a single group)
   xm2select <- function(lavmodel, target = "theta") {
-      target.idx <- which(names(lavmodel@GLIST) == target)[1] # first group
-      # dimension
-      P <- nrow(lavmodel@GLIST[[target.idx]])
-      unique.idx <- unique(lavmodel@x.free.idx[[target.idx]])
-      row.idx <- match(lavmodel@x.free.idx[[target.idx]], unique.idx)
-      out <- matrix(0, nrow = P*P, ncol = length(unique.idx))
-      IDX <- cbind(lavmodel@m.free.idx[[target.idx]], row.idx)
-      out[IDX] <- 1
-      out
+    target.idx <- which(names(lavmodel@GLIST) == target)[1] # first group
+    # dimension
+    P <- nrow(lavmodel@GLIST[[target.idx]])
+    unique.idx <- unique(lavmodel@x.free.idx[[target.idx]])
+    row.idx <- match(lavmodel@x.free.idx[[target.idx]], unique.idx)
+    out <- matrix(0, nrow = P*P, ncol = length(unique.idx))
+    IDX <- cbind(lavmodel@m.free.idx[[target.idx]], row.idx)
+    out[IDX] <- 1
+    out
   }
 
   # L.PSI, L.THETA and G2
