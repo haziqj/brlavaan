@@ -5,8 +5,8 @@ dat <- gen_data_twofac(n = 15, rel = 0.5, dist = "Normal", scale = 1)
 mod <- txt_mod_twofac(0.5)
 tru <- truth(dat)
 
-fit_lav    <- suppressWarnings(sem(mod, dat))  # neg covariances
-fit_ML     <- fit_sem(mod, dat, rbm = "none")
+fit_lav    <- sem(mod, dat, meanstructure = TRUE)
+fit_ML     <- fit_sem(mod, dat, rbm = "none", meanstructure = TRUE)
 fit_eRBM   <- fit_sem(mod, dat, rbm = "explicit")
 fit_iRBM   <- fit_sem(mod, dat, rbm = "implicit", start = tru)
 # fit_iRBM$converged
