@@ -1,7 +1,7 @@
 source(here::here("experiments/_setup.R"))
 
 simu_res_twofac <- vector("list", length = nrow(simu_id))
-for (i in seq_len(nrow(simu_id))) {
+for (i in seq_len(nrow(simu_id))[-1]) {
   dist  <- simu_id$dist[i]
   model <- "twofac"
   rel   <- simu_id$rel[i]
@@ -24,7 +24,7 @@ for (i in seq_len(nrow(simu_id))) {
     seeds = seeds
   )
   cat("\n")
-  save(simu_res_growth, file = here::here("experiments/simu_res_twofac.RData"))
+  save(simu_res_twofac, file = here::here("experiments/simu_res_twofac.RData"))
 }
 
 # bind_rows(simu_res_growth) |>
