@@ -26,7 +26,7 @@ for (i in seq_len(nrow(simu_id))) {
   cat("\n")
   save(simu_res_growth, file = here::here("experiments/simu_res_growth.RData"))
 }
-
+#
 # bind_rows(simu_res_growth) |>
 #   mutate(seOK = map_lgl(se, ~!any(is.na(.x)))) |>
 #   summarise(
@@ -35,3 +35,22 @@ for (i in seq_len(nrow(simu_id))) {
 #   ) |>
 #   pivot_wider(names_from = method, values_from = count) |>
 #   print(n = Inf)
+#
+# mycols <- RColorBrewer::brewer.pal(8, "Paired")
+# names(mycols) <- c("eRBM", "iRBM", "JB", "BB", "lav", "ML", "REML", "Ozenne")
+#
+# bind_rows(simu_res_growth) |>
+#   unnest(c(est, se, truth)) |>
+#   mutate(param = names(truth)) |>
+#   distinct(seed, sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>
+#   filter(param %in% c("i~~i", "s~~s", "i~~s", "v"), !is.na(se), Sigma_OK, converged) |>
+#   summarise(
+#     bias = mean((est - truth) / truth, trim = 0.05),
+#     .by = c(dist, model, rel, n, method, param)
+#   ) |>
+#   ggplot(aes(n, bias, col = method)) +
+#   geom_line() +
+#   facet_grid(param ~ rel + dist) +
+#   scale_x_log10() +
+#   scale_colour_manual(values = mycols)
+#
