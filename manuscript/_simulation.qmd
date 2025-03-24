@@ -1,4 +1,4 @@
-::: {#fig-path-growth}
+::: {#fig-path-twofac}
 ```{r pathtwofac, engine = "tikz", out.width = "90%"}
 \begin{tikzpicture}
 \node[inner sep=3pt] {%
