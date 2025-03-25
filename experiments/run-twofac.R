@@ -1,7 +1,7 @@
 source(here::here("experiments/_setup.R"))
 
 simu_res_twofac <- vector("list", length = nrow(simu_id))
-for (i in seq_len(nrow(simu_id))[-1]) {
+for (i in seq_len(nrow(simu_id))) {
   dist  <- simu_id$dist[i]
   model <- "twofac"
   rel   <- simu_id$rel[i]
