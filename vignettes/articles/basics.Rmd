@@ -359,9 +359,9 @@ Due to diagonal matrices, we express the covariance parameters as the diagonal o
 - $\frac{\partial \ell}{\partial \Lambda_{ij}} = n \operatorname{tr}\left\{ M \Lambda^\top E \frac{\partial\Lambda}{\partial \Lambda_{ij}} \right\} = n[M\Lambda^\top E]_{j i}$
 - $\frac{\partial \ell}{\partial \beta} = n \operatorname{tr}\left\{ \Psi (I + B^\top) \Lambda^\top E \Lambda \frac{\partial B}{\partial \beta} \right\} = n[\Psi (I + B^\top) \Lambda^\top E \Lambda]_{12}$
 - $\frac{\partial \ell}{\partial \text{diag}(\Theta)} = \frac{n}{2}\text{diag}(E)$
-- $\frac{\partial \ell}{\partial \text{diag}(\Psi)} = \frac{n}{2}\text{diag}\left((I - B)^{-T}\Lambda^\top E \Lambda (I-B)^{-1}\right)$
+- $\frac{\partial \ell}{\partial \text{diag}(\Psi)} = \frac{n}{2}\text{diag}\left((I - B)^{-\top}\Lambda^\top E \Lambda (I-B)^{-1}\right)$
 
 
-Where $M = (I - B)^{-1} \Psi (I - B)^{-T}$.
+We have $M = (I - B)^{-1} \Psi (I - B)^{-\top}$.
 
 
