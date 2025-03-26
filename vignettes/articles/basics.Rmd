@@ -1,6 +1,6 @@
 ---
-title: The basics
-description: | 
+title: "The basics"
+description: |
   Coding the explicit and implicit bias reduction methods from scratch.
 ---
 
@@ -181,7 +181,8 @@ tibble(
 For the growth curve model, the gradients are simplified somewhat:
 
 - $\frac{\partial\ell}{\partial \alpha} = n (\bar y - \mu)^\top \Sigma^{-1} \Lambda$.
-- $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$.
+<!-- - $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$. TODO: Edit -->
+- $\frac{\partial\ell}{\partial \Psi_{ij}} = \frac{n}{2} \operatorname{tr} \left\{\Lambda^\top E \Lambda \frac{\partial \Psi}{\partial \Psi_{ij}} \right\}$
 - $\frac{\partial\ell}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
 
 The implementation in R code is also straightforward (see R/40-manual_growth.R).
@@ -227,4 +228,140 @@ toc(log = TRUE)
 c(list(truth = tru[1:6]), lapply(fit, \(x) round(coef(x)[1:6], 5)))
 sapply(fit, \(x) if (inherits(x, "lavaan")) x@optim$converged else x$converged)
 ```
+
+
+## Two factor model
+
+For the two factor model, we have two latent variables $\eta_1$ and $\eta_2$, each indicated by three observed variables, $(y_1, y_2, y_3)$ and $(y_4, y_5, y_6)$ respectively. Each observed variable has a corresponding error $\epsilon_j \sim N(0, \Theta_{j,j})$, leading to six variance parameters. The latent variables have a regression path from $\eta_1 to \eta_2$ with parameter $\beta$, and each have a variance parameter $\Psi_{11}$ and $\Psi_{22}$ respectively. For the factor loadings, we fix $\Lambda_{11}$ and $\Lambda_{42}$ to $1$ for identifiability. The thirteen parameters to be estimated in the two factor model are $\theta = (\Lambda_{21}, \Lambda_{31}, \Lambda_{52}, \Lambda_{62}, \beta, \Theta_{11}, \Theta_{22}, \Theta_{33}, \Theta_{44}, \Theta_{55}, \Theta_{66}, \Psi_{11}, \Psi_{22})$. (In this order in the code).
+
+
+
+```{r pathtwofac, engine = "tikz"}
+\begin{tikzpicture}
+\node[inner sep=3pt] {%
+\begin{tikzpicture}[%
+  >=stealth,
+  auto,
+  node distance=1.6cm,
+  every node/.style={font=\small},
+  latent/.style={circle, draw, minimum size=8mm, inner sep=0mm},
+  obs/.style={rectangle, draw, minimum size=7mm, inner sep=0mm},
+  error/.style={circle, draw, minimum size=6mm, inner sep=0mm}
+]
+
+% --------------------------------------------------------
+% 1) LATENT VARIABLES
+% --------------------------------------------------------
+\node[latent] (eta1) at (-1.5, -2) {$\eta_{1}$};
+\node[latent] (eta2) at ( 3, -2) {$\eta_{2}$};
+
+% --------------------------------------------------------
+% 2) OBSERVED VARIABLES + ERROR TERMS
+%    Place y1..y3 (for eta1) on the left, y4..y6 (for eta2) on the right.
+% --------------------------------------------------------
+\node[obs] (y1) at (-3, 0) {$y_{1}$};
+\node[obs] (y2) at (-1.5, 0) {$y_{2}$};
+\node[obs] (y3) at ( 0, 0) {$y_{3}$};
+
+\node[obs] (y4) at ( 1.5, 0) {$y_{4}$};
+\node[obs] (y5) at ( 3, 0) {$y_{5}$};
+\node[obs] (y6) at ( 4.5, 0) {$y_{6}$};
+
+% Error terms above each observed variable
+\node[error] (e1) at (-3, 1.5) {$\epsilon_{1}$};
+\node[error] (e2) at (-1.5, 1.5) {$\epsilon_{2}$};
+\node[error] (e3) at ( 0, 1.5) {$\epsilon_{3}$};
+\node[error] (e4) at ( 1.5, 1.5) {$\epsilon_{4}$};
+\node[error] (e5) at ( 3, 1.5) {$\epsilon_{5}$};
+\node[error] (e6) at ( 4.5, 1.5) {$\epsilon_{6}$};
+
+% --------------------------------------------------------
+% 3) PATHS FROM ERROR TERMS TO OBSERVED VARIABLES
+% --------------------------------------------------------
+\draw[->] (e1) -- (y1);
+\draw[->] (e2) -- (y2);
+\draw[->] (e3) -- (y3);
+\draw[->] (e4) -- (y4);
+\draw[->] (e5) -- (y5);
+\draw[->] (e6) -- (y6);
+
+% --------------------------------------------------------
+% 4) FACTOR LOADINGS
+%    \eta_1 -> y1, y2, y3
+%    \eta_2 -> y4, y5, y6
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{11}$} (y1);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{21}$} (y2);
+\draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{31}$} (y3);
+
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{42}$} (y4);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{52}$} (y5);
+\draw[->] (eta2) -- node[pos=0.5, right] {$\Lambda_{62}$} (y6);
+
+% --------------------------------------------------------
+% 5) REGRESSION BETWEEN LATENT VARIABLES
+%    \eta_1 -> \eta_2, labeled beta
+% --------------------------------------------------------
+\draw[->] (eta1) -- node[midway, above] {$\beta$} (eta2);
+
+% --------------------------------------------------------
+% 6) VARIANCES OF LATENT VARIABLES
+%    Double-headed arrows for psi_{11} and psi_{22}
+% --------------------------------------------------------
+\draw[<->] (eta1) to[out=200, in=230, looseness=4] 
+  node[left] {$\Psi_{11}$} (eta1);
+
+\draw[<->] (eta2) to[out=-50, in=-20, looseness=4] 
+  node[right] {$\Psi_{22}$} (eta2);
+
+\end{tikzpicture}
+};
+\end{tikzpicture}
+```
+
+
+
+```{r}
+#| label: tbl-truth-twofac
+#| html-table-processing: none
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_twofac(0.8), truth_twofac(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |> 
+  mutate(param = case_when(
+    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
+    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
+    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
+    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
+    param == "fy~fx"  ~ "$\\beta$",
+    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
+    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
+    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
+    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
+    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
+    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
+    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
+    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
+  )) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
+```
+
+
+Due to diagonal matrices, we express the covariance parameters as the diagonal of the covariance matrices, which have all other entries as zero.
+
+- $\frac{\partial \ell}{\partial \Lambda_{ij}} = n \operatorname{tr}\left\{ M \Lambda^\top E \frac{\partial\Lambda}{\partial \Lambda_{ij}} \right\} = n[M\Lambda^\top E]_{j i}$
+- $\frac{\partial \ell}{\partial \beta} = n \operatorname{tr}\left\{ \Psi (I + B^\top) \Lambda^\top E \Lambda \frac{\partial B}{\partial \beta} \right\} = n[\Psi (I + B^\top) \Lambda^\top E \Lambda]_{12}$
+- $\frac{\partial \ell}{\partial \text{diag}(\Theta)} = \frac{n}{2}\text{diag}(E)$
+- $\frac{\partial \ell}{\partial \text{diag}(\Psi)} = \frac{n}{2}\text{diag}\left((I - B)^{-T}\Lambda^\top E \Lambda (I-B)^{-1}\right)$
+
+
+Where $M = (I - B)^{-1} \Psi (I - B)^{-T}$.
+
 
