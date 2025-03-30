@@ -55,8 +55,8 @@ docs
 
 */_freeze/*
 */site_libs/*
-manuscript/*_files*
-manuscript/_*.html
+manuscript/*/*_files*
+manuscript/*/_*.html
 */dhaene_rosseel/*
 vignettes/articles/*_files/*
 
