@@ -47,12 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Others
 .DS_Store
 *.log
-R/dhaene_rosseel/02_Results/2FSEM_est_combined_final.RData
-R/dhaene_rosseel/02_Results/GCM_est_combined_final.RData
-notes/dhaene_rosseel/02_Results/2FSEM_est_combined_final.RData
-notes/dhaene_rosseel/02_Results/GCM_est_combined_final.RData
 docs
 
 */_freeze/*
@@ -61,7 +59,6 @@ manuscript/*_files*
 manuscript/_*.html
 */dhaene_rosseel/*
 vignettes/articles/*_files/*
-
 
 # large RData files from experiments
 experiments/*.RData
