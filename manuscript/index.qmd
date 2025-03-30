@@ -68,7 +68,6 @@ library(gt)
 library(glue)
 library(semPlot)
 library(semptools)
-here::i_am("experiments/results/results.qmd")
 load(here::here("experiments/results.RData"))
 ```
 

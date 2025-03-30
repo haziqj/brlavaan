@@ -1,26 +1,32 @@
-<!-- On success rates -->
 
-<!-- - Success rate is determined as optimiser reporting convergence and an estimate that makes sense. -->
-<!--   - For two-factor models, this is when absolute values of the estimates are less than 4 (~400% relative) and se is less than 10. -->
-<!--   - For the growth curve model, this is when absolute values of the estimates are less than 700 (~40% relative) and se is less than 1000. -->
-<!--   - The eRBM estimates for growth curve model needed aggressive trimming due to poor performance. -->
-<!-- - eRBM and iRBM face numerical issues particularly in low sample size (n=15,20) settings.  -->
-<!-- - Reliability = 0.8 is "easier" to estimate. -->
-<!-- - eRBM methods uses ML estimates and adjusts them, so the numerical issue lies in the gradient of the bias function (and not convergence rate) -->
+On success rates
 
-<!-- Two-factor model -->
+- Success rate is determined as optimiser reporting convergence and an estimate that makes sense.
+  - For two-factor models, standard errors must be less than 5.
+  - For growth curve models, the standard errors must be less than 500.
+  - These two are different due to the scaling of the data.
+  - For both models, the implied Sigma covariance matrix is reported to be positive definite.
+- In general, the success rates are high for the iBR and eBR methods across all scenarios, but there are a couple of exceptions.
+- For n >= 50, this is at least 85% and higher, and convergence is 100% for n = 100 and above.
+- The problem arise when n = 15 and 20, in particular for the two-factor model and the eBR method. Note that the convergence is determined by the ML, so the improper estimates come from numerical issues in the derivative of the penalty function in the eBR method.
 
-<!-- - For normal distribution and rel = 0.8, about 25% of iRBM estimates were used for n =15, and about 50% for n = 20. For n>=50 then this is nearly 100%. -->
-<!-- - Increasing sample size also reduced the variability of estimates. We see that all methods perform well where the centred distributions are averaged at 0. -->
-<!-- - The performance plots indicate a clear advantage of the eBR and iBR methods over ML especially at small sample size (n=15,20), where both variance parameters Theta and Psi as well as loadings Lambda and latent regression coefficient beta are reduced by as high as 12%. -->
-<!-- - iBR gives the lowest variability in terms of RMSE, again in small samples. -->
-<!-- - For all methods, there is a tendency to underestimate the variance parameters, and this is more pronounced in the ML method. This speaks to the median bias being negative. However, our proposed methods consistently give smaller chance of this happening. -->
-<!-- - In terms of coverage, the ML is seen to under cover, especially in small samples. On the other hand, we see that iBR and eBR improve on this, giving a better coverage rate for 95% confidence intervals. -->
-<!-- - Comparing to the D&R methods, our methods (the iBR especially) matches or outperforms the bias reducing properties, as shown by the relative mean bias and RMSE plots.  -->
+Two-factor models
 
-<!-- Growth model -->
+- To compare the performance of our methods, we looked at the specific scenario of normally distributed errors with reliability of 0.8. The reason for this is that this scenario gave the best convergence rates across all methods, so a fair comparison could be made.
+- The centred distributions of the estimates show high degree of variability in the estimates across all methods, but this became less as sample size increased.
+- Our methods always improved the bias over ML estimates particularly in small sample sizes. RMSE was roughly the same for all methods, which suggests that variability in the estimates was similar. This was seen as well in the distribution plot.
+- Our method also improved coverage by about 5% at best, particularly in small sample sizes. 
+- Comparing our methods to the D&R methods, in terms of relative mean bias, our methods always offered improvement across different reliability settings and also in the non-normal setting. 
+- Bias performance was comparable to the other proposed methods including Jackknife and Bootstrap and Ozenne, although typically the resampling methods showed slightly better performance, at a csot of higher variability especially in non-normal settings. Our method did not have this drawback.
+- In the non-normal setting, we highlighted the fact that eRBM method had convergence issues in small sample sizes and non-normal distributions, where about 60% of the estimates were rejected. This seemed to affect the bias performance. It is noted however the median bias was close to zero, suggesting that the mean bias was pulled by extreme estimates caused by numerical issues.
 
-<!-- - Similar performance for the growth model. However eBR suffer from numerical problems causing the bias term to explode and give non-sensical estimates. -->
+Growth model
+
+- For the growth model, the estimates were markedly less variable. This is attributed to the smaller number of parameters needed to be estimated (6 vs 13) [???]
+- The performance was similar, whereby we see the performance of our iRBM and eRBM methods giving substantial improvements in bias and coverage, but not in RMSE.
+- Additionally, the probability of underestimating the parameters is much closer to the nominal level (i.e. median bias is close to zero), where we also see ML overshooting median bias more than our methods.
+- When data is normal, REML gave the best relative mean bias. To be expected... [???], but when data is non-normal, REML gave the worst performance. This is likely due to the fact that REML is not robust to non-normality, and the fact that the data was generated from a non-normal distribution.
+- Overall, our methods performed equally well to the resampling and Ozenne methods, giving slightly better performance in some cases.
 
 
 
@@ -74,6 +80,35 @@ gt(res_conv) |>
   tab_options(table.font.size = "11px")
 ```
 
+### Timing
+
+```{r}
+#| label: tbl-timing
+#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor model and growth curve models.'
+#| html-table-processing: none
+res_timing_n1000 |>
+  rowwise() |>
+  mutate(
+    thing = glue::glue("{gt::vec_fmt_number(mean)} ({gt::vec_fmt_number(sd)})"),
+    method = factor(
+      method,
+      levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"),
+      labels = names(mycols)
+    )
+  ) |>
+  select(-mean, -sd) |>
+  pivot_wider(names_from = model, values_from = thing) |>
+  arrange(method) |>
+  gt() |>
+  sub_missing(missing_text = "") |>
+  gt::cols_label(
+    method = "Method",
+    twofac = "Two-factor model",
+    growth = "Growth curve model"
+  )
+```
+
+
 ### Two-factor model
 
 #### Centred distributions for parameters
@@ -102,12 +137,14 @@ p1 <-
   guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
   theme_bw() +
   theme(
-    legend.position.inside = c(0.88, 0.095), 
+    legend.position.inside = c(0.91, 0.095), 
     legend.background = element_rect(fill = NA), 
     legend.text = element_text(size = 8), 
-    legend.title = element_text(size = 9)
+    legend.title = element_text(size = 9),
+    strip.background = element_blank(),
+    strip.text = element_blank()    
   ) +
-  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+  labs(x = NULL, y = NULL, fill = "Method", subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 
 p2 <-
   plot_df |>
@@ -189,7 +226,7 @@ plot_df |>
     legend.key.height = unit(1, "pt"), 
     legend.key.width = unit(9, "pt")
   ) +
-  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 ```
 
 #### Comparison to other methods
@@ -200,7 +237,7 @@ plot_df |>
 #| out-width: 100%
 
 plot_drcomp |>
-  filter(model == "twofac") |>
+  filter(model == "twofac", !method %in% c("lav")) |>
   ggplot(aes(n, relbias, col = method)) +
   geom_line(linewidth = 0.75, alpha = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -208,7 +245,7 @@ plot_drcomp |>
   scale_color_manual(values = mycols) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
   scale_y_continuous(labels = scales::percent) +
-  # coord_cartesian(ylim = c(-0.25, 0.25)) +
+  # coord_cartesian(ylim = c(-0.3, 0.3)) +
   guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
   theme_bw() +
   labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
@@ -220,7 +257,8 @@ plot_drcomp |>
 #| out-width: 100%
 
 plot_drcomp |>
-  filter(model == "twofac") |>
+  filter(model == "twofac", !method %in% c("lav")) |>
+  mutate(method = fct_rev(method)) |>
   ggplot(aes(n, rmse, fill = method)) +
   geom_col(position = "dodge", width = 0.75) +
   scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
@@ -259,12 +297,14 @@ p1 <-
   guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
   theme_bw() +
   theme(
-    legend.position.inside = c(0.88, 0.095), 
+    legend.position.inside = c(0.89, 0.095), 
     legend.background = element_rect(fill = NA), 
     legend.text = element_text(size = 8),
-    legend.title = element_text(size = 9)
+    legend.title = element_text(size = 9),
+    strip.background = element_blank(),
+    strip.text = element_blank()     
   ) +
-  labs(x = NULL, y = NULL, fill = "Method", subtitle = "Normal distribution, reliability = 0.8")
+  labs(x = NULL, y = NULL, fill = "Method", subtitle =  glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 
 p2 <-
   plot_df |>
@@ -345,7 +385,7 @@ plot_df |>
     legend.key.height = unit(1, "pt"), 
     legend.key.width = unit(9, "pt")
   ) +  
-  labs(x = NULL, y = NULL, fill = NULL, subtitle = "Normal distribution, reliability = 0.8")
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 ```
 
 #### Comparison to other methods
@@ -356,7 +396,7 @@ plot_df |>
 #| out-width: 100%
 
 plot_drcomp |>
-  filter(model == "growth") |>
+  filter(model == "growth", !method %in% c("lav")) |>
   ggplot(aes(n, relbias, col = method)) +
   geom_line(linewidth = 0.75, alpha = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -367,7 +407,7 @@ plot_drcomp |>
   # coord_cartesian(ylim = c(-0.25, 0.25)) +
   guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
   theme_bw() +
-  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+  labs(x = "Sample size (n)", y = "Relative mean bias", col = NULL)
 ```
 
 ```{r}
@@ -376,7 +416,8 @@ plot_drcomp |>
 #| out-width: 100%
 
 plot_drcomp |>
-  filter(model == "growth") |>
+  filter(model == "growth", !method %in% c("lav")) |>
+  mutate(method = fct_rev(method)) |>
   ggplot(aes(n, rmse, fill = method)) +
   geom_col(position = "dodge", width = 0.75) +
   scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
