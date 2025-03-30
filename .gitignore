@@ -53,8 +53,8 @@ rsconnect/
 *.log
 docs
 
-*/_freeze/*
-*/site_libs/*
+**/_freeze/
+**/site_libs/
 manuscript/*/*_files*
 manuscript/*/_*.html
 */dhaene_rosseel/*
