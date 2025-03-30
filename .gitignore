@@ -62,3 +62,4 @@ manuscript/*_files*
 manuscript/_*.html
 */dhaene_rosseel/*
 vignettes/articles/*_files/*
+experiments/simu_res_twofacDR.RData

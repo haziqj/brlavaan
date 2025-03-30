@@ -17,43 +17,65 @@ mycols <- c(
   REML = "#FF7F00"
 )
 
-## ----- Part 1: Our methods ---------------------------------------------------
-
-# To create the following data frames:
-#
-# 1. simu_id: A data frame with the simulation ids. (in Part 2 add seeds)
-#
-# 2. res_ours_nested: A nested data frame with the results of each simulation, used
-# for counting convergences etc.
-#
-# 3. res_ours: The full (raw) results data frame.
-#
-# 4. res_filtered: The filtered results data frame, with bad estimates removed.
-
 load(here::here("experiments/simu_id.RData"))
 simu_id <- bind_rows(
   mutate(simu_id, model = "twofac", .after = simid),
   mutate(simu_id, model = "growth", .after = simid)
 )
 
-load(here::here("experiments/simu_res_twofac_new.RData"))
-load(here::here("experiments/simu_res_growth_new.RData"))
-simu_res_ours <- c(simu_res_twofac, simu_res_growth)
+load(here::here("experiments/simu_res_twofac_mp1.RData"))
+simu_res_twofac1 <- simu_res_twofac  # 20-30
+load(here::here("experiments/simu_res_twofac_mp2.RData"))
+simu_res_twofac2 <- simu_res_twofac  # 11-19
+load(here::here("experiments/simu_res_twofac_mp3.RData"))
+simu_res_twofac[11:19] <- simu_res_twofac2[11:19]
+simu_res_twofac[20:30] <- simu_res_twofac1[20:30]
+load(here::here("experiments/simu_res_growth.RData"))
+simu_res <- c(simu_res_twofac, simu_res_growth)
 
+## ----- Convergence statistics ------------------------------------------------
 res_ours_nested <-
-  simu_res_ours |>
-  imap(\(x, idx) bind_cols(simid = idx, x$simu_res)) |>
+  simu_res |>
   bind_rows() |>
+  filter(method %in% c("ML", "eRBM", "iRBM")) |>
   mutate(
-    super_converged = converged & #max_loglik < 0 &
-      unlist(lapply(se, \(x) !any(is.na(x))))
+    super_converged = converged & Sigma_OK &
+      mapply(function(se_vec, mod) {
+        if(any(is.na(se_vec))) return(FALSE)
+        if(mod == "twofac") {
+         return(all(se_vec < 5))
+        } else if(mod == "growth") {
+         return(all(se_vec < 500))
+        } else {
+         return(TRUE)
+        }
+      }, se, model)
   )
 
-res_ours <-
+res_conv <-
   res_ours_nested |>
+  summarise(count = sum(super_converged, na.rm = TRUE), .by = dist:method) |>
+  mutate(count = count / max(count), .by = dist:n) |>
+  pivot_wider(names_from = c(model, method, rel), values_from = count) |>
+  group_by(dist)
+
+## ----- Timing statistics -----------------------------------------------------
+res_timing_n1000 <-
+  simu_res |>
+  bind_rows() |>
+  filter(method != "lav", n == 1000) |>
+  summarise(
+    mean = mean(timing),
+    sd = sd(timing, na.rm = TRUE),
+    .by = c(model, method)
+  )
+
+## ----- Big results data frame ------------------------------------------------
+res <-
+  simu_res |>
+  bind_rows() |>
   mutate(param = lapply(truth, names), .before = est) |>
   unnest(param:truth) |>
-  select(!starts_with("info")) |>
   distinct(sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>
   mutate(
     type = case_when(
@@ -62,216 +84,63 @@ res_ours <-
       grepl("[xy][0-9]~~[xy][0-9]|v", param) ~ "Theta",
       grepl("f[xy]~~f[xy]|[is]~~[is]", param) ~ "Psi",
       grepl("[is]~1", param) ~ "alpha",
+      grepl("[xy][0-9]~1", param) ~ "nu",
       TRUE ~ NA
     ),
     across(c(est, truth, se), ~if_else(model == "growth" & type != "alpha", .x * 100, .x)),  # rescale back
     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
     rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
-    method = factor(method, levels = rev(names(mycols))),
-    bias = est - truth,
-    relbias = bias / truth,
-    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
-  )
-
-## ----- Part 2: Comparison to D&R methods -------------------------------------
-
-# To create the following data frames:
-#
-# 1. res_ours: The full (raw) results data frame.
-#
-# 2. truth: The truth data frame.
-#
-# 3. res_dr: The full (raw) results data frame from D&R.
-
-truth <-
-  expand_grid(
-    model = c("twofac", "growth"),
-    rel = factor(c("Rel = 0.8", "Rel = 0.5"), levels = c("Rel = 0.8", "Rel = 0.5"))
-  ) |>
-  mutate(out = map2(model, rel, \(x, y) {
-    rel <- as.numeric(gsub("Rel = ", "", y))
-    out <- if (x == "twofac") truth_twofac(rel)[twofacpars] else truth_growth(rel)[growthpars]
-    list(param = names(out), truth = as.numeric(out))
-  })) |>
-  unnest_wider(out) |>
-  unnest(c(param, truth))
-
-# Others
-dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
-dr_file2 <- here::here("experiments/2FSEM_est_combined_final.RData")
-if (!file.exists(dr_file1))
-  download.file("https://osf.io/vjq5m/download", destfile = dr_file1)
-if (!file.exists(dr_file2))
-  download.file("https://osf.io/cw5b7/download", destfile = dr_file2)
-
-load(here::here("experiments/2FSEM_est_combined_final.RData"))
-res_dr_twofac <-
-  as_tibble(Results) |>
-  unite("simu", jobid, iteration, sep = ".") |>
-  mutate(
-    simu = as.integer(factor(simu)),
-    convergence = convergence == 1
-  ) |>
-  select(
-    seed,
-    sim = simu,
-    method,
-    dist,
-    n = nobs,
-    converged = convergence,
-    rel,
-    starts_with("est"),
-    starts_with("se")
-  ) |>
-  select(-ends_with("~1")) |>
-  pivot_longer(
-    cols = c(starts_with("est_"), starts_with("se_")),
-    names_to = c(".value", "param"),
-    names_sep = "_"
-  ) |>
-  filter(method %in% c("MLB", "JB", "BB", "Ozenne", "REML")) |>
-  distinct(sim, seed, method, dist, n, rel, param, est, se, converged) |>
-  mutate(model = "twofac")
-
-load(here::here("experiments/GCM_est_combined_final.RData"))
-res_dr_growth <-
-  as_tibble(Results) |>
-  unite("simu", jobid, iteration, sep = ".") |>
-  mutate(
-    simu = as.integer(factor(simu)),
-    convergence = convergence == 1
-  ) |>
-  select(
-    seed,
-    sim = simu,
-    method,
-    dist,
-    n = nobs,
-    converged = convergence,
-    rel,
-    `est_v` = `est_Day0~~Day0`,
-    `est_i~~i`,
-    `est_i~1`,
-    `est_s~~s`,
-    `est_s~1`,
-    `est_i~~s`,
-    `se_v` = `se_Day0~~Day0`,
-    `se_i~~i`,
-    `se_i~1`,
-    `se_s~~s`,
-    `se_s~1`,
-    `se_i~~s`
-  ) |>
-  pivot_longer(
-    cols = c(starts_with("est_"), starts_with("se_")),
-    names_to = c(".value", "param"),
-    names_sep = "_"
-  ) |>
-  filter(method %in% c("MLB", "JB", "BB", "Ozenne", "REML")) |>
-  distinct(sim, seed, method, dist, n, rel, param, est, se, converged) |>
-  mutate(model = "growth")
-
-res_dr <- bind_rows(res_dr_twofac, res_dr_growth)
-
-# Clean up
-res_dr$dist <- factor(
-  res_dr$dist,
-  levels = c("Normal", "Kurtosis", "NonNormal"),
-  labels = c("Normal", "Kurtosis", "Non-normal")
-)
-res_dr$dist <- as.character(res_dr$dist)
-
-res_dr$rel <- factor(
-  res_dr$rel,
-  levels = c("REL80", "REL50"),
-  labels = c(0.8, 0.5)
-)
-res_dr$rel <- as.numeric(as.character(res_dr$rel))
-
-res_dr$n <- as.numeric(as.character(res_dr$n))
-
-tmp_lev <- levels(res_dr$method)
-tmp_lev <- gsub("JB", "Jackknife", tmp_lev)
-tmp_lev <- gsub("BB", "Bootstrap", tmp_lev)
-tmp_lev <- gsub("Ozenne", "Ozenne et al.", tmp_lev)
-tmp_lev <- gsub("REML", "REML", tmp_lev)
-levels(res_dr$method) <- tmp_lev
-
-# Add truth and simid
-levels(truth$rel) <- c(0.8, 0.5)
-truth$rel <- as.numeric(as.character(truth$rel))
-res_dr <- left_join(res_dr, truth)
-res_dr <- left_join(res_dr, select(simu_id, -seed))
-
-# Rearrange columns
-res_dr <-
-  res_dr |>
-  mutate(timing = NA, scaled_grad = NA, max_loglik = NA, optim_message = NA, Sigma_OK = NA) |>
-  select(simid, seed, sim, dist, model, rel, n, method, param, est, se, truth,
-         timing, converged, scaled_grad, max_loglik, Sigma_OK, optim_message) |>
-  arrange(simid, sim, dist, model, rel, n, method, param) |>
-  mutate(
-    type = case_when(
-      grepl("f[xy]=~[xy][0-9]", param) ~ "Lambda",
-      grepl("fy~fx", param) ~ "beta",
-      grepl("[xy][0-9]~~[xy][0-9]|v", param) ~ "Theta",
-      grepl("f[xy]~~f[xy]|[is]~~[is]", param) ~ "Psi",
-      grepl("[is]~1", param) ~ "alpha",
-      TRUE ~ NA
+    method = factor(
+      method,
+      levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"),
+      labels = names(mycols)
     ),
-    simid = as.integer(simid),
-    dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
-    rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
-    method = factor(method, levels = rev(names(mycols))),
     bias = est - truth,
     relbias = bias / truth,
     covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
   )
 
-tinytest::expect_equal(colnames(res_ours), colnames(res_dr))
+# Load D&R two factor sims
+load(here::here("experiments/simu_res_twofacDr.RData"))
 
-## ----- Part 3: Summarised data -----------------------------------------------
+# For two-factor model BB & JB, get from res_dr
+res <-
+  res |>
+  filter(!(method %in% c("Bootstrap", "Jackknife") & model == "twofac")) |>
+  bind_rows(
+    filter(res_dr, model == "twofac", method %in%  c("Bootstrap", "Jackknife"))
+  )
 
-# For convergence statistics
-res_conv <-
-  res_ours_nested |>
-  summarise(count = sum(super_converged, na.rm = TRUE), .by = dist:method) |>
-  mutate(count = count / max(count), .by = dist:n) |>
-  pivot_wider(names_from = c(model, method, rel), values_from = count) |>
-  group_by(dist)
+## ----- Prepare data for plots ------------------------------------------------
 
 # For the plots showing performance of our methods
 plot_df <-
-  res_ours |>
-  filter(converged, !is.na(se)) |>
-  filter(dist == "Normal", rel == "Rel = 0.8",
-         param %in% c(twofacpars, growthpars)) |>
+  res |>
+  filter(method %in% c("ML", "eRBM", "iRBM")) |>
+  filter( converged, !is.na(se)) |>
+  # for each kind of model, filter bad standard errors
+  filter(!(model == "twofac" & abs(se) > 5)) |>
+  filter(!(model == "growth" & abs(se) > 500)) |>
+  # which distribution and reliability we want?
+  filter(dist == "Normal", rel == "Rel = 0.8") |>
   mutate(
     param = factor(param, levels = c(rev(twofacpars), rev(growthpars))),
     n = factor(n, labels = paste0("n = ", c(15, 20, 50, 100, 1000))),
   )
 
 # For plots showing performance of D&R methods
-summ_ours <-
-  res_ours |>
-  filter(param %in% c(twofacpars, growthpars), dist != "Kurtosis",
-         converged, !is.na(se)) |>
-  summarise(
-    relbias = mean(relbias, na.rm = TRUE, trim = 0.05),
-    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
-    .by = c(dist:param)
-  )
-summ_dr <-
-  res_dr |>
-  filter(param %in% c(twofacpars, growthpars), dist != "Kurtosis") |>
-  summarise(
-    relbias = mean(relbias, na.rm = TRUE, trim = 0.05),
-    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
-    .by = c(dist:param)
-  )
-
 plot_drcomp <-
-  bind_rows(summ_ours, summ_dr) |>
+  res |>
+  filter(param %in% c(twofacpars, growthpars), dist != "Kurtosis") |>
+  # filter(converged, !is.na(se)) |>
+  # for each kind of model, filter bad standard errors
+  filter(!(model == "twofac" & abs(se) > 5)) |>
+  filter(!(model == "growth" & abs(se) > 500)) |>
+  summarise(
+    relbias = mean(relbias, na.rm = TRUE, trim = 0.05),
+    rmse = sqrt(mean(bias ^ 2, na.rm = TRUE, trim = 0.05)),
+    .by = c(dist:param)
+  ) |>
   mutate(
     n = as.numeric(factor(n)),
     param = factor(param, levels = c(twofacpars, growthpars), labels = c(
@@ -297,22 +166,16 @@ plot_drcomp <-
     method = factor(method, levels = rev(names(mycols)))
   )
 
-# bind_rows(
-#   res_dr, res_ours
-# ) |>
-#   filter(model == "growth", dist == "Non-normal", n == 15, rel == "Rel = 0.5", param == "v") |>
-#   ggplot(aes(est, fill = method)) +
-#   geom_histogram() + facet_grid(method ~ .)
-
-## ----- Part 4: Tables --------------------------------------------------------
+## ----- Tables ----------------------------------------------------------------
 
 create_summdf <- function(model, rel) {
-  ress <- bind_rows(res_ours, res_dr)
-  i <- ress$rel == glue("Rel = {rel}") & ress$model == model
+  i <- res$rel == glue("Rel = {rel}") & res$model == model
 
-  ress |>
-    filter(dist != "Kurtosis", param %in% c(twofacpars, growthpars), i) |>
-    filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+  res |>
+    filter(dist != "Kurtosis", param %in% c(twofacpars, growthpars),
+           method != "lav", i) |>
+    filter(!(model == "twofac" & abs(se) > 5)) |>
+    filter(!(model == "growth" & abs(se) > 500)) |>
     summarise(
       mean_bias = mean(relbias, na.rm = TRUE, trim = 0.05),
       med_bias = median(relbias, na.rm = TRUE),
@@ -325,17 +188,18 @@ create_summdf <- function(model, rel) {
       names_from = c(dist, n),
       values_from = c(mean_bias, med_bias, rmse)
     ) |>
-    group_by(param)
+    group_by(param) |>
+    arrange(param, method)
 }
 
 create_covrdf <- function(model) {
-  ress <- bind_rows(res_ours, res_dr)
-  i <- ress$model == model
-  if (model == "growth") i <- i & ress$method != "REML"
+  i <- res$model == model
+  if (model == "growth") i <- i & res$method != "REML"
 
-  ress |>
+  res |>
     filter(dist != "Kurtosis", param %in% c(twofacpars, growthpars), i) |>
-    filter(!method %in% c("eRBM") | abs(relbias) < 1) |>
+    filter(!(model == "twofac" & abs(se) > 5)) |>
+    filter(!(model == "growth" & abs(se) > 500)) |>
     summarise(
       covr = mean(covered, na.rm = TRUE),
       .by = c(dist:method, param)
@@ -493,40 +357,8 @@ covr_growth_df    <- create_covrdf("growth")
 
 ## ----- SAVE RESULTS ----------------------------------------------------------
 save(twofacpars, growthpars, mycols, simu_id,
-     res_conv, plot_df, plot_drcomp,
+     res_conv, res_timing_n1000, plot_df, plot_drcomp,
      bias_twofac_80_df, bias_twofac_50_df, covr_twofac_df,
      bias_growth_80_df, bias_growth_50_df, covr_growth_df,
      tab_bias, tab_covr,
      file = here::here("experiments", "results.RData"))
-
-# res_dr |>
-#   filter(param == "v", n == 15) |>
-#   summarise(est = modeest::mfv1(est, na_rm = TRUE), .by = dist:method) |>
-#   pivot_wider(names_from = rel, values_from = est) |> print(n = Inf)
-
-# bind_rows(res_dr, res_ours) |>
-#   filter(param == "fy~fx", n == 15) |>
-#   summarise(est = mean(est, na.rm = TRUE), .by = dist:method) |>
-#   pivot_wider(names_from = rel, values_from = est) |>
-#   arrange(dist:method) |>
-#   print(n = Inf)
-#
-#
-# ## TRANSFORM???
-#
-# x <-
-#   res_ours |>
-#   filter(model == "growth", dist == "Normal", rel == "Rel = 0.8", n == 15,
-#          param == "v")
-# xx <- x$est[x$method == "ML"]
-#
-# y <-
-#   res_dr |>
-#   filter(model == "growth", dist == "Normal", rel == "Rel = 0.8", n == 15,
-#          param == "v")
-# yy <- y$est[y$method == "MLB"]
-#
-# plot(sort(xx), sort(yy))
-# mod <- lm(sort(yy) ~ I(50 + sort(xx)))
-# summary(mod)
-# plot(50 + sort(xx), sort(yy))
