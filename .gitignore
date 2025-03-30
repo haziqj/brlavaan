@@ -54,12 +54,15 @@ R/dhaene_rosseel/02_Results/GCM_est_combined_final.RData
 notes/dhaene_rosseel/02_Results/2FSEM_est_combined_final.RData
 notes/dhaene_rosseel/02_Results/GCM_est_combined_final.RData
 docs
-experiments/GCM_est_combined_final.RData
-experiments/2FSEM_est_combined_final.RData
+
 */_freeze/*
 */site_libs/*
 manuscript/*_files*
 manuscript/_*.html
 */dhaene_rosseel/*
 vignettes/articles/*_files/*
-experiments/simu_res_twofacDR.RData
+
+
+# large RData files from experiments
+experiments/*.RData
+experiments/*/*.RData
