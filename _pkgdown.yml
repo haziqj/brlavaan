@@ -23,4 +23,8 @@ navbar:
   components:
     manuscript:
       text: Manuscript
-      href: manuscript/index.html
+      menu:
+        - text: BR Estimation of SEM
+          href: manuscript/brsem/index.html
+        - text: Plugin Penalties
+          href: manuscript/plugin/index.html
