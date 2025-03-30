@@ -68,8 +68,7 @@ library(gt)
 library(glue)
 library(semPlot)
 library(semptools)
-here::i_am("manuscript/brsem/index.qmd")
-load(here::here("experiments/brsem/results.RData"))
+load("results.RData")
 ```
 
 ## Introduction
