@@ -1,0 +1,43 @@
+project:
+  type: manuscript
+  output-dir: ../../docs/manuscript/plugin
+
+manuscript:
+  article: index.qmd
+
+notebook-links: false
+
+format:
+  html:
+    number-sections: true
+    other-links:
+      - text: PRELIM RESULTS
+        icon: database      
+        href: results.html       
+  # docx:
+  #   output-file: jamil2025bias
+  arxiv-pdf:
+    link-citations: true
+    keep-tex: true  
+    linenumbers: false
+    doublespacing: false
+    runninghead: "A Preprint"
+    output-file: kemp2025stable
+
+execute:
+  freeze: auto
+  cache: false
+  echo: false
+
+bibliography: 
+  - ../refs-HJ.bib
+  - ../refs-OK.bib
+
+csl: ../apa.csl
+
+citation:
+  type: article-journal
+  container-title: 'Manuscript in preparation'
+  # doi: "10.23915/reprodocs.00010"
+  url: https://haziqj.ml/sem-bias/plugin
+google-scholar: true

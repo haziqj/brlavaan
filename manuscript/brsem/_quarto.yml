@@ -1,6 +1,6 @@
 project:
   type: manuscript
-  output-dir: ../docs/manuscript
+  output-dir: ../../docs/manuscript/brsem
 
 manuscript:
   article: index.qmd
@@ -27,9 +27,6 @@ format:
       # - \input{maths_shortcuts.tex}
       - \usepackage{setspace}
       - \onehalfspacing
-      # - \usepackage{afterpage}
-      # - \newcommand{\blscape}{\begin{landscape}}
-      # - \newcommand{\elscape}{\end{landscape}}
     output-file: jamil2025bias
 
 execute:
@@ -38,14 +35,14 @@ execute:
   echo: false
 
 bibliography: 
-  - refs-HJ.bib
-  - refs-OK.bib
+  - ../refs-HJ.bib
+  - ../refs-OK.bib
 
-# csl: apa.csl
+csl: ../apa.csl
 
 citation:
   type: article-journal
-  # container-title: "Journal of Data Science Software"
+  container-title: 'Manuscript in preparation'
   # doi: "10.23915/reprodocs.00010"
-  # url: https://example.com/summarizing-output
+  url: https://haziqj.ml/sem-bias/brsem
 google-scholar: true
