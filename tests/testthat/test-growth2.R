@@ -1,14 +1,18 @@
 set.seed(123)
 n <- 15
-rel <- 0.8
-dat <- gen_data_growth(n = n, rel = rel, dist = "Normal", scale = 1 / 10)
+rel <- 0.5
+dist <- "Non-normal"
+dat <- gen_data_growth(n = n, rel = rel, dist = dist, scale = 1 / 10)
 mod <- txt_mod_growth(rel)
 tru <- truth(dat)
 
 fit_lav   <- lavaan::growth(mod, dat, ceq.simple = TRUE)
-fit_ML    <- fit_sem(mod, dat, rbm = "none", bounds = "standard")
-fit_eBR <- fit_sem(mod, dat, rbm = "explicit", bounds = "standard", start = tru)
-fit_iBR <- fit_sem(mod, dat, rbm = "implicit", bounds = "standard", start = tru)
+fit_ML    <- fit_sem(mod, dat, rbm = "none")
+fit_eBR <- fit_sem(mod, dat, rbm = "explicit", start = tru)
+fit_iBR <- fit_sem(mod, dat, rbm = "implicit", start = tru)
+
+list(fit_ML = fit_ML, fit_eBR = fit_eBR, fit_iBR = fit_iBR, fit_lav = fit_lav) |>
+  map_dbl(\(x) (coef(x)["i~~s"] - tru["i~~s"]) / tru["i~~s"])
 
 # Check log-likelihood
 test_that("Log-likelihood value matches lavaan::logLik()", {
