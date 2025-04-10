@@ -1,3 +1,38 @@
+To assess the performance of our proposed bias reduction methods, we conducted a simulation study based on two different structural equation models: a two-factor model and a latent growth curve model. 
+These are the two exact same models that were studied in @dhaene2022resampling, and the exact same simulation settings were used.
+This allows us to directly compare our results with resampling based bias correction methods.
+
+The two-factor SEM contains two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables ($y_{1}$, $y_{2}$, $y_{3}$) for $\eta_{1}$ and ($y_{4}$, $y_{5}$, $y_{6}$) for $\eta_{2}$. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
+In total there are 13 parameters to estimate, as shown in @tbl-truth-twofac.
+A path diagram is shown in @fig-path-twofac.
+
+The growth curve model models continuous responses that were measured at 10 separate time points, $y_{1}$ to $y_{10}$. The model contains two latent variables, an intercept ($i$) and a slope ($s$), each indicated by the 10 observed variables. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The intercept factor loadings are fixed to 1, while slope factor loadings increment from 0 to 9. 
+It is customary to assume a common variance for the error terms, $\Theta_{jj} = \Theta$, the interpretation being that the error terms are all equally reliable.
+@dhaene2022resampling (and many others) discuss the equivalence of these growth curve models to a random intercept and random slope model (a.k.a. multilevel model), in which there is a common error variance.
+The variances of the intercept and slope factors are represented by $\Psi_{11}$ and $\Psi_{22}$, respectively, and the covariance between the two factors is represented by $\Psi_{12}$. 
+The intercepts of the latent variables $i$ and $s$ are allowed to be freely estimated, which represents the average effect of the intercept and slope factors on the observed variables.
+Altogether then there are just 6 parameters to estimate, as shown in @tbl-truth-growth, which makes it a more parsimonious model than the two-factor model. 
+A schematic of the growth curve model is shown in @fig-path-growth.
+
+
+There are two additional methods mentioned in @dhaene2022resampling, which is the Ozenne method and the REML method.
+The Ozenne works like this ....
+This can be used for both models, however the REML is only applicable to the growth model.
+The REML works like this...
+
+Now as for the specific simulation scenario, data were generated from each model but certain conditions were changed in the experiments. 
+These were
+
+- Sample size $n=15,20,50,100,1000$
+- Reliability of the observed variables $\text{rel}=0.5,0.8$
+- Distribution of the error terms $\epsilon_{j}$, one of "Normal", "Non-normal", or "Kurtosis" (explained below)
+
+In total there are 30 different simulation scenarios, and for each scenario, 1000 replications of the data were generated and fitted using ML, the two bias reduction methods (eBR and iBR), as well as the Jackknife, Bootstrap, Ozenne and REML (where applicable) methods.
+The results are summarised and discussed in the next section.
+The main result of interest are the distributions of the (centred) parameter estimates, and summary statistics such as the mean bias, median bias, root mean square error (RMSE), and coverage of the 95% Wald intervals.
+
+
+
 ::: {#fig-path-twofac}
 ```{r pathtwofac, engine = "tikz", out.width = "90%"}
 \begin{tikzpicture}
@@ -81,12 +116,13 @@
 };
 \end{tikzpicture}
 ```
-A structural equation model featuring two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables ($y_{1}$, $y_{2}$, $y_{3}$) for $\eta_{1}$ and ($y_{4}$, $y_{5}$, $y_{6}$) for $\eta_{2}$. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
+The path diagram for the two-factor structural equation model. 
 :::
 
 ```{r}
 #| label: tbl-truth-twofac
 #| html-table-processing: none
+#| tbl-cap: 'True parameter values for the two reliability settings in the two-factor model.'
 tibble(
   rel = paste0("Reliability = ", c(0.8, 0.5))
 ) |>
@@ -189,7 +225,7 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 };
 \end{tikzpicture}
 ```
-A schematic of a univariate latent growth curve model with intercept ($i$) and slope ($s$) factors measured over 10 time points ($y_1$--$y_{10}$). Each observed measure has an associated error term ($\epsilon_j\sim\operatorname{N}(0,\theta)$). The intercept factor loadings are fixed to 1, while slope factor loadings increment from 0 to 9, and $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$ denote the variances and covariance of the latent factors.
+Path diagram for the growth curve model.
 :::
 
 ```{r}
