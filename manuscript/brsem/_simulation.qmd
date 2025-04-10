@@ -1,37 +1,46 @@
-To assess the performance of our proposed bias reduction methods, we conducted a simulation study based on two different structural equation models: a two-factor model and a latent growth curve model. 
-These are the two exact same models that were studied in @dhaene2022resampling, and the exact same simulation settings were used.
-This allows us to directly compare our results with resampling based bias correction methods.
-
-The two-factor SEM contains two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables ($y_{1}$, $y_{2}$, $y_{3}$) for $\eta_{1}$ and ($y_{4}$, $y_{5}$, $y_{6}$) for $\eta_{2}$. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
-In total there are 13 parameters to estimate, as shown in @tbl-truth-twofac.
-A path diagram is shown in @fig-path-twofac.
-
-The growth curve model models continuous responses that were measured at 10 separate time points, $y_{1}$ to $y_{10}$. The model contains two latent variables, an intercept ($i$) and a slope ($s$), each indicated by the 10 observed variables. Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. The intercept factor loadings are fixed to 1, while slope factor loadings increment from 0 to 9. 
-It is customary to assume a common variance for the error terms, $\Theta_{jj} = \Theta$, the interpretation being that the error terms are all equally reliable.
-@dhaene2022resampling (and many others) discuss the equivalence of these growth curve models to a random intercept and random slope model (a.k.a. multilevel model), in which there is a common error variance.
-The variances of the intercept and slope factors are represented by $\Psi_{11}$ and $\Psi_{22}$, respectively, and the covariance between the two factors is represented by $\Psi_{12}$. 
-The intercepts of the latent variables $i$ and $s$ are allowed to be freely estimated, which represents the average effect of the intercept and slope factors on the observed variables.
-Altogether then there are just 6 parameters to estimate, as shown in @tbl-truth-growth, which makes it a more parsimonious model than the two-factor model. 
-A schematic of the growth curve model is shown in @fig-path-growth.
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+# execute:
+#   freeze: auto
+#   cache: true
+#   echo: false
+# 
+# bibliography: 
+#   - ../refs-HJ.bib
+#   - ../refs-OK.bib
+---
 
 
-There are two additional methods mentioned in @dhaene2022resampling, which is the Ozenne method and the REML method.
-The Ozenne works like this ....
-This can be used for both models, however the REML is only applicable to the growth model.
-The REML works like this...
+<!-- ```{r} -->
+<!-- #| label: setup -->
+<!-- #| include: false -->
+<!-- library(tidyverse) -->
+<!-- library(brlavaan) -->
+<!-- library(gt) -->
+<!-- library(glue) -->
+<!-- library(semPlot) -->
+<!-- library(semptools) -->
+<!-- load("results.RData") -->
+<!-- ``` -->
 
-Now as for the specific simulation scenario, data were generated from each model but certain conditions were changed in the experiments. 
-These were
+To evaluate the effectiveness of our proposed explicit and implicit bias reduction methods, we conducted an extensive simulation study mirroring the work done by @dhaene2022resampling.
+We replicated the models and experimental settings exactly, allowing for a direct comparison with existing resampling-based and other methods for bias correction.
+This section describes the models, simulation scenarios, and the outcome of interest of our simulations.
 
-- Sample size $n=15,20,50,100,1000$
-- Reliability of the observed variables $\text{rel}=0.5,0.8$
-- Distribution of the error terms $\epsilon_{j}$, one of "Normal", "Non-normal", or "Kurtosis" (explained below)
+### Models
 
-In total there are 30 different simulation scenarios, and for each scenario, 1000 replications of the data were generated and fitted using ML, the two bias reduction methods (eBR and iBR), as well as the Jackknife, Bootstrap, Ozenne and REML (where applicable) methods.
-The results are summarised and discussed in the next section.
-The main result of interest are the distributions of the (centred) parameter estimates, and summary statistics such as the mean bias, median bias, root mean square error (RMSE), and coverage of the 95% Wald intervals.
+Two distinct structural equation models (SEM) were considered: a) A two-factor SEM with a latent regression; and b) a latent growth curve model (GCM), 
+These models represent commonly used models used by practitioners and researchers alike in the social sciences.
 
-
+The two-factor SEM contains two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables: 
+$y_{1}$, $y_{2}$, $y_{3}$ for $\eta_{1}$ and $y_{4}$, $y_{5}$, $y_{6}$ for $\eta_{2}$. 
+Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. 
+The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. 
+Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
+Altogether, the model has 13 estimable parameters, as specified in @tbl-truth-twofac.
+The corresponding path diagram is illustrated in @fig-path-twofac.
 
 ::: {#fig-path-twofac}
 ```{r pathtwofac, engine = "tikz", out.width = "90%"}
@@ -119,38 +128,17 @@ The main result of interest are the distributions of the (centred) parameter est
 The path diagram for the two-factor structural equation model. 
 :::
 
-```{r}
-#| label: tbl-truth-twofac
-#| html-table-processing: none
-#| tbl-cap: 'True parameter values for the two reliability settings in the two-factor model.'
-tibble(
-  rel = paste0("Reliability = ", c(0.8, 0.5))
-) |>
-  mutate(
-    truth = list(truth_twofac(0.8), truth_twofac(0.5)),
-    param = map(truth, ~ names(.x))
-  ) |>
-  unnest(c(truth, param)) |> 
-  mutate(param = case_when(
-    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
-    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
-    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
-    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
-    param == "fy~fx"  ~ "$\\beta$",
-    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
-    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
-    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
-    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
-    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
-    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
-    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
-    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
-  )) |>
-  mutate(truth = as.character(truth)) |>
-  pivot_wider(names_from = rel, values_from = truth) |>
-  gt(rowname_col = "param") |>
-  fmt_markdown("param")
-```
+The latent GCM on the other hand characterises longitudinally observed continuous variables measured across ten time points $y_{1},\dots,y_{10}$ using two latent factors labelled $i$ for *intercept*, and $s$ for *slope*.
+The intercept factor loadings are fixed to unity, while slope factor loadings increment from 0 to 9. 
+Latent variances and covariance are represented by parameters $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$. 
+Additionally, latent intercepts for both growth factors are freely estimated, representing average initial status and growth trajectory, respectively. 
+
+This model, illustrated in @fig-path-growth, involves a total of 6 parameters (see @tbl-truth-growth).
+The reduce number of parameters is due to contraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM.
+The reason for this is that the latent GCM model can equivalently be viewed as a random intercept and random slope (multilevel) model, where repeated observations over time are nested within individuals. 
+Under this hierarchical perspective, it is customary--and theoretically justified--to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion. 
+This equivalence also motivates our examination of Restricted Maximum Likelihood (REML) estimation, which is commonly employed in multilevel modelling contexts to reduce bias in the estimation of variance components, particularly when dealing with limited sample sizes.
+A description of the REML method is provided in the next subsection.
 
 ::: {#fig-path-growth}
 ```{r pathgrowth, engine = "tikz"}
@@ -228,9 +216,73 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 Path diagram for the growth curve model.
 :::
 
+### Competitor methods
+
+In @dhaene2022resampling, the authors compared four bias reduction methods on the two SEM models above namely the Bootstrap, Jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
+The first two of these methods involve resampling, while @ozenne2020small and REML are analytical methods.
+
+Explain jackknife...
+
+Explain bootstrap...
+
+Explain Ozenne...
+
+Explain REML...
+
+### Simulation scenarios
+
+Assessing bias reduction under these various settings is crucial because estimation methods may behave differently when a departure from ideal condition occurs.
+To thoroughly assess robustness and performance of the proposed methods, we considered multiple scenarios varying by three experimental factors: 
+
+- Sample size $n=15,20,50,100,1000$
+- Reliability of the observed variables $\text{rel}=0.5,0.8$
+- Distribution of $\boldsymbol\eta$ and $\boldsymbol\epsilon$, one of "Normal", "Kurtosis", or "Non-normal".
+
+Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error. 
+Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques. 
+The chosen values of 0.8 and 0.5 are justified as they represent two distinct and informative measurement scenarios: a reliability of 0.8 simulates a close to ideal condition where the indicators capture 80% of the true variability, thereby reflecting a high-quality measurement scenario, while a reliability of 0.5 simulates a more challenging condition.
+
+::: {#tbl-panel layout-ncol=2}
+
+
+```{r}
+#| label: tbl-truth-twofac
+#| html-table-processing: none
+#| tbl-cap: 'Two-factor model parameters.'
+tibble(
+  rel = paste0("Reliability = ", c(0.8, 0.5))
+) |>
+  mutate(
+    truth = list(truth_twofac(0.8), truth_twofac(0.5)),
+    param = map(truth, ~ names(.x))
+  ) |>
+  unnest(c(truth, param)) |> 
+  mutate(param = case_when(
+    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
+    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
+    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
+    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
+    param == "fy~fx"  ~ "$\\beta$",
+    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
+    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
+    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
+    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
+    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
+    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
+    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
+    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
+  )) |>
+  mutate(truth = as.character(truth)) |>
+  pivot_wider(names_from = rel, values_from = truth) |>
+  gt(rowname_col = "param") |>
+  fmt_markdown("param")
+```
+
+
 ```{r}
 #| label: tbl-truth-growth
 #| html-table-processing: none
+#| tbl-cap: 'Growth curve model parameters.'
 tibble(
   rel = paste0("Reliability = ", c(0.8, 0.5))
 ) |>
@@ -260,3 +312,94 @@ tibble(
   gt(rowname_col = "param") |>
   fmt_markdown("param")
 ```
+
+True parameter values used in the simulations for the each reliability setting.
+:::
+
+Distribution-free estimation methods exist for SEM, which are initially derived from the Gaussian likelihood, but is generally thought to be quite robust to non-normality.
+Investigating the effect of departing from the baseline normality assumption in SEM is also of interest.
+This was done by replacing the normal distribution of *both* the latent factors and the measurement errors with one that has higher-order moments, yet still retains the same covariance structure.
+In other words, every simulated dataset is constructed to have the same underlying covariance matrix, but the distributional shape (e.g., the bell-shaped curve in the normal case or the altered spread and tail behaviour in the non-normal and kurtosis cases) differs. 
+The `{covsim}` [@gronneberg2022covsim] package was utilised for this purpose.
+The function allows to generate multivariate data with a target covariance matrix while controlling for the excess kurtosis and skewness of the distribution.
+In the baseline Normal distribution, both the skewness and excess kurtosis were set to $0$.
+In the "Kurtosis" condition, excess kurtosis was set to $6$ (with skewness held at $0$) to induce heavier tails; and in the "Non-normal" condition, skewness was set to $-2$ with excess kurtosis of $6$, producing asymmetric heavy-tailed distributions.
+@fig-compare-dist compares the shapes of the distributions for the three conditions.
+Once the data were generated, the observed variables were computed as per equations ... for each model.
+
+```{r}
+#| label: fig-compare-dist
+#| fig-cap: 'Scatterplots illustrating the three distributional conditions used in the simulation study. Each plot displays 1000 randomly generated observations drawn from a distribution with zero mean vector and covariance matrix $\begin{bmatrix} 1 & 0.3 \\ 0.3 & 1 \end{bmatrix}$. Marginal density plots on the axes highlight differences in symmetry and tail behavior across conditions.'
+#| out-width: 100%
+#| fig-width: 9
+#| fig-height: 3.2
+
+n <- 1000
+rho <- 0.3
+Sigma <- matrix(c(1, rho, rho, 1), nrow = 2)
+dat <- list()
+dat$Normal <-
+  covsim::rIG(n, Sigma, skewness = rep(0, 2), excesskurtosis = rep(0, 2))[[1]]
+dat$Kurtosis <-  # kurtosis
+  covsim::rIG(n, Sigma, skewness = rep(0, 2), excesskurtosis = rep(6, 2))[[1]]
+dat$`Non-normal` <-  # non-normal
+  covsim::rIG(n, Sigma, skewness = rep(-2, 2), excesskurtosis = rep(6, 2))[[1]]
+
+# get max and min for x and y axes
+xyminmax <- 
+  map(dat, as.data.frame) |>
+  bind_rows() |>
+  summarise(
+    x_min = min(V1),
+    x_max = max(V1),
+    y_min = min(V2),
+    y_max = max(V2)
+  ) |> 
+  unlist() 
+
+allplots <- imap(dat, \(x, idx) {
+  mycols <- rev(RColorBrewer::brewer.pal(3, "Set1"))
+  names(mycols) <- names(dat)
+  
+  p <-
+    as.data.frame(x) |>
+    ggplot(aes(x = V1, y = V2)) +
+    geom_point(alpha = 0.5, size = 1, col = mycols[idx]) +
+    geom_density_2d(col = "black") +
+    theme_bw() +
+    theme(legend.position = "none") +
+    scale_x_continuous(limits = c(xyminmax["x_min"], xyminmax["x_max"])) +
+    scale_y_continuous(limits = c(xyminmax["y_min"], xyminmax["y_max"])) +
+    labs(title = glue::glue("{idx}"), x = NULL, y = NULL)
+  ggExtra:::ggMarginal(p, fill = mycols[idx], alpha = 0.5, size = 10) 
+})
+cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
+```
+
+### Performance measures
+
+Across these $5\times 2 \times 3 = 30$ distinct scenarios, 1000 replications of the data were generated and fitted using the ML, our two bias reduction methods (eBR and iBR), as well as the competitor methods.
+The performance of each method was evaluated using the criteria below.
+In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ be the parameter estimates from the $r$-th replication, and $\theta$ be the true parameter value.
+
+1. Mean bias
+  $$
+  \operatorname{Bias}(\hat{\theta}) = \frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)} - \theta)
+  $$
+
+2. Probability of underestimation (median)
+  $$
+  \operatorname{P}(\hat{\theta}^{(r)} < \theta) = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}(\hat{\theta}^{(r)} < \theta)
+  $$
+
+3. Root Mean Square Error (RMSE)
+  $$
+  \text{RMSE}(\hat{\theta}) = \sqrt{\frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)} - \theta)^2}
+  $$
+
+4. Coverage of 95% Wald Confidence Intervals
+  $$
+  \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)} - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)})} \leq \theta \leq \hat{\theta}^{(r)} + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)})}\right)
+  $$
+
+Results summarising these outcomes are discussed in detail in the next section.

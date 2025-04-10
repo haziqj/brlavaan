@@ -49,8 +49,6 @@ authors:
     affiliations:
       - ref: warwick
 date-modified: last-modified
-nocite: |
-  @*
 abstract: |
   {{< lipsum 1 >}}
 keywords:
