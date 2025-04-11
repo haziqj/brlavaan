@@ -3,4 +3,6 @@
 - While resampling-based methods like Jackknife and Bootstrap occasionally achieved slightly lower bias, they often exhibited higher variability. Our methods provided a favourable balance between bias reduction and estimate stability.
 - Restricted Maximum Likelihood (REML) performed well under normal data conditions but showed significant bias when the data deviated from normality, highlighting its sensitivity to distributional assumptions.
 - The eRBM and iRBM method offered a computationally efficient alternative to traditional resampling techniques, achieving bias reduction with significantly lower computational cost. Further improvements could be made to the codebase to increase efficiency--at the moment it is a very naive implementation.
-
+- Future work:
+  - To address computational problems, consider plugin penalties and/or bounded estimation (??)
+  - More complex models
