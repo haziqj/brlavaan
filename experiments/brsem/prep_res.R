@@ -157,6 +157,20 @@ plot_df <-
     n = factor(n, labels = paste0("n = ", c(15, 20, 50, 100, 1000))),
   )
 
+plot_df50 <-
+  res |>
+  filter(method %in% c("ML", "eRBM", "iRBM")) |>
+  filter( converged, !is.na(se)) |>
+  # for each kind of model, filter bad standard errors
+  filter(!(model == "twofac" & abs(se) > 5)) |>
+  filter(!(model == "growth" & abs(se) > 500)) |>
+  # which distribution and reliability we want?
+  filter(dist == "Normal", rel == "Rel = 0.5") |>
+  mutate(
+    param = factor(param, levels = c(rev(twofacpars), rev(growthpars))),
+    n = factor(n, labels = paste0("n = ", c(15, 20, 50, 100, 1000))),
+  )
+
 # For plots showing performance of D&R methods
 plot_drcomp <-
   res |>
@@ -386,7 +400,7 @@ covr_growth_df    <- create_covrdf("growth")
 
 ## ----- SAVE RESULTS ----------------------------------------------------------
 save(twofacpars, growthpars, mycols, simu_id,
-     res_conv, res_timing_n1000, plot_df, plot_drcomp,
+     res_conv, res_timing_n1000, plot_df, plot_df50, plot_drcomp,
      bias_twofac_80_df, bias_twofac_50_df, covr_twofac_df,
      bias_growth_80_df, bias_growth_50_df, covr_growth_df,
      tab_bias, tab_covr,
