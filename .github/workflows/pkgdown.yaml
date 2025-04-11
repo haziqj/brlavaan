@@ -58,6 +58,7 @@ jobs:
             any::tictoc
             any::mvtnorm
             any::katex
+            any::ggExtra
           needs: website
 
       - name: Build site
