@@ -50,7 +50,7 @@ authors:
       - ref: warwick
 date-modified: last-modified
 abstract: |
-  {{< lipsum 1 >}}
+  An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:
   - Structural Equation Models
   - Growth Curve Models
@@ -76,7 +76,7 @@ load("results.RData")
 
 ```{r}
 #| label: tbl-timing
-#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor model and growth curve models.'
+#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor SEM and latent growth curve models for $n=1000$.'
 #| html-table-processing: none
 res_timing_n1000 |>
   rowwise() |>
@@ -93,10 +93,14 @@ res_timing_n1000 |>
   arrange(method) |>
   gt() |>
   sub_missing(missing_text = "") |>
-  gt::cols_label(
+  cols_label(
     method = "Method",
-    twofac = "Two-factor model",
-    growth = "Growth curve model"
+    twofac = "Two-factor SEM",
+    growth = "Latent growth curve model"
+  ) |>
+  cols_width(
+    twofac ~ px(180),
+    growth ~ px(180)
   )
 ```
 

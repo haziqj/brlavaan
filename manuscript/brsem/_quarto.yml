@@ -30,7 +30,7 @@ format:
     output-file: jamil2025bias
 
 execute:
-  freeze: false
+  freeze: auto
   cache: false
   echo: false
 
