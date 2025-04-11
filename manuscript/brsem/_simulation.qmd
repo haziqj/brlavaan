@@ -371,7 +371,8 @@ allplots <- imap(dat, \(x, idx) {
     scale_x_continuous(limits = c(xyminmax["x_min"], xyminmax["x_max"])) +
     scale_y_continuous(limits = c(xyminmax["y_min"], xyminmax["y_max"])) +
     labs(title = glue::glue("{idx}"), x = NULL, y = NULL)
-  ggExtra:::ggMarginal(p, fill = mycols[idx], alpha = 0.5, size = 10) 
+  ggExtra:::ggMarginal(p, fill = mycols[idx], alpha = 0.5, size = 10, 
+                       trim = idx != "Non-normal") 
 })
 cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
 ```

@@ -73,6 +73,33 @@ load("results.RData")
 
 {{< include _intro.qmd >}}
 
+
+```{r}
+#| label: tbl-timing
+#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor model and growth curve models.'
+#| html-table-processing: none
+res_timing_n1000 |>
+  rowwise() |>
+  mutate(
+    thing = glue::glue("{gt::vec_fmt_number(mean)} ({gt::vec_fmt_number(sd)})"),
+    method = factor(
+      method,
+      levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"),
+      labels = names(mycols)
+    )
+  ) |>
+  select(-mean, -sd) |>
+  pivot_wider(names_from = model, values_from = thing) |>
+  arrange(method) |>
+  gt() |>
+  sub_missing(missing_text = "") |>
+  gt::cols_label(
+    method = "Method",
+    twofac = "Two-factor model",
+    growth = "Growth curve model"
+  )
+```
+
 ## Methodology
 
 {{< include _method.qmd >}}

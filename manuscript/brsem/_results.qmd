@@ -1,35 +1,3 @@
-
-On success rates
-
-- Success rate is determined as optimiser reporting convergence and an estimate that makes sense.
-  - For two-factor models, standard errors must be less than 5.
-  - For growth curve models, the standard errors must be less than 500.
-  - These two are different due to the scaling of the data.
-  - For both models, the implied Sigma covariance matrix is reported to be positive definite.
-- In general, the success rates are high for the iBR and eBR methods across all scenarios, but there are a couple of exceptions.
-- For n >= 50, this is at least 85% and higher, and convergence is 100% for n = 100 and above.
-- The problem arise when n = 15 and 20, in particular for the two-factor model and the eBR method. Note that the convergence is determined by the ML, so the improper estimates come from numerical issues in the derivative of the penalty function in the eBR method.
-
-Two-factor models
-
-- To compare the performance of our methods, we looked at the specific scenario of normally distributed errors with reliability of 0.8. The reason for this is that this scenario gave the best convergence rates across all methods, so a fair comparison could be made.
-- The centred distributions of the estimates show high degree of variability in the estimates across all methods, but this became less as sample size increased.
-- Our methods always improved the bias over ML estimates particularly in small sample sizes. RMSE was roughly the same for all methods, which suggests that variability in the estimates was similar. This was seen as well in the distribution plot.
-- Our method also improved coverage by about 5% at best, particularly in small sample sizes. 
-- Comparing our methods to the D&R methods, in terms of relative mean bias, our methods always offered improvement across different reliability settings and also in the non-normal setting. 
-- Bias performance was comparable to the other proposed methods including Jackknife and Bootstrap and Ozenne, although typically the resampling methods showed slightly better performance, at a csot of higher variability especially in non-normal settings. Our method did not have this drawback.
-- In the non-normal setting, we highlighted the fact that eRBM method had convergence issues in small sample sizes and non-normal distributions, where about 60% of the estimates were rejected. This seemed to affect the bias performance. It is noted however the median bias was close to zero, suggesting that the mean bias was pulled by extreme estimates caused by numerical issues.
-
-Growth model
-
-- For the growth model, the estimates were markedly less variable. This is attributed to the smaller number of parameters needed to be estimated (6 vs 13) [???]
-- The performance was similar, whereby we see the performance of our iRBM and eRBM methods giving substantial improvements in bias and coverage, but not in RMSE.
-- Additionally, the probability of underestimating the parameters is much closer to the nominal level (i.e. median bias is close to zero), where we also see ML overshooting median bias more than our methods.
-- When data is normal, REML gave the best relative mean bias. To be expected... [???], but when data is non-normal, REML gave the worst performance. This is likely due to the fact that REML is not robust to non-normality, and the fact that the data was generated from a non-normal distribution.
-- Overall, our methods performed equally well to the resampling and Ozenne methods, giving slightly better performance in some cases.
-
-
-
 ### Success rates
 
 ```{r}
@@ -74,44 +42,41 @@ gt(res_conv) |>
   ) |>
   data_color(
     columns = -all_of("n"),
-    domain = c(0, 1),
+    domain = c(0, 1.1),
     palette = c("red3", "white",  "white")
   ) |>
   tab_options(table.font.size = "11px")
 ```
 
-### Timing
 
-```{r}
-#| label: tbl-timing
-#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor model and growth curve models.'
-#| html-table-processing: none
-res_timing_n1000 |>
-  rowwise() |>
-  mutate(
-    thing = glue::glue("{gt::vec_fmt_number(mean)} ({gt::vec_fmt_number(sd)})"),
-    method = factor(
-      method,
-      levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"),
-      labels = names(mycols)
-    )
-  ) |>
-  select(-mean, -sd) |>
-  pivot_wider(names_from = model, values_from = thing) |>
-  arrange(method) |>
-  gt() |>
-  sub_missing(missing_text = "") |>
-  gt::cols_label(
-    method = "Method",
-    twofac = "Two-factor model",
-    growth = "Growth curve model"
-  )
-```
+Before evaluating parameter estimates, we first examined the success rate of the estimation methods across all simulation scenarios. 
+A successful estimation was determined if 
+1) the optimiser reported successful convergence; and 
+2) standard errors of estimates fell within acceptable numerical ranges. 
+Specifically, for the two-factor model, all standard errors were required to be less than 5, whereas for the growth curve model, reflecting differences in the scaling of observed variables, standard errors needed to be less than 500. 
+Additionally, in all cases, we required that the implied covariance matrix $\hat{\Sigma}$ to be positive definite.
 
+In summarising the results we first filtered out the unsuccessful estimation cases.
+Our eRBM and iRBM methods demonstrated high success rates overall across simulation conditions, with a few exceptions. 
+For sample sizes $n \geq 50$, the success rates were consistently above 85%, reaching 100% convergence for all scenarios with $n=100$ and $n=1000$.
 
-### Two-factor model
+However, we observed notably lower success rates for smaller sample sizes ($n=15,20$), especially pronounced in the two-factor model when employing the eRBM. 
+Since convergence criteria were met by the maximum likelihood step, these failures stemmed specifically from numerical instabilities arising during the computation of the derivatives required for the correction term.
+Moreover, it is possible that the post-hoc correction brings the parameter estimates outside the feasible parameter space, leading to non-positive definite covariance matrices.
+Consequently, caution should be exercised when interpreting eRBM estimates obtained from very small sample scenarios in the two-factor setting.
 
-#### Centred distributions for parameters
+### Two-factor model results
+
+We first focus on the two-factor model under the scenario with normally distributed errors and high reliability (0.8), as this scenario yielded the highest convergence rates across all estimation methods, enabling a fair and direct comparison.
+Similar to the work by @dhaene2022resampling, we focus our evaluation on a subset of key parameters, namely the error variance for item $y_1$, $\Theta_{1,1}$, the second factor loading for item $y_1$, $\Lambda_{2,1}$, the two variance parameters for the latent factors, $\Psi_{1,1}$ and $\Psi_{2,2}$, and the regression coefficient $\beta$.
+This selection spans a range of parameter types, providing a comprehensive overview of estimation performance across different components of the model.
+
+The distribution plots of the centred parameter estimates (see @fig-centdist-twofac) revealed substantial variability across all methods at smaller sample sizes.
+However, variability decreased notably as the sample size increased. 
+@fig-perf-twofac presents the performance metrics for the two-factor model, including relative bias, RMSE, probability of underestimation, and coverage rates.
+Across all evaluated conditions, our proposed methods (eRBM and iRBM) consistently achieved reductions in mean bias compared to maximum likelihood (ML), particularly at smaller sample sizes ($n = 15, 20, 50$). 
+Root mean square error (RMSE), however, remained approximately equivalent across all methods, indicating similar levels of overall variability, a result visually corroborated by the comparative distribution plots.
+Our bias-reduction methods also provided notable improvements in confidence interval coverage, with increases of up to approximately 5% over ML, again primarily in smaller-sample scenarios.
 
 ```{r}
 #| label: fig-centdist-twofac
@@ -168,7 +133,6 @@ p2 <-
 cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
 ```
 
-#### Performance plots
 
 ```{r}
 #| label: fig-perf-twofac
@@ -229,7 +193,17 @@ plot_df |>
   labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 ```
 
-#### Comparison to other methods
+Comparisons with the resampling-based approaches of @dhaene2022resampling--including the Jackknife, Bootstrap--and the analytic Ozenne method, showed that our methods consistently improved relative mean bias across all reliability settings and distributional scenarios. 
+@fig-meanbias-twofac and @fig-rmse-twofac demonstrate the relative mean bias and RMSE of our methods compared to aforementioned methods, respectively.
+For brevity, we excluded the Kurtosis scenario from the plots, as it produced roughly similar results to the normal distribution.
+The full table of results are available in the Appendix.
+
+While the bias performance of our methods was generally comparable to these established approaches, the resampling-based methods tended to achieve slightly lower bias at the cost of greater variability, particularly pronounced in scenarios with non-normal errors. 
+Our eRBM and iRBM methods did not share this disadvantage, providing robust and stable estimates across scenarios.
+One notable exception occurred in non-normal conditions with small sample sizes $(n = 15, 20)$, where the eRBM method encountered estimation difficulties, leading to rejection of approximately 60% of parameter estimates. 
+This reduced the observed bias performance in these specific cases. 
+Despite this, median bias remained close to zero, suggesting that the inflated mean bias was driven predominantly by a small number of extreme estimates attributable to numerical instabilities.
+
 
 ```{r}
 #| label: fig-meanbias-twofac
@@ -270,18 +244,32 @@ plot_drcomp |>
   labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
 ```
 
-### Growth curve model
+### Growth curve model results
 
-#### Centred distributions for parameters
+The GCM saw more successful estimation cases than the two-factor SEM, even at smaller sample sizes and low reliability.
+We focus on the normal distribution and low reliability (0.5) scenario as this is considered a more challenging case for estimation.
+In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting. 
+The four remaining parameters are all the components in the factor covariance matrix $\Psi$, as well as the equality constrained error variance $\Theta_{1,1}$.
+
+@fig-centdist-growth displays the distribution of estimates for the growth curve model, highlighting the centered distributions of estimates across methods.
+Parameter estimates exhibited markedly lower variability--or at least, produced fewer outlier estimates in the boxplots--compared to the two-factor model
+This is possibly attributable to the more parsimonious structure of the growth model (6 vs 13 parameters).
+@fig-perf-growth presents the performance metrics for the growth curve model, similar to before in the two-factor SEM experiments.
+Also consistent with findings from before, both eRBM and iRBM methods yielded substantial improvements in bias and coverage relative to ML, particularly for small to moderate sample sizes. 
+
+RMSE values remained comparable across methods, indicating consistent variability in parameter estimates across different approaches.
+Notably, our bias-reduced methods achieved better calibration in terms of median bias. Specifically, our methods consistently resulted in probabilities of underestimating parameters closer to the nominal 50% level, whereas ML tended to systematically overshoot, thus introducing bias.
+It was interesting to see that the variance $\Psi_{1,1}$ for the latent factor $\eta_1$ benefited the most from the bias-reduction methods.
+For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and the bias was reduced by 30 units (10.9%) at best in the $n=15$ scenario.
 
 ```{r}
 #| label: fig-centdist-growth
-#| fig-cap: 'Centered distributions of estimates for the growth curve model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-cap: 'Centered distributions of estimates for the growth curve model (left panel) using normally generated data at 50% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
 #| fig-height: 7.5
 #| out-width: 100%
 
 p1 <-
-  plot_df |>
+  plot_df50 |>
   filter(param %in% growthpars) |> 
   ggplot(aes(bias, param, fill = method)) +
   geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
@@ -304,7 +292,7 @@ p1 <-
     strip.background = element_blank(),
     strip.text = element_blank()     
   ) +
-  labs(x = NULL, y = NULL, fill = "Method", subtitle =  glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
+  labs(x = NULL, y = NULL, fill = "Method", subtitle =  glue::glue("{plot_df50$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df50$rel[1])}"))
 
 p2 <-
   plot_df |>
@@ -328,7 +316,6 @@ p2 <-
 cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
 ```
 
-#### Performance plots
 
 ```{r}
 #| label: fig-perf-growth
@@ -388,7 +375,21 @@ plot_df |>
   labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 ```
 
-#### Comparison to other methods
+Next, we compared our methods to the competitor methods, including REML.
+It is noted that the constraint of equal error variances across all 10 items contributed to the stabilisation of estimates, promoting bias reduction via averages.
+This is seen clearly in the previous figures, as well as when comparing across methods (see @fig-meanbias-growth).
+In the scenario involving normally distributed data, REML generally provided the lowest relative mean bias among all methods.
+This result was expected given REML’s theoretical optimality in estimating variance components under normality. 
+On the flip side, REML exhibited substantially poorer performance under non-normal data conditions, underscoring its lack of robustness against departures from normality.
+
+The results are, on the whole, expected.
+The bias performance of our proposed eRBM and iRBM methods was consistently comparable--and occasionally superior--to existing resampling-based methods (Jackknife, Bootstrap) and the analytic Ozenne approach. 
+Unlike REML, our methods maintained robustness in non-normal settings without compromising performance.
+
+In low reliability scenarios, the estimate of the latent slope-intercept covariance $\Psi_{1,2}$ tended to be the most unstable in small samples. 
+Our methods did a great job in reducing the bias of this parameter, considering both ML and REML gave much greater bias.
+Notably, for $n\geq 100$, differences between methods converge, with all methods yielding similar performance.
+This emphasises that bias reduction is most valueable in small to moderate sample regimes, where ML is particularly vulnerable.
 
 ```{r}
 #| label: fig-meanbias-growth
