@@ -87,7 +87,14 @@ res_conv <-
 res_timing_n1000 <-
   simu_res |>
   bind_rows() |>
-  filter(method != "lav", n == 1000) |>
+  filter(n == 1000) |>
+  mutate(
+    timing = if_else(method == "Ozenne",
+                     timing + timing[method == "lav"],
+                     timing),
+    .by = c(seed, sim, dist, model, rel, n)
+  ) |>
+  filter(method != "lav") |>
   summarise(
     mean = mean(timing),
     sd = sd(timing, na.rm = TRUE),
