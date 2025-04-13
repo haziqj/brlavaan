@@ -1,3 +1,5 @@
+Testing 123
+
 - Same old song: Bias is a problem in small sample settings of SEM.
 - Answer sounds obvious: get more samples. But in psychometric applications, this is not feasible or just downright impossible. A practical example??
 - Previous studies: Resampling methods [@dhaene2022resampling], REML, Ozenne method.
