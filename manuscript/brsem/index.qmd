@@ -27,8 +27,8 @@ authors:
     affiliations:
       - name: Ghent University
         id: ugent
-        department: Center for Data Analysis and Statistical Science
-        address: Krijgslaan 281 - S9
+        department: Department of data analysis
+        address: Henri Dunantlaan 2
         city: Gent
         country: Belgium
         postal-code: 9000
