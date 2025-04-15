@@ -39,7 +39,7 @@ authors:
       - name: University of Warwick
         id: warwick
         department: Department of Statistics
-        address: Zeeman Building, University of Warwick
+        address: Mathematical Sciences Building, University of Warwick
         city: Coventry
         country: United Kingdom
         postal-code: CV4 7AL
