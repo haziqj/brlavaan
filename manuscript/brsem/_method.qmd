@@ -1,4 +1,4 @@
-## Structural Equation Models
+### Structural Equation Models
 
 A Structural equation model has two parts, a measurement part and a structural part. For observation $i$, the measurement part of the model is defined as 
 
@@ -21,9 +21,9 @@ where $\alpha$ is a $k \times 1$ vector of factor means, $B$ is a $k \times k$ m
 <!-- \zeta \sim N(0, \Psi)\\ -->
 <!-- $$ {#eq-sem} -->
 
-## Estimation methods
+### Estimation methods
 
-### Maximum likelihood estimation
+#### Maximum likelihood estimation
 
 Parameter estimation in a SEM is typically performed using maximum likelihood estimation, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $p \times 1$ vector $\theta$, and define the model mean vector and covariance matrix as
 
@@ -43,7 +43,7 @@ $${#eq-sem_lik}
 
 Maximising @eq-sem_lik with respect to $\theta$ gives the maximum likelihood estimator of $\theta$, which we denote by $\hat{\theta}$. Equivalently, we can solve the equations $\nabla l(\theta) = 0_p$, where here $\nabla$ denotes gradient with respect to $\theta$, $0_p$ is a $p-$vector of zeroes.
 
-### Reduced-bias estimation
+#### Reduced-bias estimation
 
 We apply the method of Reduced-bias M-estimation of @kosmidis2024empirical. The method works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $l(\theta)$, we instead maximise
 
@@ -70,8 +70,6 @@ $$
 $$
 where $A(\theta) = \nabla P(\theta)$. Both implicit and explicit RBM-estimators are to be investigated throughout this paper.
 
-### Jackknife, Bootstrap, Ozenne...?
 
-aaa
 
 
