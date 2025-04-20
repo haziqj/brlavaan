@@ -1,6 +1,6 @@
 ### A Derivatives {.unnumbered}
 
-#### General form
+#### A1 General form {.unnumbered}
 
 We derive the derivatives of @eq-sem_lik with respect to each of the possible parameters in a SEM. These derivatives are used to construct the bias-reducing adjustments for our two example models. Denoting $\theta$ to be the collection of all free parameters in the model, we observe that for both the growth model and two factor model, each element of $\theta$ appears in either $\mu(\theta)$ or $\Sigma(\theta)$, but not both. Therefore the derivation is divided into each of these two possibilities. 
 
@@ -34,7 +34,7 @@ The derivative of the log-likelihood with respect to a single component of $\the
 
 where $S$ is the biased sample covariance matrix $n^{-1}\sum_{i=1}^n(y_i - \mu)(y_i - \mu)^\top$, and $E = \Sigma^{-1}(S-\Sigma)\Sigma^{-1}$.
 
-#### Growth curve model
+#### A2 Growth curve model {.unnumbered}
 
 For the growth curve model, we have a latent intercept $i$ and slope $s$. There are five parameters in the latent component: Two intercepts $\alpha_1$ and $\alpha_2$, and the three unique variances and covariances $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$. The loadings for the intercept latent variable are all fixed to 1, whereas the loadings for the slope latent variable increment from 0 to 9. Thus, $\Lambda$ is some fixed $10 \times 2$ matrix. Furthermore, the observed variables $y_j$ share a common residual error variance $v$. In total, there are six parameters to be estimated in the model: $\theta = (\Psi_{11}, \alpha_1, \Psi_{22}, \alpha_2, \Psi_{12}, v)$. The two elements of the vector $\alpha$ appear in $\mu(\theta)$, while the other parameters all appear in $\Sigma(\theta)$.
 
@@ -45,7 +45,7 @@ The gradients are given by:
 - $\frac{\partial\ell(\theta)}{\partial \Psi_{ij}} = \frac{n}{2} \operatorname{tr} \left\{\Lambda^\top E \Lambda \frac{\partial \Psi}{\partial \Psi_{ij}} \right\}$
 - $\frac{\partial\ell(\theta)}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
 
-#### Two factor model
+#### A3 Two factor model {.unnumbered}
 
 For the two factor model, we have two latent variables $\eta_1$ and $\eta_2$, each indicated by three observed variables, $(y_1, y_2, y_3)$ and $(y_4, y_5, y_6)$ respectively. Each observed variable has a corresponding error $\epsilon_j \sim N(0, \Theta_{j,j})$, leading to six variance parameters. The latent variables have a regression path from $\eta_1$ to $\eta_2$ with parameter $\beta$, and each have a variance parameter $\Psi_{11}$ and $\Psi_{22}$ respectively. For the factor loadings, we fix $\Lambda_{11}$ and $\Lambda_{42}$ to $1$ for identifiability. The thirteen parameters to be estimated in the two factor model are $\theta = (\Lambda_{21}, \Lambda_{31}, \Lambda_{52}, \Lambda_{62}, \beta, \Theta_{11}, \Theta_{22}, \Theta_{33}, \Theta_{44}, \Theta_{55}, \Theta_{66}, \Psi_{11}, \Psi_{22})$.
 
