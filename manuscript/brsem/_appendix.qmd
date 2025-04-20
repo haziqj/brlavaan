@@ -16,7 +16,7 @@ $$
 
 
 \end{aligned}
-$$
+$$ {#eq-mu_deriv}
 where $\bar{y} = n^{-1}\sum_{i=1}^n y_i$ and $J(\mu; \theta_{\mu})$ is a Jacobian matrix with $i$-th row $\left[\frac{\partial \mu_i}{\partial \theta_{\mu, 1}}  \frac{\partial \mu_i}{\partial \theta_{\mu, 2}} \cdots \right]$.
 
 
@@ -32,7 +32,7 @@ $$
 &= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma\right] \right\}  + \frac{n}{2} \text{tr}\left\{ \Sigma^{-1}S \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\}  \\
 &=\frac{n}{2}\text{tr}\left\{ E \left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\},
 \end{aligned}
-$$
+$${#eq-theta_deriv}
 where $S$ is the biased sample covariance matrix $n^{-1}\sum_{i=1}^n(y_i - \mu)(y_i - \mu)^\top$, and $E = \Sigma^{-1}(S-\Sigma)\Sigma^{-1}$.
 
 #### Growth curve model
