@@ -180,7 +180,7 @@ tibble(
 
 For the growth curve model, the gradients are simplified somewhat:
 
-- $\frac{\partial\ell}{\partial \alpha} = n (\bar y - \mu)^\top \Sigma^{-1} \Lambda$.
+- $\frac{\partial\ell(\theta)}{\partial \alpha} = n \Lambda^\top \Sigma^{-1} (\bar y - \mu)$
 <!-- - $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$. TODO: Edit -->
 - $\frac{\partial\ell}{\partial \Psi_{ij}} = \frac{n}{2} \operatorname{tr} \left\{\Lambda^\top E \Lambda \frac{\partial \Psi}{\partial \Psi_{ij}} \right\}$
 - $\frac{\partial\ell}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
@@ -232,7 +232,7 @@ sapply(fit, \(x) if (inherits(x, "lavaan")) x@optim$converged else x$converged)
 
 ## Two factor model
 
-For the two factor model, we have two latent variables $\eta_1$ and $\eta_2$, each indicated by three observed variables, $(y_1, y_2, y_3)$ and $(y_4, y_5, y_6)$ respectively. Each observed variable has a corresponding error $\epsilon_j \sim N(0, \Theta_{j,j})$, leading to six variance parameters. The latent variables have a regression path from $\eta_1 to \eta_2$ with parameter $\beta$, and each have a variance parameter $\Psi_{11}$ and $\Psi_{22}$ respectively. For the factor loadings, we fix $\Lambda_{11}$ and $\Lambda_{42}$ to $1$ for identifiability. The thirteen parameters to be estimated in the two factor model are $\theta = (\Lambda_{21}, \Lambda_{31}, \Lambda_{52}, \Lambda_{62}, \beta, \Theta_{11}, \Theta_{22}, \Theta_{33}, \Theta_{44}, \Theta_{55}, \Theta_{66}, \Psi_{11}, \Psi_{22})$. (In this order in the code).
+For the two factor model, we have two latent variables $\eta_1$ and $\eta_2$, each indicated by three observed variables, $(y_1, y_2, y_3)$ and $(y_4, y_5, y_6)$ respectively. Each observed variable has a corresponding error $\epsilon_j \sim N(0, \Theta_{j,j})$, leading to six variance parameters. The latent variables have a regression path from $\eta_1$ to $\eta_2$ with parameter $\beta$, and each have a variance parameter $\Psi_{11}$ and $\Psi_{22}$ respectively. For the factor loadings, we fix $\Lambda_{11}$ and $\Lambda_{42}$ to $1$ for identifiability. The thirteen parameters to be estimated in the two factor model are $\theta = (\Lambda_{21}, \Lambda_{31}, \Lambda_{52}, \Lambda_{62}, \beta, \Theta_{11}, \Theta_{22}, \Theta_{33}, \Theta_{44}, \Theta_{55}, \Theta_{66}, \Psi_{11}, \Psi_{22})$. (In this order in the code).
 
 
 
