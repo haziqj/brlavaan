@@ -7,7 +7,7 @@ We derive the derivatives of @eq-sem_lik with respect to each of the possible pa
 Consider the gradient of $\ell(\theta)$ with respect to $\theta_{\mu}$, the vector of all elements of $\theta$ appearing in $\mu$. This is given by
 
 $$
-\begin{align}
+\begin{aligned}
 
 \nabla_{\theta_\mu} \ell(\theta)
 &= J(\mu; \theta_\mu)^\top \nabla_\mu \ell(\theta) \\
@@ -15,7 +15,7 @@ $$
 &= n J(\mu; \theta_\mu)^\top \Sigma^{-1} (\bar{y} - \mu),
 
 
-\end{align}
+\end{aligned}
 $$
 where $\bar{y} = n^{-1}\sum_{i=1}^n y_i$ and $J(\mu; \theta_{\mu})$ is a Jacobian matrix with $i$-th row $\left[\frac{\partial \mu_i}{\partial \theta_{\mu, 1}}  \frac{\partial \mu_i}{\partial \theta_{\mu, 2}} \cdots \right]$.
 
@@ -24,14 +24,14 @@ where $\bar{y} = n^{-1}\sum_{i=1}^n y_i$ and $J(\mu; \theta_{\mu})$ is a Jacobia
 The derivative of the log-likelihood with respect to a single component of $\theta$ appearing in $\Sigma(\mu)$, say $\theta_{\Sigma, t}$, is as follows:
 
 $$
-\begin{align}
+\begin{aligned}
 \frac{\partial\ell(\theta)}{\partial \theta_{\Sigma, t}} 
 &= -\frac{n}{2} \left[ \frac{\partial}{\partial \theta_{\Sigma, t}} \log|\Sigma |\right] - \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma^{-1}\right] (y_i - \mu)  \\
 &= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma \right]\right\}  + \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right] \Sigma^{-1} (y_i - \mu)\\
 &= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma \right] \right\}  + \frac{1}{2}\sum_{i=1}^n \text{tr}\left\{(y_i - \mu)(y_i - \mu)^\top \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right] \Sigma^{-1} \right\} \\
 &= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma\right] \right\}  + \frac{n}{2} \text{tr}\left\{ \Sigma^{-1}S \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\}  \\
 &=\frac{n}{2}\text{tr}\left\{ E \left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\},
-\end{align}
+\end{aligned}
 $$
 where $S$ is the biased sample covariance matrix $n^{-1}\sum_{i=1}^n(y_i - \mu)(y_i - \mu)^\top$, and $E = \Sigma^{-1}(S-\Sigma)\Sigma^{-1}$.
 
