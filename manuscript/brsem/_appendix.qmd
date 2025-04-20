@@ -1,6 +1,64 @@
 ### A Derivatives {.unnumbered}
 
-{{< lipsum 1 >}}
+#### General form
+
+We derive the derivatives of @eq-sem_lik with respect to each of the possible parameters in a SEM. These derivatives are used to construct the bias-reducing adjustments for our two example models. Denoting $\theta$ to be the collection of all free parameters in the model, we observe that for both the growth model and two factor model, each element of $\theta$ appears in either $\mu(\theta)$ or $\Sigma(\theta)$, but not both. Therefore the derivation is divided into each of these two possibilities. 
+
+Consider the gradient of $\ell(\theta)$ with respect to $\theta_{\mu}$, the vector of all elements of $\theta$ appearing in $\mu$. This is given by
+
+$$
+\begin{align}
+
+\nabla_{\theta_\mu} \ell(\theta)
+&= J(\mu; \theta_\mu)^\top \nabla_\mu \ell(\theta) \\
+&= \sum_{i=1}^n J(\mu; \theta_\mu)^\top \Sigma^{-1}(y_i - \mu)\\
+&= n J(\mu; \theta_\mu)^\top \Sigma^{-1} (\bar{y} - \mu),
+
+
+\end{align}
+$$
+where $\bar{y} = n^{-1}\sum_{i=1}^n y_i$ and $J(\mu; \theta_{\mu})$ is a Jacobian matrix with $i$-th row $\left[\frac{\partial \mu_i}{\partial \theta_{\mu, 1}}  \frac{\partial \mu_i}{\partial \theta_{\mu, 2}} \cdots \right]$.
+
+
+
+The derivative of the log-likelihood with respect to a single component of $\theta$ appearing in $\Sigma(\mu)$, say $\theta_{\Sigma, t}$, is as follows:
+
+$$
+\begin{align}
+\frac{\partial\ell(\theta)}{\partial \theta_{\Sigma, t}} 
+&= -\frac{n}{2} \left[ \frac{\partial}{\partial \theta_{\Sigma, t}} \log|\Sigma |\right] - \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma^{-1}\right] (y_i - \mu)  \\
+&= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma \right]\right\}  + \frac{1}{2}\sum_{i=1}^n (y_i - \mu)^\top \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right] \Sigma^{-1} (y_i - \mu)\\
+&= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma \right] \right\}  + \frac{1}{2}\sum_{i=1}^n \text{tr}\left\{(y_i - \mu)(y_i - \mu)^\top \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right] \Sigma^{-1} \right\} \\
+&= -\frac{n}{2}\text{tr}  \left\{ \Sigma^{-1} \left[\frac{\partial}{\partial \theta_{\Sigma, t}}\Sigma\right] \right\}  + \frac{n}{2} \text{tr}\left\{ \Sigma^{-1}S \Sigma^{-1}\left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\}  \\
+&=\frac{n}{2}\text{tr}\left\{ E \left[\frac{\partial}{\partial \theta_{\Sigma, t}} \Sigma\right]\right\},
+\end{align}
+$$
+where $S$ is the biased sample covariance matrix $n^{-1}\sum_{i=1}^n(y_i - \mu)(y_i - \mu)^\top$, and $E = \Sigma^{-1}(S-\Sigma)\Sigma^{-1}$.
+
+#### Growth curve model
+
+For the growth curve model, we have a latent intercept $i$ and slope $s$. There are five parameters in the latent component: Two intercepts $\alpha_1$ and $\alpha_2$, and the three unique variances and covariances $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$. The loadings for the intercept latent variable are all fixed to 1, whereas the loadings for the slope latent variable increment from 0 to 9. Thus, $\Lambda$ is some fixed $10 \times 2$ matrix. Furthermore, the observed variables $y_j$ share a common residual error variance $v$. In total, there are six parameters to be estimated in the model: $\theta = (\Psi_{11}, \alpha_1, \Psi_{22}, \alpha_2, \Psi_{12}, v)$. The two elements of the vector $\alpha$ appear in $\mu(\theta)$, while the other parameters all appear in $\Sigma(\theta)$.
+
+The gradients are given by:
+
+- $\frac{\partial\ell(\theta)}{\partial \alpha} = n \Lambda^\top \Sigma^{-1} (\bar y - \mu)$
+<!-- - $\frac{\partial\ell}{\partial \Psi} = \frac{n}{2} \Lambda E \Lambda^\top$. TODO: Edit -->
+- $\frac{\partial\ell(\theta)}{\partial \Psi_{ij}} = \frac{n}{2} \operatorname{tr} \left\{\Lambda^\top E \Lambda \frac{\partial \Psi}{\partial \Psi_{ij}} \right\}$
+- $\frac{\partial\ell(\theta)}{\partial v} = \frac{n}{2} \operatorname{tr}(E)$
+
+#### Two factor model
+
+For the two factor model, we have two latent variables $\eta_1$ and $\eta_2$, each indicated by three observed variables, $(y_1, y_2, y_3)$ and $(y_4, y_5, y_6)$ respectively. Each observed variable has a corresponding error $\epsilon_j \sim N(0, \Theta_{j,j})$, leading to six variance parameters. The latent variables have a regression path from $\eta_1$ to $\eta_2$ with parameter $\beta$, and each have a variance parameter $\Psi_{11}$ and $\Psi_{22}$ respectively. For the factor loadings, we fix $\Lambda_{11}$ and $\Lambda_{42}$ to $1$ for identifiability. The thirteen parameters to be estimated in the two factor model are $\theta = (\Lambda_{21}, \Lambda_{31}, \Lambda_{52}, \Lambda_{62}, \beta, \Theta_{11}, \Theta_{22}, \Theta_{33}, \Theta_{44}, \Theta_{55}, \Theta_{66}, \Psi_{11}, \Psi_{22})$.
+
+We express the covariance parameters as vectors of the diagonal entries of the covariance matrices, which have all other entries as zero. For the two factor model, all elements of $\theta$ appear only in $\Sigma(\theta)$, with derivatives given by
+
+- $\frac{\partial \ell(\theta)}{\partial \Lambda_{ij}} = n \operatorname{tr}\left\{ M \Lambda^\top E \frac{\partial\Lambda}{\partial \Lambda_{ij}} \right\} = n[M\Lambda^\top E]_{j i}$
+- $\frac{\partial \ell(\theta)}{\partial \beta} = n \operatorname{tr}\left\{ \Psi (I + B^\top) \Lambda^\top E \Lambda \frac{\partial B}{\partial \beta} \right\} = n[\Psi (I + B^\top) \Lambda^\top E \Lambda]_{12}$
+- $\frac{\partial \ell(\theta)}{\partial \text{diag}(\Theta)} = \frac{n}{2}\text{diag}(E)$
+- $\frac{\partial \ell(\theta)}{\partial \text{diag}(\Psi)} = \frac{n}{2}\text{diag}\left((I - B)^{-\top}\Lambda^\top E \Lambda (I-B)^{-1}\right)$,
+
+
+where $M = (I - B)^{-1} \Psi (I - B)^{-\top}$.
 
 ### B Tables {.unnumbered}
 
