@@ -484,6 +484,13 @@ fit_sem <- function(
   if (check_mat(j)) {
     sds <- rep(NA, length(est))
     jinv <- NULL
+
+    # EXPERIMENTAL
+    if (TRUE) {
+      jinv <- try(solve(Matrix::nearPD(j)$mat), silent = !TRUE)
+      sds <- sqrt(diag(jinv))
+    }
+
   } else {
     jinv <- try(solve(j), silent = !TRUE)
     sds <- sqrt(diag(jinv))
