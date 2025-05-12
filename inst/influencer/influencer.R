@@ -1,6 +1,8 @@
 library(tidyverse)
 library(brlavaan)
-dat <- readxl::read_xlsx("inst/influencer/raw SMI data.xlsx")
+# dat <- readxl::read_xlsx("inst/influencer/raw SMI data.xlsx")
+# save(dat, file = "inst/influencer/influencer_data.RData")
+load("inst/influencer/influencer_data.RData")
 mycols <- c(
   ML = "#E31A1C",
   lav = "#FB9A99",
