@@ -219,15 +219,41 @@ Path diagram for the growth curve model.
 ### Competitor methods
 
 In @dhaene2022resampling, the authors compared four bias reduction methods on the two SEM models above namely the Bootstrap, Jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
-The first two of these methods involve resampling, while @ozenne2020small and REML are analytical methods.
+In this subsection, we briefly describe these methods and their implementation in the context of our simulation study.
 
-Explain jackknife...
+The Bootstrap and Jackknife methods are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates.
+The estimate of the bias is then subtracted from the original estimate to obtain a bias-corrected estimate.
+Although similar, the two methods differ in their approach to resampling.
+The bootstrap involves generating numerous replicated data sets $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the original data set, subsequently refitting the model to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.
+The bootstrap bias-corrected estimator is computed as:
+$$
+\hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B \hat\theta^{*}_{(b)},
+$$
+where $B$ is the number of bootstrap samples.
+In our study, $B=500$ was utilised.
+On the other hand, the jackknife method involves obtaining jackknife estimates $\hat\theta_{(i)}$ by repeatedly fitting the model to $n$ subsamples of size $n-1$, systematically leaving out one observation at a time from the data set.
+The jackknife bias-corrected estimator is computed as:
+$$
+\hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n \hat\theta_{(i)}.
+$$
+Although intuitive and straightforward to implement, each has their limitations.
+Computing either Bootstrap or Jackknife estimates may be problematic in small sample sizes due to poor convergence of complex SEM models, and becomes computationally intensive for large samples.
 
-Explain bootstrap...
+REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components, particularly within the linear mixed effects framework.
+Therefore, this estimation method is only relevant to the GCM model, and is not applicable to the two-factor SEM.
+The GCM model @fig-pathgrowth can be expressed as a linear mixed model, where the latent intercept and slope are treated as random effects, with model equations
+$$
+\begin{gathered}
+y_i = X_i\beta + Z_i u_i + \epsilon_i \\
+u_i \sim N(0, \Sigma_u) \\
+\end{gathered}
+$$
+Here, $y_i\in\mathbb R^p$ are the item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $u_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
 
-Explain Ozenne...
 
-Explain REML...
+
+Explain Ozenne...  @ozenne2020small
+
 
 ### Simulation scenarios
 
