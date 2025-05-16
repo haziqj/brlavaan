@@ -40,7 +40,7 @@ Each observed measure has an associated error term $\epsilon_{j}\sim\operatornam
 The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. 
 Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
 Altogether, the model has 13 estimable parameters, as specified in @tbl-truth-twofac.
-The corresponding path diagram is illustrated in @fig-path-twofac.
+The corresponding path diagram is shown in @fig-path-twofac.
 
 ::: {#fig-path-twofac}
 ```{r pathtwofac, engine = "tikz", out.width = "90%"}
@@ -136,7 +136,7 @@ Additionally, latent intercepts for both growth factors are freely estimated, re
 This model, illustrated in @fig-path-growth, involves a total of 6 parameters (see @tbl-truth-growth).
 The reduced number of parameters is due to constraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM.
 The reason for this is that the latent GCM model can equivalently be viewed as a random intercept and random slope (multilevel) model, where repeated observations over time are nested within individuals. 
-Under this hierarchical perspective, it is customary--and theoretically justified--to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion. 
+Under this hierarchical perspective, it is customary to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion. 
 This equivalence also motivates our examination of Restricted Maximum Likelihood (REML) estimation, which is commonly employed in multilevel modelling contexts to reduce bias in the estimation of variance components, particularly when dealing with limited sample sizes.
 A description of the REML method is provided in the next subsection.
 
@@ -286,7 +286,7 @@ For further details, see, for example, @harville1977maximum, @skrondal2004genera
 
 ### Simulation scenarios
 
-Assessing bias reduction under these various settings is crucial because estimation methods may behave differently when a departure from ideal condition occurs.
+<!-- Assessing bias reduction under these various settings is crucial because estimation methods may behave differently when a departure from ideal condition occurs. -->
 To thoroughly assess robustness and performance of the proposed methods, we considered multiple scenarios varying by three experimental factors: 
 
 - Sample size $n=15,20,50,100,1000$
@@ -371,11 +371,11 @@ tibble(
 True parameter values used in the simulations for the each reliability setting.
 :::
 
-Distribution-free estimation methods exist for SEM, which are initially derived from the Gaussian likelihood, but is generally thought to be quite robust to non-normality.
+Distribution-free estimation methods exist for SEM, which are initially derived from the Gaussian likelihood, but is generally thought to be quite robust to non-normality. [Any reference to support the latter statement?]{bg-colour="#ffaA00"}
 Investigating the effect of departing from the baseline normality assumption in SEM is also of interest.
 This was done by replacing the normal distribution of *both* the latent factors and the measurement errors with one that has higher-order moments, yet still retains the same covariance structure.
 In other words, every simulated dataset is constructed to have the same underlying covariance matrix, but the distributional shape (e.g., the bell-shaped curve in the normal case or the altered spread and tail behaviour in the non-normal and kurtosis cases) differs. 
-The `{covsim}` [@gronneberg2022covsim] package was utilised for this purpose.
+The `{covsim}` [@gronneberg2022covsim] package was used for this purpose.
 The function allows to generate multivariate data with a target covariance matrix while controlling for the excess kurtosis and skewness of the distribution.
 In the baseline Normal distribution, both the skewness and excess kurtosis were set to $0$.
 In the "Kurtosis" condition, excess kurtosis was set to $6$ (with skewness held at $0$) to induce heavier tails; and in the "Non-normal" condition, skewness was set to $-2$ with excess kurtosis of $6$, producing asymmetric heavy-tailed distributions.
@@ -434,7 +434,7 @@ cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
 
 ### Performance measures
 
-Across these $5\times 2 \times 3 = 30$ distinct scenarios, 1000 replications of the data were generated and fitted using the ML, our two bias reduction methods (eBR and iBR), as well as the competitor methods.
+Across these $5\times 2 \times 3 = 30$ distinct scenarios, 1000 replications of the data were generated and for each replication we fitted the model using ML, our two bias reduction methods (eBR and iBR), and other competitor methods.
 The performance of each method was evaluated using the criteria below.
 In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ be the parameter estimates from the $r$-th replication, and $\theta$ be the true parameter value.
 
@@ -445,17 +445,17 @@ In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ 
 
 2. Probability of underestimation (median)
   $$
-  \operatorname{P}(\hat{\theta}^{(r)} < \theta) = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}(\hat{\theta}^{(r)} < \theta)
+  \operatorname{P}(\hat{\theta}^{(r)}_j < \theta_j) = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}(\hat{\theta}^{(r)}_j < \theta_j)
   $$
 
 3. Root Mean Square Error (RMSE)
   $$
-  \text{RMSE}(\hat{\theta}) = \sqrt{\frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)} - \theta)^2}
+  \text{RMSE}(\hat{\theta}_j) = \sqrt{\frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)}_j - \theta_j)^2}
   $$
 
 4. Coverage of 95% Wald Confidence Intervals
   $$
-  \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)} - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)})} \leq \theta \leq \hat{\theta}^{(r)} + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)})}\right)
+  \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)}_j - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)} \leq \theta \leq \hat{\theta}^{(r)}_j + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)}\right)
   $$
 
 Results summarising these outcomes are discussed in detail in the next section.

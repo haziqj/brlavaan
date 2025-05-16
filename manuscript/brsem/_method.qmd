@@ -27,7 +27,7 @@ We also assume that $\operatorname{Cov}(\eta_i, \epsilon_i) = \text{cov}(\epsilo
 
 #### Maximum likelihood estimation
 
-Parameter estimation in a SEM is typically performed using maximum likelihood estimation, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $m \times 1$ vector $\theta$, and define the model mean vector and covariance matrix as
+Parameter estimation in a SEM is typically performed using maximum likelihood, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $m \times 1$ vector $\theta$, and define the mean vector and covariance matrix as
 
 \begin{align}
 \mu(\theta) &= \nu + \Lambda (I - B)^{-1} \alpha \\
@@ -36,9 +36,9 @@ Parameter estimation in a SEM is typically performed using maximum likelihood es
 
 where for an invertible matrix $A$, $A^{-\top} = (A^{-1})^\top$.
 
-Then given independent and identically distributed data $\mathcal Y = \{y_1, \dots, y_n \}$ sampled from $\text{N}\big(\mu(\theta), \Sigma(\theta)\big)$, parameter estimation is achieved by maximising the multivariate normal log likelihood defined as
+Then given independent and identically distributed data $\mathcal Y = \{y_1, \dots, y_n \}$ sampled from $\text{N}\big(\mu(\theta), \Sigma(\theta)\big)$, parameter estimation is achieved by maximising the SEM log likelihood
 $$
-\ell(\theta \mid \mathcal Y) = \frac{-np}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n \big(y_i - \mu(\theta)\big)^\top \Sigma(\theta)^{-1}\big(y_i - \mu(\theta)\big).
+\ell(\theta \mid \mathcal Y) = -\frac{np}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n \big(y_i - \mu(\theta)\big)^\top \Sigma(\theta)^{-1}\big(y_i - \mu(\theta)\big).
 $${#eq-sem_lik}
 
 
@@ -46,24 +46,22 @@ Maximising @eq-sem_lik with respect to $\theta$ gives the maximum likelihood est
 
 #### Reduced-bias estimation
 
-Within statistical research, it is often the case that an estimator of an unknown parameter $\theta \in \mathbb{R}^m$ is biased, that is the expected value of the estimator is not equal to the parameter. The maximum likelihood estimator, as used for SEMs, is an example of a typically biased estimator which under regularity conditions from @cox1979theoretical, has bias with asymptotic order $O(n^{-1})$. Therefore, $\hat{\theta}$ is asymptotically unbiased but for small samples the bias may be substantial. As reviewed in, for example, @kosmidis2014bias, the aim of bias reduction methods is to produce a new estimator $\theta^*$ of $\theta$ that approximates the solution of
+Within statistical research, it is often the case that an estimator of an unknown parameter $\theta \in \mathbb{R}^m$ is biased, that is the expected value of the estimator is not equal to the target parameters. The maximum likelihood estimator, as used for SEMs, is an example of a typically biased estimator which under regularity conditions from @cox1979theoretical, has bias with asymptotic order $O(n^{-1})$. Therefore, $\hat{\theta}$ is asymptotically unbiased but for small samples the bias may be substantial. As reviewed in, for example, @kosmidis2014bias, the aim of bias reduction methods is to produce a new estimator $\theta^*$ of $\theta$ that approximates the solution of
 $$
 \hat{\theta} - \theta^* = B(\bar{\theta})
 $$ {#eq-bias_eq}
-with respect to $\theta^*$. In @eq-bias_eq, $B(\bar{\theta}) = \mathbb{E}(\hat{\theta} - \bar{\theta})$ is the bias function, and $\bar{\theta}$ is the value that $\hat{\theta}$ converges to, or is assumed to converge to in probability, as sample size increases. However, the unbiased estimator $\theta^*$ generally can not be computed exactly since $B(\cdot)$ is typically not available in closed form and $\bar{\theta}$ is not known. Therefore, we may not be able to produce a new estimator that is unbiased, but we can approximate the solution of @eq-bias_eq to produce an estimator with asymptotically smaller bias than the original $\hat{\theta}$.
+with respect to $\theta^*$. In @eq-bias_eq, $B(\bar{\theta}) = \mathbb{E}(\hat{\theta} - \bar{\theta})$ is the bias function, and $\bar{\theta}$ is the value that $\hat{\theta}$ converges to, or is assumed to converge to in probability, as sample size increases. However, the unbiased estimator $\theta^*$ generally cannot be computed exactly since $B(\cdot)$ is typically not available in closed form and $\bar{\theta}$ is not known. Therefore, we may not be able to produce a new estimator that is unbiased, but we can approximate the solution of @eq-bias_eq to produce an estimator with asymptotically smaller bias than the original $\hat{\theta}$.
 
-Bias reduction methods operate explicitly or implicitly, we denote the explicit estimator as $\theta_{\text{exp}}$ and the implicit estimator as $\tilde{\theta}$. In explicit methods, we aim to approximate the bias of an estimator, then subtract this bias from the original estimator to produce a reduced-bias estimator. In particular, such methods replace $B(\theta)$ with $B^*$, which is computed from the available data, before computing $\theta_{\text{exp}} = \hat{\theta} - B^*$. Implicit methods compute a reduced-bias estimator by replacing $B(\theta)$ with $\hat{B}(\tilde{\theta})$, which is an estimator of the whole bias function at the desired estimator. Then we solve the implicit equation $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for $\tilde{\theta}$. 
-Examples of explicit bias reduction methods include the bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife [@quenouille1956notes; @efron1982jackknife], which are both examined in this paper, while a notable example of an implicit method is the bias-reducing adjusted score equations of @firth1993bias, from which reduced-bias M-estimation was developed.
+Bias reduction methods operate explicitly or implicitly, we denote the explicit estimator as $\theta^\dagger$ and the implicit estimator as $\tilde{\theta}$. In explicit methods, we aim to approximate the bias of an estimator, then subtract this bias from the original estimator to produce a reduced-bias estimator. In particular, such methods replace $B(\theta)$ with $B^*$, which is computed from the available data, before computing $\theta^\dagger = \hat{\theta} - B^*$. Implicit methods compute a reduced-bias estimator by replacing $B(\theta)$ with $\hat{B}(\tilde{\theta})$, which is an estimator of the whole bias function at the desired estimator. Then we solve the implicit equation $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for $\tilde{\theta}$. 
+Examples of explicit bias reduction methods include the bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife [@quenouille1956notes; @efron1982jackknife], which are both examined in this paper, while a notable example of an implicit method is the bias-reducing adjusted score equations of @firth1993bias.
 
-The main bias reduction technique to be examined in this paper is Reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical], which can operate implicitly or explicitly. This method requires only the SEM likelihood and its first three derivatives, so can be readily implemented, either in closed form, or numerically using packages such as `{numDeriv}` [@gilbert2022numderiv]. Since the bias is approximated analytically, RBM-estimation is likely to be noticeably faster than simulation based methods such as the bootstrap and jackknife. When estimation is by maximising a log-likelihood, as is the case for SEMs, implicit RBM-estimation works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $\ell(\theta)$, we instead maximise
+The main bias reduction technique to be examined in this paper is reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical], which can operate implicitly or explicitly. This method requires only the SEM likelihood and its first three derivatives, so can be readily implemented, either in closed form, or numerically using packages such as `{numDeriv}` [@gilbert2022numderiv]. Since the bias is approximated analytically, RBM-estimation is likely to be noticeably faster than simulation based methods such as the bootstrap and jackknife. When estimation is by maximising a log-likelihood, as is the case for SEMs, implicit RBM-estimation works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $\ell(\theta)$, we instead maximise
 
 $$
 \ell(\theta) + P(\theta)
 $$
 
-for an appropriate penalty term $P(\theta)$. The penalty term is chosen such that the resulting estimator, $\tilde{\theta}$, has asymptotically reduced bias compared to $\hat{\theta}$, while still retaining the same asymptotic properties. This concept started in @firth1993bias for regular maximum likelihood estimators, by adding a bias-reducing adjustment term to the score equations, the derivative of the log likelihood. When estimating the canonical parameter of an exponential family model, @jeffreys1946prior invariant prior can be added as a penalty term to the log-likelihood to achieve the same result. @kosmidis2024empirical generalised this adjustment to generic M-estimators, which also has the significant advantage of giving rise to a penalised likelihood for any M-estimator estimated by maximising an objective function, rather than only when estimating canonical parameters in an exponential family model.
-
-The penalty term $P(\theta)$ is defined as
+for an appropriate penalty term $P(\theta)$. The penalty term is chosen such that the resulting estimator, $\tilde{\theta}$, has asymptotically reduced bias compared to $\hat{\theta}$, while still retaining the same asymptotic properties.  @kosmidis2024empirical show that a bias-reducing penalty that applies to generic $M$-estimation problems is 
 $$
 P(\theta) = -\frac{1}{2}\operatorname{tr}\big\{j(\theta)^{-1} e(\theta)\big\},
 $$
@@ -71,13 +69,14 @@ where $j(\theta)$ is the negative Hessian matrix $-\nabla \nabla^T \ell(\theta)$
 $$
 [e(\theta)]_{kl} = \sum_{i=1}^n \left\{ \frac{\partial \ell_i(\theta)}{\partial \theta_l}  \frac{\partial \ell_i(\theta)}{\partial \theta_k} \right\},
 $$
-
 where $\ell_i(\theta)$ is the $i$-th contribution to the log-likelihood, such that $\ell(\theta) = \sum_{i=1}^n \ell_i(\theta)$.
 
 We define the explicit version of RBM-estimation by obtaining an explicit expression for the bias and subtracting this from the maximum likelihood estimator. The explicit estimator is
 $$
-\theta_{\text{exp}} = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}),
+\theta^\dagger = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}),
 $$
 where $A(\hat\theta) = \nabla P(\theta)\Big|_{\theta=\hat\theta}$.
 
-There are advantages and disadvantages to the implicit and explicit approaches. Computing $\theta_{\text{exp}}$ is a single step procedure so is likely to be faster to compute then $\tilde{\theta}$. Indeed, computing $\theta_{\text{exp}}$ can be seen as performing one step of the optimisation routine used to compute $\tilde{\theta}$. However, the explicit approach contains no safeguards on what value the final estimator can take, so may result in an estimate outside the parameter space. The implicit approach allows such constraints to be incorporated into the optimisation procedure, and may be more stable as it does not require $\hat{\theta}$, so is useful in cases where obtaining $\hat{\theta}$ is unstable. The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability.
+There are advantages and disadvantages to the implicit and explicit approaches. Computing $\theta^\dagger$ is a single step procedure so is likely to be faster to compute then $\tilde{\theta}$. Indeed, computing $\theta^\dagger$ can be seen as performing one step of a quasi-Newton Raphson procedure for computing $\tilde{\theta}$ starting at $\hat\theta$ [see @kosmidis2024empirical, Supplementary Material document, Section S4]. However, the explicit approach contains no safeguards on what value the final estimator can take, so may result in an estimate outside the parameter space. The implicit approach allows such constraints to be incorporated into the optimisation procedure, and may be more stable as it does not require $\hat{\theta}$, so is useful in cases where obtaining $\hat{\theta}$ is unstable. 
+
+<!-- DISCUSSION: The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability. -->
