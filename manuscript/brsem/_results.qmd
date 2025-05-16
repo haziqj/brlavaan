@@ -1,11 +1,24 @@
 ### Success rates
 
+
+```{r}
+## Using Table 1 of https://doi.org/10.1080/10705511.2022.2057999
+## compute the probability of success of bootstrap bias correction (using 500 bootstrap samples per sample)
+boot_probs <- data.frame(dist = rep(c("Normal", "Kurtosis", "Non-normal"), each = 5),
+           n = rep(c(15, 20, 50, 100, 1000), 3),
+           growth_boot_0.8 = pbinom(0, 500, c(279.91, 8.37, 0.02, 0.02, 0, 279.41, 8.61, 0.05, 0.04, 0, 279.08, 8.49, 0.06, 0.04, 0) / 500),
+           growth_boot_0.5 = pbinom(0, 500, c(278.56, 8.62, 0.04, 0, 0, 278.77, 8.92, 0.18, 0.05, 0, 278.27, 9.18, 0.25, 0.07, 0) / 500),
+           twofac_boot_0.8 = pbinom(0, 500, c(1.12, 0, 0, 0, 0, 1.19, 0, 0, 0, 0, 1.18, 0.01, 0, 0, 0) / 500),
+           twofac_boot_0.5 = pbinom(0, 500, c(1.13, 0, 0, 0, 0, 1.14, 0, 0, 0, 0, 1.14, 0, 0, 0, 0) / 500))
+```
+
+
 ```{r}
 #| label: tbl-convsucc
 #| tbl-cap: 'Success rates for estimation of the two-factor model for the ML, eBR, and iBR methods. Highlighted in red are the scenarios which produced success rates below 50%.'
 #| html-table-processing: none
 
-gt(res_conv) |>
+gt(res_conv |> left_join(boot_probs, by = c("dist", "n"))) |>
   tab_spanner(
     columns = matches("twofac.*0\\.8"),
     label = "Reliability = 0.8",
@@ -38,7 +51,8 @@ gt(res_conv) |>
   cols_label(
     contains("ML") ~ "ML",
     contains("eRBM") ~ "eRBM",
-    contains("iRBM") ~ "iRBM"
+    contains("iRBM") ~ "iRBM",
+    contains("boot") ~ "bootstrap"
   ) |>
   data_color(
     columns = -all_of("n"),
@@ -47,7 +61,6 @@ gt(res_conv) |>
   ) |>
   tab_options(table.font.size = "11px")
 ```
-
 
 Before evaluating parameter estimates, we first examined the success rate of the estimation methods across all simulation scenarios. 
 A successful estimation was determined if 
