@@ -26,6 +26,25 @@ You can install the development version of `{brlavaan}` from
 pak::pak("haziqj/sem-bias")
 ```
 
+## In brief
+
+`{brlavaan}` provides explicit and implicit bias-reduction maximum
+likelihood estimation of latent variable models that are `{lavaan}`
+compatible. The main functions are
+
+1.  `brsem()` for structural equation models.
+2.  `brcfa()` for confirmatory factor analysis models.
+3.  `brgrowth()` for growth curve models.
+4.  `brlavaan()` for a more general interface to fit any model supported
+    by `{lavaan}`.
+
+Note the convention of `br` prefix for all functions in this package.
+This is to distinguish between the bias-reduced methods and the standard
+maximum likelihood methods provided by `{lavaan}`.
+
+> \[!WARNING\]  
+> Plugin penalties are not yet supported.
+
 ## Example
 
 Here’s the beloved classic example – Bollen (1989)’s political democracy

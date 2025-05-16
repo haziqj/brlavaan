@@ -41,7 +41,6 @@ Imports:
     rlang,
     stats,
     stringr,
-    tibble,
     tidyr,
     utils
 Config/Needs/website: rmarkdown
