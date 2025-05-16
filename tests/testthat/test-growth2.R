@@ -11,8 +11,8 @@ fit_ML    <- fit_sem(mod, dat, rbm = "none")
 fit_eBR <- fit_sem(mod, dat, rbm = "explicit", start = tru)
 fit_iBR <- fit_sem(mod, dat, rbm = "implicit", start = tru)
 
-list(fit_ML = fit_ML, fit_eBR = fit_eBR, fit_iBR = fit_iBR, fit_lav = fit_lav) |>
-  map_dbl(\(x) (coef(x)["i~~s"] - tru["i~~s"]) / tru["i~~s"])
+# list(fit_ML = fit_ML, fit_eBR = fit_eBR, fit_iBR = fit_iBR, fit_lav = fit_lav) |>
+#   map_dbl(\(x) (coef(x)["i~~s"] - tru["i~~s"]) / tru["i~~s"])
 
 # Check log-likelihood
 test_that("Log-likelihood value matches lavaan::logLik()", {
