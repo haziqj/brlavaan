@@ -75,6 +75,8 @@ load("results.RData")
 
 {{< include _intro.qmd >}}
 
+[To place this table elsewhere (or remove)]{bg-colour="#FFEA00"}
+
 
 ```{r}
 #| label: tbl-timing

@@ -280,7 +280,6 @@ For further details, see, for example, @harville1977maximum, @skrondal2004genera
 
 #### Ozenne et al.'s method
 
-<!-- []{bg-colour="#FFEA00#"} -->
 [Add description of @ozenne2020small method.]{bg-colour="#FFEA00"}
 
 ### Simulation scenarios
