@@ -27,7 +27,7 @@ We also assume that $\operatorname{Cov}(\eta_i, \epsilon_i) = \text{cov}(\epsilo
 
 #### Maximum likelihood estimation
 
-Parameter estimation in a SEM is typically performed using maximum likelihood estimation, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $t \times 1$ vector $\theta$, and define the model mean vector and covariance matrix as
+Parameter estimation in a SEM is typically performed using maximum likelihood estimation, where given some observed data, we estimate parameters as those which make the observations most likely under the assumed model. The specific parameters to estimate depend on the model, since which parameters from @eq-measurement and @eq-structural are present in the model and free depend on the specific SEM. In any case, as described in @dhaene2022resampling, we can combine all free parameters to be estimated in to a single $m \times 1$ vector $\theta$, and define the model mean vector and covariance matrix as
 
 \begin{align}
 \mu(\theta) &= \nu + \Lambda (I - B)^{-1} \alpha \\
@@ -37,17 +37,16 @@ Parameter estimation in a SEM is typically performed using maximum likelihood es
 where for an invertible matrix $A$, $A^{-\top} = (A^{-1})^\top$.
 
 Then given independent and identically distributed data $\mathcal Y = \{y_1, \dots, y_n \}$ sampled from $\text{N}\big(\mu(\theta), \Sigma(\theta)\big)$, parameter estimation is achieved by maximising the multivariate normal log likelihood defined as
-
 $$
 \ell(\theta \mid \mathcal Y) = \frac{-np}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n \big(y_i - \mu(\theta)\big)^\top \Sigma(\theta)^{-1}\big(y_i - \mu(\theta)\big).
 $${#eq-sem_lik}
 
 
-Maximising @eq-sem_lik with respect to $\theta$ gives the maximum likelihood estimator of $\theta$, which we denote by $\hat{\theta}$. Equivalently, we can solve the equations $\nabla \ell(\theta) = 0_t$, where here $\nabla$ denotes gradient with respect to $\theta$, $0_t$ is a $t-$vector of zeroes.
+Maximising @eq-sem_lik with respect to $\theta$ gives the maximum likelihood estimator of $\theta$, which we denote by $\hat{\theta}$. Equivalently, we can solve the equations $\nabla \ell(\theta) = 0_m$, where here $\nabla$ denotes gradient with respect to $\theta$, $0_m$ is an $m-$vector of zeroes.
 
 #### Reduced-bias estimation
 
-Within statistical research, it is often the case that an estimator of an unknown parameter $\theta \in \mathbb{R}^t$ is biased, that is the expected value of the estimator is not equal to the parameter. The maximum likelihood estimator, as used for SEMs, is an example of a typically biased estimator which under regularity conditions from @cox1979theoretical, has bias with asymptotic order $O(n^{-1})$. Therefore, $\hat{\theta}$ is asymptotically unbiased but for small samples the bias may be substantial. As reviewed in, for example, @kosmidis2014bias, the aim of bias reduction methods is to produce a new estimator $\theta^*$ of $\theta$ that approximates the solution of
+Within statistical research, it is often the case that an estimator of an unknown parameter $\theta \in \mathbb{R}^m$ is biased, that is the expected value of the estimator is not equal to the parameter. The maximum likelihood estimator, as used for SEMs, is an example of a typically biased estimator which under regularity conditions from @cox1979theoretical, has bias with asymptotic order $O(n^{-1})$. Therefore, $\hat{\theta}$ is asymptotically unbiased but for small samples the bias may be substantial. As reviewed in, for example, @kosmidis2014bias, the aim of bias reduction methods is to produce a new estimator $\theta^*$ of $\theta$ that approximates the solution of
 $$
 \hat{\theta} - \theta^* = B(\bar{\theta})
 $$ {#eq-bias_eq}
@@ -56,7 +55,7 @@ with respect to $\theta^*$. In @eq-bias_eq, $B(\bar{\theta}) = \mathbb{E}(\hat{\
 Bias reduction methods operate explicitly or implicitly, we denote the explicit estimator as $\theta_{\text{exp}}$ and the implicit estimator as $\tilde{\theta}$. In explicit methods, we aim to approximate the bias of an estimator, then subtract this bias from the original estimator to produce a reduced-bias estimator. In particular, such methods replace $B(\theta)$ with $B^*$, which is computed from the available data, before computing $\theta_{\text{exp}} = \hat{\theta} - B^*$. Implicit methods compute a reduced-bias estimator by replacing $B(\theta)$ with $\hat{B}(\tilde{\theta})$, which is an estimator of the whole bias function at the desired estimator. Then we solve the implicit equation $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for $\tilde{\theta}$. 
 Examples of explicit bias reduction methods include the bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife [@quenouille1956notes; @efron1982jackknife], which are both examined in this paper, while a notable example of an implicit method is the bias-reducing adjusted score equations of @firth1993bias, from which reduced-bias M-estimation was developed.
 
-The main bias reduction technique to be examined in this paper is Reduced-bias M-estimation [RBM-estimation; @kosmidis2024empirical], which can operate implicitly or explicitly. This method requires only the SEM likelihood and its first three derivatives, so can be readily implemented, either in closed form, or numerically using packages such as `{numDeriv}` [@gilbert2022numderiv]. Since the bias is approximated analytically, RBM-estimation is likely to be noticeably faster than simulation based methods such as the bootstrap and jackknife. When estimation is by maximising a log-likelihood, as is the case for SEMs, implicit RBM-estimation works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $\ell(\theta)$, we instead maximise
+The main bias reduction technique to be examined in this paper is Reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical], which can operate implicitly or explicitly. This method requires only the SEM likelihood and its first three derivatives, so can be readily implemented, either in closed form, or numerically using packages such as `{numDeriv}` [@gilbert2022numderiv]. Since the bias is approximated analytically, RBM-estimation is likely to be noticeably faster than simulation based methods such as the bootstrap and jackknife. When estimation is by maximising a log-likelihood, as is the case for SEMs, implicit RBM-estimation works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $\ell(\theta)$, we instead maximise
 
 $$
 \ell(\theta) + P(\theta)

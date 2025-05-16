@@ -218,6 +218,8 @@ Path diagram for the growth curve model.
 
 ### Competitor methods
 
+[I wonder if this should go in the section prior.]{bg-colour="#FFEA00"}
+
 In @dhaene2022resampling, the authors compared four bias reduction methods applied to the two SEM models above, namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
 In this subsection, we briefly describe these methods and their implementation in the context of our simulation study.
 
@@ -251,17 +253,17 @@ REML, while not an explicit bias reduction technique, is frequently employed in 
 As noted earlier, the latent growth curve models may be expressed as a linear mixed model [@bauer2003estimating;@cheung2013implementing], where the latent intercept and slope are treated as random effects with model equations
 $$
 \begin{gathered}
-y_i = X_i \beta + Z_i u_i + \epsilon_i \\
+y_i = X_i \beta + Z_i b_i + \epsilon_i \\
 u_i \sim N(0, \Sigma_u) \\
 \epsilon_i \sim N(0, \sigma^2I) \\
 \end{gathered}
 $$
-Here, $y_i\in\mathbb R^p$ are the observed item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $u_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
-Specifically, the latent GCM in @fig-path-growth has $X_i$ and $Z_i$ both $10 \times 2$ matrices where the first column contains all 1s and the second column contains the time points 0 to 9 in increments of 1--the same for all $i$.
-Further, the coefficient 2-vector $\beta$ in fact contains the latent intercepts $\alpha_1$ and $\alpha_2$, while the vector $u_i$ represents the two latent factors.
+Here, $y_i\in\mathbb R^p$ are the observed item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $b_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
+Specifically, the latent GCM in @fig-path-growth has $X_i$ and $Z_i$, for each $i$, both being $10 \times 2$ matrices where the first column contains all 1s and the second column contains the time points 0 to 9 in increments of 1.
+Further, the 2-vector $\beta$ in fact contains the latent intercepts $\alpha_1$ and $\alpha_2$, while the vector $b_i$ represents the two latent factors.
 Therefore, the covariance matrix $\Sigma_u$ contains elements $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$.
 
-Linear mixed models elicits a Gaussian likelihood.
+Linear mixed models elicit a Gaussian likelihood.
 However, unlike standard ML, REML estimates are obtained by maximising a likelihood function derived from linearly transformed data, designed to remove fixed-effects parameters. 
 Specifically, REML maximises [@fitzmaurice2011applied]
 $$
@@ -289,7 +291,7 @@ To thoroughly assess robustness and performance of the proposed methods, we cons
 
 - Sample size $n=15,20,50,100,1000$
 - Reliability of the observed variables $\text{rel}=0.5,0.8$
-- Distribution of $\boldsymbol\eta$ and $\boldsymbol\epsilon$, one of "Normal", "Kurtosis", or "Non-normal".
+- Distribution of $\eta$ and $\epsilon$, one of "Normal", "Kurtosis", or "Non-normal".
 
 Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error. 
 Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques. 
