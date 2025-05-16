@@ -46,3 +46,6 @@ citation:
   # doi: "10.23915/reprodocs.00010"
   url: https://haziqj.ml/sem-bias/brsem
 google-scholar: true
+
+filters:
+  - highlight-text
