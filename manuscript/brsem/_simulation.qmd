@@ -134,7 +134,7 @@ Latent variances and covariance are represented by parameters $\Psi_{11}$, $\Psi
 Additionally, latent intercepts for both growth factors are freely estimated, representing average initial status and growth trajectory, respectively. 
 
 This model, illustrated in @fig-path-growth, involves a total of 6 parameters (see @tbl-truth-growth).
-The reduce number of parameters is due to contraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM.
+The reduced number of parameters is due to constraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM.
 The reason for this is that the latent GCM model can equivalently be viewed as a random intercept and random slope (multilevel) model, where repeated observations over time are nested within individuals. 
 Under this hierarchical perspective, it is customary--and theoretically justified--to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion. 
 This equivalence also motivates our examination of Restricted Maximum Likelihood (REML) estimation, which is commonly employed in multilevel modelling contexts to reduce bias in the estimation of variance components, particularly when dealing with limited sample sizes.
@@ -218,39 +218,60 @@ Path diagram for the growth curve model.
 
 ### Competitor methods
 
-In @dhaene2022resampling, the authors compared four bias reduction methods on the two SEM models above namely the Bootstrap, Jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
+In @dhaene2022resampling, the authors compared four bias reduction methods on the two SEM models above namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
 In this subsection, we briefly describe these methods and their implementation in the context of our simulation study.
 
-The Bootstrap and Jackknife methods are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates.
-The estimate of the bias is then subtracted from the original estimate to obtain a bias-corrected estimate.
+#### Bootstrap and jackknife
+
+The bootstrap and jackknife methods are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates, which is then subtracted from the original estimate to obtain a bias-corrected estimate.
 Although similar, the two methods differ in their approach to resampling.
-The bootstrap involves generating numerous replicated data sets $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the original data set, subsequently refitting the model to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.
+The bootstrap involves generating numerous replicated data sets $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the original data set, and subsequently refitting the model to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.
 The bootstrap bias-corrected estimator is computed as:
 $$
 \hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B \hat\theta^{*}_{(b)},
 $$
 where $B$ is the number of bootstrap samples.
 In our study, $B=500$ was utilised.
-On the other hand, the jackknife method involves obtaining jackknife estimates $\hat\theta_{(i)}$ by repeatedly fitting the model to $n$ subsamples of size $n-1$, systematically leaving out one observation at a time from the data set.
-The jackknife bias-corrected estimator is computed as:
+On the other hand, the jackknife method involves obtaining estimates $\hat\theta_{(i)}$ by repeatedly fitting the model to $n$ subsamples of size $n-1$, systematically leaving out one observation at a time from the data set.
+The jackknife bias-corrected estimator is then computed as:
 $$
 \hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n \hat\theta_{(i)}.
 $$
 Although intuitive and straightforward to implement, each has their limitations.
-Computing either Bootstrap or Jackknife estimates may be problematic in small sample sizes due to poor convergence of complex SEM models, and becomes computationally intensive for large samples.
+Computing either bootstrap or jackknife estimates may be problematic in small sample sizes due to poor convergence of complex SEM models, and becomes computationally intensive for large samples.
+
+#### REML
 
 REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components, particularly within the linear mixed effects framework.
-Therefore, this estimation method is only relevant to the GCM model, and is not applicable to the two-factor SEM.
-The GCM model @fig-pathgrowth can be expressed as a linear mixed model, where the latent intercept and slope are treated as random effects, with model equations
+As noted earlier, the latent growth curve models may be expressed as a linear mixed model, where the latent intercept and slope are treated as random effects with model equations
 $$
 \begin{gathered}
-y_i = X_i\beta + Z_i u_i + \epsilon_i \\
+y_i = X_i \beta + Z_i u_i + \epsilon_i \\
 u_i \sim N(0, \Sigma_u) \\
+\epsilon_i \sim N(0, \sigma^2I) \\
 \end{gathered}
 $$
-Here, $y_i\in\mathbb R^p$ are the item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $u_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
+Here, $y_i\in\mathbb R^p$ are the observed item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $u_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
+Specifically, the latent GCM in @fig-path-growth has $X_i$ and $Z_i$ both $10 \times 2$ matrices where the first column contains all 1s and the second column contains the time points 0 to 9 in increments of 1--the same for all $i$.
+Further, the coefficient 2-vector $\beta$ in fact contains the latent intercepts $\alpha_1$ and $\alpha_2$, while the vector $u_i$ represents the two latent factors.
+Therefore, the covariance matrix $\Sigma_u$ contains elements $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$.
 
+Linear mixed models elicits a Gaussian likelihood.
+However, unlike standard ML, REML estimates are obtained by maximising a likelihood function derived from linearly transformed data, designed to remove fixed-effects parameters. 
+Specifically, REML maximises
+$$
+\ell_{\text{REML}}(\theta) 
+= \text{const.} 
+- \frac{1}{2} \log |V| 
+- \frac{1}{2} \| y - X\hat{\beta} \|_{V^{-1}}^2 
+- \frac{1}{2} \log | X^\top V^{-1} X |,
+$$
+where $y$, $X$, and $Z$ represent the vertically stacked versions of $y_i$, $X_i$, and $Z_i$ across all $n$ observations, respectively, and $V=Z\Sigma_u Z^\top + \sigma^2I$ is the variance-covariance matrix of these stacked observations.
+The term $\hat\beta = (X^\top V^{-1}X)^{-1}X^\top V^{-1} y$ represents the generalised least squares estimates of the fixed-effects parameters.
+Variance and covariance parameters estimated this way yield less biased estimates, and is particularly beneficial for data characterised by small sample sizes and complex covariance structures.
+For further details, see ...
 
+#### Ozenne et al.'s method
 
 Explain Ozenne...  @ozenne2020small
 
