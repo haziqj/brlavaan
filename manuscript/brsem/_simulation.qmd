@@ -273,8 +273,8 @@ For further details, see ...
 
 #### Ozenne et al.'s method
 
-Explain Ozenne...  @ozenne2020small
-
+<!-- []{bg-colour="#FFEA00#"} -->
+[Add description of @ozenne2020small method.]{bg-colour="#FFEA00"}
 
 ### Simulation scenarios
 

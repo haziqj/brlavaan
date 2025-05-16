@@ -55,6 +55,8 @@ keywords:
   - Structural Equation Models
   - Growth Curve Models
   - Bias Reduction
+filters:
+  - highlight-text
 ---
 
 ```{r}
