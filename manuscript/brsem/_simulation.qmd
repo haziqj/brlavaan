@@ -218,12 +218,12 @@ Path diagram for the growth curve model.
 
 ### Competitor methods
 
-In @dhaene2022resampling, the authors compared four bias reduction methods on the two SEM models above namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
+In @dhaene2022resampling, the authors compared four bias reduction methods applied to the two SEM models above, namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
 In this subsection, we briefly describe these methods and their implementation in the context of our simulation study.
 
 #### Bootstrap and jackknife
 
-The bootstrap and jackknife methods are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates, which is then subtracted from the original estimate to obtain a bias-corrected estimate.
+The bootstrap and jackknife methods [@quenouille1956notes;@tukey1958bias;@hall1988bootstrap;@efron1982jackknife;@efron1992bootstrap] are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates, which is then subtracted from the original estimate to obtain a bias-corrected estimate [@quenouille1949approximate;@efron1994introduction].
 Although similar, the two methods differ in their approach to resampling.
 The bootstrap involves generating numerous replicated data sets $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the original data set, and subsequently refitting the model to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.
 The bootstrap bias-corrected estimator is computed as:
@@ -237,13 +237,18 @@ The jackknife bias-corrected estimator is then computed as:
 $$
 \hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n \hat\theta_{(i)}.
 $$
-Although intuitive and straightforward to implement, each has their limitations.
-Computing either bootstrap or jackknife estimates may be problematic in small sample sizes due to poor convergence of complex SEM models, and becomes computationally intensive for large samples.
+
+Confidence intervals can be constructed in several ways [@davison1997bootstrap], but here we use the normal approximation interval. 
+This method centers the bias-corrected estimate, assumes approximate normality of its sampling distribution, and uses standard errors derived from the variability across resamples.
+
+Although intuitive and straightforward to implement, the bootstrap and jackknife each have their limitations. 
+In small samples, convergence issues and estimator instability can lead to unreliable resampled estimates [@dhaene2022resampling], while in large samples, the procedures can be computationally intensive. 
+Additionally, the jackknife may underestimate variability for nonlinear estimators [@efron1994introduction], and the bootstrap can perform poorly when the sampling distribution is skewed or parameters are near the boundary of the parameter space [@davison1997bootstrap].
 
 #### REML
 
-REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components, particularly within the linear mixed effects framework.
-As noted earlier, the latent growth curve models may be expressed as a linear mixed model, where the latent intercept and slope are treated as random effects with model equations
+REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components [@patterson1971recovery], particularly within the linear mixed effects framework [@corbeil1976restricted].
+As noted earlier, the latent growth curve models may be expressed as a linear mixed model [@bauer2003estimating;@cheung2013implementing], where the latent intercept and slope are treated as random effects with model equations
 $$
 \begin{gathered}
 y_i = X_i \beta + Z_i u_i + \epsilon_i \\
@@ -258,7 +263,7 @@ Therefore, the covariance matrix $\Sigma_u$ contains elements $\Psi_{11}$, $\Psi
 
 Linear mixed models elicits a Gaussian likelihood.
 However, unlike standard ML, REML estimates are obtained by maximising a likelihood function derived from linearly transformed data, designed to remove fixed-effects parameters. 
-Specifically, REML maximises
+Specifically, REML maximises [@fitzmaurice2011applied]
 $$
 \ell_{\text{REML}}(\theta) 
 = \text{const.} 
@@ -268,8 +273,10 @@ $$
 $$
 where $y$, $X$, and $Z$ represent the vertically stacked versions of $y_i$, $X_i$, and $Z_i$ across all $n$ observations, respectively, and $V=Z\Sigma_u Z^\top + \sigma^2I$ is the variance-covariance matrix of these stacked observations.
 The term $\hat\beta = (X^\top V^{-1}X)^{-1}X^\top V^{-1} y$ represents the generalised least squares estimates of the fixed-effects parameters.
-Variance and covariance parameters estimated this way yield less biased estimates, and is particularly beneficial for data characterised by small sample sizes and complex covariance structures.
-For further details, see ...
+
+Variance parameters estimated this way yield less biased estimates, and is particularly beneficial for data characterised by small sample sizes and complex covariance structures.
+Confidence intervals are constructed in the usual way using Wald-type intervals based on the inverse of the observed information matrix, though their accuracy may be limited for variance components near the boundary or in small samples.
+For further details, see, for example, @harville1977maximum, @skrondal2004generalized, and @bates2015fitting.
 
 #### Ozenne et al.'s method
 
