@@ -61,6 +61,7 @@ where $M = (I - B)^{-1} \Psi (I - B)^{-\top}$.
 
 ### B Tables {.unnumbered}
 
+#### Two-factor model
 
 ```{r}
 #| label: tbl-bias-twofac-80
@@ -88,6 +89,8 @@ tab_bias(bias_twofac_50_df, "twofac")
 
 tab_covr(covr_twofac_df, "twofac")
 ```
+
+#### Growth curve model
 
 ```{r}
 #| label: tbl-bias-growth-80
