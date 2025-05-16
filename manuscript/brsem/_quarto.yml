@@ -10,10 +10,10 @@ notebook-links: false
 format:
   html:
     number-sections: true
-    other-links:
-      - text: PRELIM RESULTS
-        icon: database      
-        href: results.html       
+    # other-links:
+    #   - text: PRELIM RESULTS
+    #     icon: database      
+    #     href: results.html       
   # docx:
   #   output-file: jamil2025bias
   tandf-pdf:
