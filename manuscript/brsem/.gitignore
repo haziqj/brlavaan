@@ -1,2 +1,5 @@
 /.quarto/
 index_files/
+_freeze/
+orcidlink.sty
+interact.cls
