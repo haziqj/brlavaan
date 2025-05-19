@@ -1,5 +1,4 @@
 ---
-title: Bias-Reduced Estimation of Structural Equation Models
 authors:
   - name: Haziq Jamil
     orcid: 0000-0003-3298-1010
@@ -49,6 +48,7 @@ authors:
     affiliations:
       - ref: warwick
 date-modified: last-modified
+title: Bias-Reduced Estimation of Structural Equation Models
 abstract: |
   An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:

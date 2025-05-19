@@ -222,11 +222,11 @@ Despite this, median bias remained close to zero, suggesting that the inflated m
 #| label: fig-meanbias-twofac
 #| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
 #| out-width: 100%
-
+lwd <- 0.4
 plot_drcomp |>
   filter(model == "twofac", !method %in% c("lav")) |>
   ggplot(aes(n, relbias, col = method)) +
-  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_line(linewidth = lwd, alpha = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
   scale_color_manual(values = mycols) +
@@ -412,7 +412,7 @@ This emphasises that bias reduction is most valueable in small to moderate sampl
 plot_drcomp |>
   filter(model == "growth", !method %in% c("lav")) |>
   ggplot(aes(n, relbias, col = method)) +
-  geom_line(linewidth = 0.75, alpha = 1) +
+  geom_line(linewidth = lwd, alpha = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
   scale_color_manual(values = mycols) +
