@@ -1,55 +1,171 @@
-Structural Equation Modeling (SEM) is a widely used statistical framework that enables researchers to specify, estimate, and test complex relationships among observed and latent variables. 
-Despite its versatility and theoretical appeal, the practical application of SEM in empirical research is often challenged by limitations in sample size. 
-Small samples are particularly common in fields such as clinical psychology, developmental research, and neuroscience, where data collection is expensive, time-consuming, or logistically constrained [@vandeschoot2020small].
+Structural Equation Models (SEMs) are widely used statistical models
+that enable researchers to specify, estimate, and test complex
+relationships among observed and latent variables.  Despite their
+versatility and theoretical appeal, the practical use of SEMs in
+empirical research is often challenged by small sample sizes. Small
+samples are particularly common in fields where data collection is
+expensive, time-consuming, or logistically constrained, such as
+clinical psychology, developmental research, and neuroscience
+[@vandeschoot2020small]. Small samples are also often an inevitable
+consequence of studying rare populations.  For example, research
+involving children with burned facial injuries is inherently limited
+by the small number of individuals who meet these specific criteria.
+Similarly, studies focusing on rare genetic disorders, elite athletes,
+or unique cultural groups often face strict limitations in sample size
+due to the rarity of the target population.  In such contexts, the use
+of SEMs remains desirable for testing complex theoretical models, but
+the challenges posed by small samples become unavoidable and cannot be
+ignored.
 
-However, small samples do not always arise from poor study design or logistical constraints; 
-in many cases, they are an inevitable consequence of studying rare populations. 
-For example, research involving children with burned facial injuries is inherently limited by the small number of individuals who meet these specific criteria. 
-Similarly, studies focusing on rare genetic disorders, elite athletes, or unique cultural groups often face strict limitations in sample size due to the rarity of the target population. 
-In such contexts, the use of SEM remains desirable for testing complex theoretical models, but the challenges posed by small samples become unavoidable and cannot be ignored.
+When the sample size is small, SEMs face a range of well-documented
+difficulties, involving non-convergence of estimation algorithms,
+improper solutions such as negative variance estimates (Heywood cases)
+or non-positive definite estimates of variance-covariance matrices,
+inflated standard errors, and low statistical power
+[@deng2018structural;@bentler1999structural;@nevitt2004evaluating].
+Non-convergence, in particular, can be a frustrating experience for
+applied researchers, often leading them to consider simpler and often
+sub-optimal (non-SEM) procedures [@dejonckere2022using].
 
-When the sample size is small, SEM faces a range of well-documented difficulties [@deng2018structural;@bentler1999structural;@nevitt2004evaluating]. 
-These include non-convergence of estimation algorithms, improper solutions such as negative variance estimates (Heywood cases), inflated standard errors, and low statistical power. 
-Non-convergence, in particular, can be frustrating experience for applied researchers, often leading them to consider more simple and often suboptimal (non-SEM) procedures [@dejonckere2022using].
+In response to these challenges, researchers have developed a range of
+techniques to improve estimation performance in small samples. These
+include alternative estimators such as those from Bayesian methods
+[@muthen2012bayesian;@lee2012basic], penalized likelihood approaches
+[@huang2017penalized;@jacobucci2016regularized], as well as model
+simplification strategies [@rosseel2024structural].  Such developments
+have substantially improved the feasibility and stability of SEMs in
+small-sample contexts.  However, even when convergence is achieved and
+estimates appear admissible, the finite-sample bias of the estimators
+may be impacting estimation quality and inferential performance.
 
-In response to these challenges, researchers have developed a variety of techniques to improve estimation performance in small samples. 
-These include alternative estimators such as Bayesian methods [@muthen2012bayesian;@lee2012basic], penalized likelihood approaches [@huang2017penalized;@jacobucci2016regularized], as well as model simplification strategies [@rosseel2024structural]. 
-Such developments have significantly improved the feasibility and stability of SEM in small-sample contexts. 
-However, even when convergence is achieved and estimates appear admissible, a subtler problem remains: 
-the presence of finite-sample bias in parameter estimates. 
+<!-- Resolving issues associated with finite-sample bias has been a typical -->
+<!-- problem in statistics. For example, for a range of models, the maximum -->
+<!-- likelihood estimator is known to exhibit systematic deviations from -->
+<!-- the true parameter values in small samples [@cox1979theoretical]. A -->
+<!-- range of bias reduction procedures have been developed in that -->
+<!-- direction, that operating either explicitly or -->
+<!-- implicitly. @kosmidis2024empirical [Secction 1] provide an integrated -->
+<!-- review of explicit and implicit bias reduction procedures. -->
 
-Finite-sample bias is a well-recognized issue in statistics, particularly in
-the context of maximum likelihood estimation, where estimators often exhibit
-systematic deviations from the true parameter values in small samples [@cox1979theoretical].
-To address this, a variety of strategies have been proposed.
-Analytical bias corrections based on higher-order asymptotic theory, such as the one introduced @firth1993bias, adjust the score function or likelihood equations to produce estimators with reduced bias. 
-@kosmidis2009bias and @kosmidis2020mean have further developed such bias-reduction techniques and applied them across a wide range of models, including generalized linear models. 
-These methods are particularly appealing due to their strong theoretical properties and broad applicability. 
-In parallel, resampling-based techniques such as bootstrap and jackknife procedures [@efron1994introduction] offer flexible, model-agnostic tools for bias correction and have gained popularity in applied research for their ease of implementation. 
-In Bayesian estimation, prior distributions can also help shrink estimates toward more plausible values in small samples, though this introduces sensitivity to prior specification [@vanerp2018prior].
+<!-- Explicit bias reduction procedures attempt to obtain an estimate of -->
+<!-- the bias, which is then subtracted from the original -->
+<!-- estimator. Bootstrap and jackknife [@efron1994introduction] are -->
+<!-- popular explicit procedures, which are based on resampling and can be -->
+<!-- applied in a wide range of models. Their implementation, however, -->
+<!-- typically involves repeated estimation of the model parameters, which -->
+<!-- renders them computationally intensive in many contents, and sensitive -->
+<!-- to non-convergence or improper solutions, even if no issues resulted -->
+<!-- when computing the original estimates. Another family of explicit -->
+<!-- procedures aims to obtain an analytical approximation for the bias -->
+<!-- function, which is then evaluated at the original estimates. A -->
+<!-- prominent example is subtracting the first-term in the Taylor -->
+<!-- expansion of the bias function of the ML estimator -->
+<!-- [@cox1979theoretical] evaluated at the ML estimates, from the ML -->
+<!-- estimates. Such approximations typically require taking expectations -->
+<!-- of products of log-likelihood derivatives with respect to the model, -->
+<!-- which makes them depend heavily on the adequacy of the modelling -->
+<!-- assumptions. Furthermore, explicit bias reduction techniques may lead -->
+<!-- to reduced-bias estimates that are not admissible (e.g. non-positive -->
+<!-- definite variance-covariance matrices) due to the requirement of -->
+<!-- subtracting an estimate of the bias, that is obtained separately from -->
+<!-- the original estimates. -->
 
-Within the SEM literature, initial attempts to mitigate the finite-sample bias involved the use of restricted maximum likelihood (REML), an estimation technique originally developed for variance component models [@corbeil1976restricted;@patterson1971recovery]. Although effective, this approach is only applicable for a very restricted subclass of SEMs, namely those models that are mathematically equivalent to mixed effect models
+<!-- Implicit bias reduction procedures typically manifest as adjusting the -->
+<!-- gradient of the log-likelihood by a function of the parameters and the -->
+<!-- data, and solving the adjusted likelihood equations instead of the -->
+<!-- original ones. As a result, they do not directly depend on the -->
+<!-- original estimates. A widely-used example of an implicit procedure is -->
+<!-- due to @firth1993bias, which adjusts the gradient of the -->
+<!-- log-likelihood by a scaled version of the first-term in the Taylor -->
+<!-- expansion of the bias function of the ML estimator. That bias -->
+<!-- reduction method has been used in a range of modelling contexts and is -->
+<!-- being actively used in a range of applications, mainly because it does -->
+<!-- not require the original estimates, and can also result in estimators -->
+<!-- with desirable properties, such as being always finite in models with -->
+<!-- categorical responses [@kosmidis2021finite]. -->
+
+Initial attempts to mitigate the finite-sample bias involves the use
+of restricted maximum likelihood (REML), an estimation technique
+originally developed for variance component models
+[@corbeil1976restricted; @patterson1971recovery]. Although effective,
+this approach is only applicable for specific SEMs that
+are mathematically equivalent to mixed effect models
 [@bauer2003estimating;@cheung2013implementing;@mcneish2016using;@mcneish2018brief].
-In a paper focusing on small sample corrections for Wald tests in SEMs, @ozenne2020small describe an analytic method to correct for the finite-sample bias in SEMs based on technology originating from the generalized estimating equation (GEE) literature [@kauermann2001note]. 
-Importantly, their method only targets the (observed or latent) (co)variance parameters in the model. 
-All other parameters (intercepts, regressions, factor loadings) are unaffected by their method.
-Finally, a more general strategy is the resampling-based approach proposed by @dhaene2022resampling, which adapts jacknife and bootstrap techniques to SEM
-for correcting finite-sample bias in all parameter estimates. 
-This method is broadly applicable and relatively easy to implement, though it can be computationally intensive and may still exhibit some limitations in very small samples. Together, these approaches represent important steps toward addressing finite-sample bias in SEM, though each carries trade-offs between generality, complexity, and computational cost.
+In a paper focusing on small sample corrections for Wald tests in
+SEMs, @ozenne2020small describe an analytic method to correct for the
+finite-sample bias in SEMs based on technology originating from the
+generalized estimating equation (GEE) literature [@kauermann2001note].
+Importantly, their method only targets the (observed or latent)
+(co)variance parameters in the model.  All other parameters
+(intercepts, regressions, factor loadings) are unaffected by their
+method.  Finally, a more general strategy is the resampling-based
+approach proposed by @dhaene2022resampling, which adapts jacknife and
+bootstrap techniques to SEM for correcting finite-sample bias in all
+parameter estimates.  This method is broadly applicable and relatively
+easy to implement, though it can be computationally intensive and may
+still exhibit some limitations in very small samples. Together, these
+approaches represent important steps toward addressing finite-sample
+bias in SEM, though each carries trade-offs between generality,
+complexity, and computational cost.
 
-Recently, @kosmidis2024empirical introduced a new framework for reducing bias in M-estimators (including maximum likelihood estimators) derived from asymptotically unbiased estimating functions [@vandervaart1998asymptotic]. 
-This framework offers both implicit and explicit methods for bias correction. 
-The implicit approach involves solving adjusted estimating equations, while the explicit method subtracts an estimated bias from the original M-estimates. 
-Notably, these methods require only the first and second derivatives of the estimating functions, eliminating the need for complex expectations or resampling techniques. 
-In addition, these methods maintain the same asymptotic distribution as the original M-estimators, ensuring that standard inference and model selection procedures remain applicable. 
 
-Motivated by these appealing properties, the goal of this paper is to investigate how the reduced-bias M (RBM) estimation framework developed by @kosmidis2024empirical can be applied to the context of structural equation modeling. 
-In contrast to existing bias-reduction techniques for SEM, the RBM approach is fully general---applicable to any SEM specification---while simultaneously targeting all model parameters. 
-It also offers a computationally efficient alternative to resampling-based methods. 
-Moreover, the RBM method is relatively straightforward to implement in practice, and we provide accompanying R code in the supplementary materials to facilitate its application.
 
-The remainder of the paper is structured as follows. 
-We begin by briefly outlining the SEM framework and introducing the notation used throughout the paper. 
-We then present a concise overview of several bias-reduction techniques, including the method proposed by Ozenne and colleagues, the jackknife and bootstrap approaches, and the recently introduced RBM method. 
-Following this, we report the results of a comprehensive simulation study designed to evaluate the performance of the RBM approach in comparison to existing alternatives.
-Finally, we conclude with a discussion of the findings and offer practical recommendations for applied researchers.
+<!-- Finite-sample bias is a well-recognized issue in statistics, particularly in -->
+<!-- the context of maximum likelihood estimation, where estimators often exhibit -->
+<!-- systematic deviations from the true parameter values in small samples [@cox1979theoretical]. -->
+<!-- To address this, a variety of strategies have been proposed. -->
+<!-- Analytical bias corrections based on higher-order asymptotic theory, such as the one introduced @firth1993bias, adjust the score function or likelihood equations to produce estimators with reduced bias.  -->
+<!-- @kosmidis2009bias and @kosmidis2020mean have further developed such bias-reduction techniques and applied them across a wide range of models, including generalized linear models.  -->
+<!-- These methods are particularly appealing due to their strong theoretical properties and broad applicability.  -->
+<!-- In parallel, resampling-based techniques such as bootstrap and jackknife procedures [@efron1994introduction] offer flexible, model-agnostic tools for bias correction and have gained popularity in applied research for their ease of implementation.  -->
+<!-- In Bayesian estimation, prior distributions can also help shrink estimates toward more plausible values in small samples, though this introduces sensitivity to prior specification [@vanerp2018prior]. -->
+
+<!-- Within the SEM literature, initial attempts to mitigate the finite-sample bias involved the use of restricted maximum likelihood (REML), an estimation technique originally developed for variance component models [@corbeil1976restricted;@patterson1971recovery]. Although effective, this approach is only applicable for a very restricted subclass of SEMs, namely those models that are mathematically equivalent to mixed effect models -->
+<!-- [@bauer2003estimating;@cheung2013implementing;@mcneish2016using;@mcneish2018brief]. -->
+<!-- In a paper focusing on small sample corrections for Wald tests in SEMs, @ozenne2020small describe an analytic method to correct for the finite-sample bias in SEMs based on technology originating from the generalized estimating equation (GEE) literature [@kauermann2001note].  -->
+<!-- Importantly, their method only targets the (observed or latent) (co)variance parameters in the model.  -->
+<!-- All other parameters (intercepts, regressions, factor loadings) are unaffected by their method. -->
+<!-- Finally, a more general strategy is the resampling-based approach proposed by @dhaene2022resampling, which adapts jacknife and bootstrap techniques to SEM -->
+<!-- for correcting finite-sample bias in all parameter estimates.  -->
+<!-- This method is broadly applicable and relatively easy to implement, though it can be computationally intensive and may still exhibit some limitations in very small samples. Together, these approaches represent important steps toward addressing finite-sample bias in SEM, though each carries trade-offs between generality, complexity, and computational cost. -->
+
+Recently, @kosmidis2024empirical introduced a new framework for
+reducing bias in M-estimators (including maximum likelihood
+estimators) derived from asymptotically unbiased estimating functions
+[@vandervaart1998asymptotic]. That framework operates either
+explicitly, by subtracting an estimate of the bias from the original
+estimator, or implicitly, by finding the roots of adjusted estimating
+functions. Notably, reduced-bias $M$-estimation (RB$M$) requires only
+a bias approximation that involves the first and second derivatives of
+the estimating functions with respect to the parameters, eliminating
+the need for complex expectations under the model, and hence being
+more robust to model mis-specification than other popular bias
+reduction methods, such as that of @firth1993bias. Furthermore, its
+explicit version requires just the original estimates and an
+evaluation of the bias approximation, and the implicit the computation
+of the root of the adjusted score equations, which adjustment directly
+depends on the bias approximation. As a result, RB$M$ estimation
+requires no re-sampling or repeated fitting of the SEM.  Furthermore,
+in contrast to existing bias-reduction techniques for SEM, the RB$M$
+approach is fully general --- applicable to any SEM specification ---
+while simultaneously targeting all model parameters.  Furthermore, the
+RB$M$ estimators have the same asymptotic distribution as the original
+M-estimators, ensuring that standard inference and model selection
+procedures apply directly.
+
+Motivated by these appealing properties, the goal of this paper is to
+investigate the performance of the RB$M$ estimation framework for
+SEM. The RBM method is relatively straightforward to implement for any
+SEM specification, and we provide accompanying R code in the
+supplementary materials to facilitate its application.
+
+The remainder of the paper is structured as follows.  We begin by
+briefly outlining the SEM framework and introducing the notation used
+throughout the paper.  We then present a concise overview of several
+bias-reduction techniques, including the method proposed by
+@ozenne2020small, the jackknife and bootstrap approaches, and the
+recently introduced RBM method.  Following this, we report the results
+of a comprehensive simulation study designed to evaluate the
+performance of the RBM approach in comparison to existing
+alternatives.  Finally, we conclude with a discussion of the findings
+and offer practical recommendations for applied researchers.

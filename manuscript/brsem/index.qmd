@@ -50,7 +50,7 @@ authors:
 date-modified: last-modified
 title: Bias-Reduced Estimation of Structural Equation Models
 abstract: |
-  An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
+  [Shouldn't this be a bit more descriptive of what is the problem and what is the proposal here?]{bg-colour="#FFEA00"} An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:
   - Structural Equation Models
   - Growth Curve Models
