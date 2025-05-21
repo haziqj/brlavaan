@@ -3,7 +3,7 @@ project:
   output-dir: ../../docs/manuscript/brsem
 
 manuscript:
-  article: index.qmd
+  article: sem-bias.qmd
 
 notebook-links: false
 

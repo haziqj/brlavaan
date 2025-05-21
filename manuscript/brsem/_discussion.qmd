@@ -1,9 +1,0 @@
-
-- Both the implicit (iRBM) and explicit (eRBM) bias-reduction methods demonstrated high convergence rates across various simulation scenarios, particularly for sample sizes $n\geq 50$.
-- In both the two-factor model and latent GCM, iRBM and eRBM consistently reduced bias compared to maximum likelihood (ML) estimates, especially in small sample sizes. These methods also enhanced the coverage probabilities of confidence intervals. The eRBM and iRBM also showed robustness under non-normal data distributions for the GCM especially.
-- While resampling-based methods like Jackknife and Bootstrap occasionally achieved slightly lower bias, they often exhibited higher variability. Our methods provided a favourable balance between bias reduction and estimate stability.
-- Restricted Maximum Likelihood (REML) performed well under normal data conditions but showed significant bias when the data deviated from normality, highlighting its sensitivity to distributional assumptions.
-- The eRBM and iRBM method offered a computationally efficient alternative to traditional resampling techniques, achieving bias reduction with significantly lower computational cost. Further improvements could be made to the codebase to increase efficiency--at the moment it is a very naive implementation.
-- Future work:
-  - To address computational problems, consider plugin penalties and/or bounded estimation (??)
-  - More complex models
