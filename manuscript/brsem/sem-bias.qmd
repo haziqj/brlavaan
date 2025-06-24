@@ -50,14 +50,13 @@ authors:
 date-modified: last-modified
 title: Bias-Reduced Estimation of Structural Equation Models
 abstract: |
-  [Shouldn't this be a bit more descriptive of what is the problem and what is the proposal here?]{bg-colour="#FFEA00"} An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
+  [**IK: A BIT MORE DESCRIPTIVE HERE**] An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:
   - Structural Equation Models
   - Growth Curve Models
   - Bias Reduction
-filters:
-  - highlight-text
 ---
+
 
 
 ```{r}
@@ -76,7 +75,7 @@ load("results.RData")
 ## Introduction
 
 Structural Equation Models (SEMs) are widely used statistical models
-that enable researchers to specify, estimate, and test complex
+that allow the to specification, estimation, and testing of complex
 relationships among observed and latent variables.  Despite their
 versatility and theoretical appeal, the practical use of SEMs in
 empirical research is often challenged by small sample sizes. Small
@@ -86,34 +85,37 @@ clinical psychology, developmental research, and neuroscience
 [@vandeschoot2020small]. Small samples are also often an inevitable
 consequence of studying rare populations.  For example, research
 involving children with burned facial injuries is inherently limited
-by the small number of individuals who meet these specific criteria.
-Similarly, studies focusing on rare genetic disorders, elite athletes,
-or unique cultural groups often face strict limitations in sample size
-due to the rarity of the target population.  In such contexts, the use
-of SEMs remains desirable for testing complex theoretical models, but
-the challenges posed by small samples become unavoidable and cannot be
+by the small number of individuals who meet these specific criteria
+[**IK: ANY REFERENCE?**].  Similarly, studies focusing on rare genetic
+disorders, elite athletes, or unique cultural groups often face strict
+limitations in sample size due to the rarity of the target
+population. [**IK: ANY REFERENCE?**]  In such contexts, the use of
+SEMs remains desirable for testing complex theoretical models, but the
+challenges posed by small samples become unavoidable and cannot be
 ignored.
 
 When the sample size is small, SEMs face a range of well-documented
 difficulties, involving non-convergence of estimation algorithms,
 improper solutions such as negative variance estimates (Heywood cases)
 or non-positive definite estimates of variance-covariance matrices,
-inflated standard errors, and low statistical power
+inflated standard errors, and low power of statistical tests
 [@deng2018structural;@bentler1999structural;@nevitt2004evaluating].
-Non-convergence, in particular, can be a frustrating experience for
-applied researchers, often leading them to consider simpler and often
-sub-optimal (non-SEM) procedures [@dejonckere2022using].
+
+<!-- Non-convergence, in particular, can be a frustrating experience for -->
+<!-- applied researchers, often leading them to consider simpler and often -->
+<!-- sub-optimal (non-SEM) procedures [@dejonckere2022using]. -->
 
 In response to these challenges, researchers have developed a range of
 techniques to improve estimation performance in small samples. These
 include alternative estimators such as those from Bayesian methods
 [@muthen2012bayesian;@lee2012basic], penalized likelihood approaches
-[@huang2017penalized;@jacobucci2016regularized], as well as model
+[@huang2017penalized;@jacobucci2016regularized], and model
 simplification strategies [@rosseel2024structural].  Such developments
 have substantially improved the feasibility and stability of SEMs in
 small-sample contexts.  However, even when convergence is achieved and
-estimates appear admissible, the finite-sample bias of the estimators
-may be impacting estimation quality and inferential performance.
+estimates appear admissible, the estimators may exhibit poor
+finite-sample performance, which, in turn, can impact inferential
+conclusions.
 
 <!-- Resolving issues associated with finite-sample bias has been a typical -->
 <!-- problem in statistics. For example, for a range of models, the maximum -->
@@ -161,31 +163,28 @@ may be impacting estimation quality and inferential performance.
 <!-- with desirable properties, such as being always finite in models with -->
 <!-- categorical responses [@kosmidis2021finite]. -->
 
-Initial attempts to mitigate the finite-sample bias involves the use
-of restricted maximum likelihood (REML), an estimation technique
-originally developed for variance component models
-[@corbeil1976restricted; @patterson1971recovery]. Although effective,
-this approach is only applicable for specific SEMs that
-are mathematically equivalent to mixed effect models
-[@bauer2003estimating;@cheung2013implementing;@mcneish2016using;@mcneish2018brief].
-In a paper focusing on small sample corrections for Wald tests in
-SEMs, @ozenne2020small describe an analytic method to correct for the
-finite-sample bias in SEMs based on technology originating from the
-generalized estimating equation (GEE) literature [@kauermann2001note].
-Importantly, their method only targets the (observed or latent)
-(co)variance parameters in the model.  All other parameters
-(intercepts, regressions, factor loadings) are unaffected by their
-method.  Finally, a more general strategy is the resampling-based
-approach proposed by @dhaene2022resampling, which adapts jacknife and
-bootstrap techniques to SEM for correcting finite-sample bias in all
-parameter estimates.  This method is broadly applicable and relatively
-easy to implement, though it can be computationally intensive and may
-still exhibit some limitations in very small samples. Together, these
+Many attempts to improve finite-sample performance focus on reducing
+estimation bias. For SEMs that are mathematically equivalent to mixed
+effects models
+[@bauer2003estimating;@cheung2013implementing;@mcneish2016using;@mcneish2018brief],
+the use of restricted maximum likelihood (REML) has been found to
+result in less biased estimates of the variance components
+[@corbeil1976restricted; @patterson1971recovery]. In a paper focusing
+on small sample corrections for Wald tests in SEMs, @ozenne2020small
+describe an analytic method to correct for the finite-sample bias in
+SEMs based on technology originating from the generalized estimating
+equation (GEE) literature [@kauermann2001note].  Importantly, their
+method only targets the (observed or latent) (co)variance parameters
+in the model, and parameters like regression coefficients and factor
+loadings are not affected. More general strategies towards reducing
+bias of the estimators for all parameters are the resampling-based
+approaches proposed by @dhaene2022resampling, which adapt jacknife and
+bootstrap techniques to SEM.  Such methods are broadly applicable and
+relatively easy to implement. However, they can be computationally
+intensive and exhibit limitations in very small samples. These
 approaches represent important steps toward addressing finite-sample
-bias in SEM, though each carries trade-offs between generality,
-complexity, and computational cost.
-
-
+bias in SEM estimation. However, each carries trade-offs between
+generality, complexity, and computational cost.
 
 <!-- Finite-sample bias is a well-recognized issue in statistics, particularly in -->
 <!-- the context of maximum likelihood estimation, where estimators often exhibit -->
@@ -208,112 +207,114 @@ complexity, and computational cost.
 
 Recently, @kosmidis2024empirical introduced a new framework for
 reducing bias in M-estimators (including maximum likelihood
-estimators) derived from asymptotically unbiased estimating functions
-[@vandervaart1998asymptotic]. That framework operates either
-explicitly, by subtracting an estimate of the bias from the original
-estimator, or implicitly, by finding the roots of adjusted estimating
-functions. Notably, reduced-bias $M$-estimation (RB$M$) requires only
-a bias approximation that involves the first and second derivatives of
-the estimating functions with respect to the parameters, eliminating
-the need for complex expectations under the model, and hence being
-more robust to model mis-specification than other popular bias
-reduction methods, such as that of @firth1993bias. Furthermore, its
-explicit version requires just the original estimates and an
-evaluation of the bias approximation, and the implicit the computation
-of the root of the adjusted score equations, which adjustment directly
-depends on the bias approximation. As a result, RB$M$ estimation
+estimators) derived from asymptotically unbiased estimating
+functions. That framework operates either explicitly, by subtracting
+an estimate of the bias from the original estimator, or implicitly, by
+finding the roots of adjusted estimating functions. Notably,
+reduced-bias $M$-estimation (RB$M$) requires only a bias approximation
+that involves the first and second derivatives of the estimating
+functions with respect to the parameters, eliminating the need for
+complex expectations under the model, and hence being more robust to
+model mis-specification than other popular bias reduction methods,
+such as that of @firth1993bias. Explicit RB$M$ estimation requires
+just the original estimates and an evaluation of the bias
+approximation, and the implicit version requires the computation of
+the root of adjusted score equations, with an adjustment that directly
+depends on that bias approximation. As a result, RB$M$ estimation
 requires no re-sampling or repeated fitting of the SEM.  Furthermore,
-in contrast to existing bias-reduction techniques for SEM, the RB$M$
-approach is fully general --- applicable to any SEM specification ---
-while simultaneously targeting all model parameters.  Furthermore, the
-RB$M$ estimators have the same asymptotic distribution as the original
-M-estimators, ensuring that standard inference and model selection
-procedures apply directly.
+in contrast to existing bias-reduction techniques for SEMs, the RB$M$
+approach is fully general and, hence, applicable to any SEM
+specification, while simultaneously targeting all model parameters,
+and the RB$M$ estimators have the same asymptotic distribution as the
+original estimators, ensuring that standard inference and model
+selection procedures apply directly.
 
 Motivated by these appealing properties, the goal of this paper is to
 investigate the performance of the RB$M$ estimation framework for
-SEM. The RBM method is relatively straightforward to implement for any
+SEM. The RBM method is straightforward to implement for any
 SEM specification, and we provide accompanying R code in the
 supplementary materials to facilitate its application.
 
-The remainder of the paper is structured as follows.  We begin by
+[**IK: REVISIT**] The remainder of the paper is structured as follows.  We begin by
 briefly outlining the SEM framework and introducing the notation used
 throughout the paper.  We then present a concise overview of several
 bias-reduction techniques, including the method proposed by
 @ozenne2020small, the jackknife and bootstrap approaches, and the
-recently introduced RBM method.  Following this, we report the results
+recently introduced RB$M$ method.  Following this, we report the results
 of a comprehensive simulation study designed to evaluate the
-performance of the RBM approach in comparison to existing
+performance of the RB$M$ approach in comparison to existing
 alternatives.  Finally, we conclude with a discussion of the findings
 and offer practical recommendations for applied researchers.
 
-[To place this table elsewhere (or remove)]{bg-colour="#FFEA00"}
 
 
-```{r}
-#| label: tbl-timing
-#| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor SEM and latent growth curve models for $n=1000$.'
-#| html-table-processing: none
-res_timing_n1000 |>
-  rowwise() |>
-  mutate(
-    thing = glue::glue("{gt::vec_fmt_number(mean)} ({gt::vec_fmt_number(sd)})"),
-    method = factor(
-      method,
-      levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"),
-      labels = names(mycols)
-    )
-  ) |>
-  select(-mean, -sd) |>
-  pivot_wider(names_from = model, values_from = thing) |>
-  arrange(method) |>
-  gt() |>
-  sub_missing(missing_text = "") |>
-  cols_label(
-    method = "Method",
-    twofac = "Two-factor SEM",
-    growth = "Latent growth curve model"
-  ) |>
-  cols_width(
-    twofac ~ px(180),
-    growth ~ px(180)
-  )
-```
+<!-- [To place this table elsewhere (or remove)]{bg-colour="#FFEA00"} -->
+
+
+<!-- ```{r} -->
+<!-- #| label: tbl-timing -->
+<!-- #| tbl-cap: 'Comparison of mean computation times (in seconds, with standard deviations in parentheses) for estimating the two-factor SEM and latent growth curve models for $n=1000$.' -->
+<!-- #| html-table-processing: none -->
+<!-- res_timing_n1000 |> -->
+<!--   rowwise() |> -->
+<!--   mutate( -->
+<!--     thing = glue::glue("{gt::vec_fmt_number(mean)} ({gt::vec_fmt_number(sd)})"), -->
+<!--     method = factor( -->
+<!--       method, -->
+<!--       levels = c("ML", "lav", "eRBM", "iRBM", "JB", "BB", "Ozenne", "REML"), -->
+<!--       labels = names(mycols) -->
+<!--     ) -->
+<!--   ) |> -->
+<!--   select(-mean, -sd) |> -->
+<!--   pivot_wider(names_from = model, values_from = thing) |> -->
+<!--   arrange(method) |> -->
+<!--   gt() |> -->
+<!--   sub_missing(missing_text = "") |> -->
+<!--   cols_label( -->
+<!--     method = "Method", -->
+<!--     twofac = "Two-factor SEM", -->
+<!--     growth = "Latent growth curve model" -->
+<!--   ) |> -->
+<!--   cols_width( -->
+<!--     twofac ~ px(180), -->
+<!--     growth ~ px(180) -->
+<!--   ) -->
+<!-- ``` -->
 
 
 ## Structural Equation Models
 
 A SEM has two parts, a measurement part and a structural part.  For
-observation $i$, the measurement part of the model is defined as
+the $i$th observation, the measurement part of the model is defined as
 
 $$
-y_i = \nu + \Lambda \eta_i + \epsilon_i,
+y_i = \nu + \Lambda \eta_i + \epsilon_i \, ,
 $$ {#eq-measurement}
 
-where $y_i$ is a $p \times 1$ vector of observed variables, $\nu$ is a
-$p \times 1$ vector of measurement intercepts, $\Lambda$ is a $p
-\times q$ matrix of factor loadings, $\eta_i$ is a $q \times 1$ vector
-of latent variables, and $\epsilon_i$ is a $p \times 1$ vector of
+where $y_i$ is a $p$-vector of observed variables, $\nu$ is a
+$p$-vector of measurement intercepts, $\Lambda$ is a $p
+\times q$ matrix of factor loadings, $\eta_i$ is a $q$-vector
+of latent variables, and $\epsilon_i$ is a $p$-vector of
 measurement errors, assumed to be normally distributed with mean zero
-and covariance matrix $\Theta$.
+and covariance matrix $\Theta$ $(i = 1, \ldots, n)$.
 
 The structural part of the model is defined as
 
 $$
-\eta_i =\alpha + B \eta_i + \zeta_i,
+\eta_i =\alpha + B \eta_i + \zeta_i \, ,
 $$ {#eq-structural}
 
-where $\alpha$ is a $q \times 1$ vector of factor means, $B$ is a $q
+where $\alpha$ is a $q$-vector of factor means, $B$ is a $q
 \times q$ matrix of latent regression coefficients for which
 $\operatorname{diag}(B) = 0$ and $I-B$ is invertible, and $\zeta_i$ is
-a $q \times 1$ vector of structural disturbances, assumed to be
+a $q$-vector of structural disturbances, assumed to be
 normally distributed with mean zero and covariance matrix $\Psi$.  We
-also assume that $\operatorname{Cov}(\eta_i, \epsilon_i) =
-\text{cov}(\epsilon_i, \zeta_i) = 0$.
+also assume that $\operatorname{cov}(\eta_i, \epsilon_i) =
+\operatorname{cov}(\epsilon_i, \zeta_i) = 0$.
 
 The parameters of a SEM are typically estimated using maximum
 likelihood. The specific parameters to estimate depend on which
-parameters from @eq-measurement and @eq-structural are present in the
+parameters from ([-@eq-measurement]) and ([-@eq-structural]) are present in the
 model and free. We can combine all free parameters to be estimated in
 to a single $m \times 1$ vector $\theta$, and define the marginal mean
 vector and variance-covariance matrix as
@@ -327,23 +328,20 @@ $$
 
 where for an invertible matrix $A$, $A^{-\top} = (A^{-1})^\top$.
 
-Then, given independent response vectors $\mathcal Y = \{y_1, \dots,
-y_n \}$ with $y_i$ a realization of $\text{N}\big(\mu(\theta),
-\Sigma(\theta)\big)$, parameter estimation proceeds by maximizing
-the SEM log likelihood
+Then, given independent response vectors $y_1, \dots, y_n$ with $y_i \sim \text{N}\big(\mu(\theta), \Sigma(\theta)\big)$,
+maximum likelihood estimation proceeds by maximizing the SEM log likelihood
 
 $$
-\ell(\theta \mid \mathcal Y) = -\frac{np}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n \big(y_i - \mu(\theta)\big)^\top \Sigma(\theta)^{-1}\big(y_i - \mu(\theta)\big) \,.
+\ell(\theta) = -\frac{np}{2}\log(2\pi) -\frac{n}{2}\log|\Sigma(\theta)| - \frac{1}{2}\sum_{i=1}^n \big(y_i - \mu(\theta)\big)^\top \Sigma(\theta)^{-1}\big(y_i - \mu(\theta)\big) \,.
 $$ {#eq-sem_lik}
 
+Maximizing ([-@eq-sem_lik]) with respect to $\theta$ gives the maximum
+likelihood estimator $\hat{\theta}$ of $\theta$. Equivalently, we can
+solve the equations $\nabla \ell(\theta) = 0_m$, where $\nabla$
+denotes gradient with respect to $\theta$, and $0_m$ is an $m-$vector
+of zeros.
 
-Maximizing @eq-sem_lik with respect to $\theta$ gives the maximum
-likelihood estimator of $\theta$, which we denote by
-$\hat{\theta}$. Equivalently, we can solve the equations $\nabla
-\ell(\theta) = 0_m$, where here $\nabla$ denotes gradient with respect
-to $\theta$, and $0_m$ is an $m-$vector of zeroes.
-
-## Reduced-bias estimation
+## Reducing bias
 
 <!-- Resolving issues associated with finite-sample bias has been a typical -->
 <!-- problem in statistics. For example, for a range of models, the maximum -->
@@ -391,58 +389,111 @@ The maximum likelihood estimator, as used for SEMs, is an example of a
 typically biased estimator which under regularity conditions from
 @cox1979theoretical, has bias with asymptotic order
 $O(n^{-1})$. Therefore, despite that $\hat{\theta}$ is asymptotically
-unbiased, for the finite-sample bias may be substantial, and
-particularly pronounced in small samples.
+unbiased, the finite-sample bias may be substantial, and particularly
+pronounced in small samples.
 
-A range of general bias reduction procedures have been developed, that
-operating either explicitly or implicitly. @kosmidis2024empirical
-[Secction 1] provide an integrated review of explicit and implicit
-bias reduction procedures, elements of which we present here. 
+@kosmidis2024empirical [Secction 1] provide an integrated review of a
+range of general-purpose bias reduction procedures, elements of which
+we present here.
 
 The aim of bias reduction methods is to produce a new estimator
 $\theta^*$ of $\theta$ that approximates the solution of
-
 $$
 \hat{\theta} - \theta^* = B(\bar{\theta})
 $$ {#eq-bias_eq}
-
-with respect to $\theta^*$. In @eq-bias_eq, $B(\bar{\theta}) =
+with respect to $\theta^*$. In ([-@eq-bias_eq]), $B(\bar{\theta}) =
 \mathbb{E}(\hat{\theta} - \bar{\theta})$ is the bias function, and
-$\bar{\theta}$ is the value that $\hat{\theta}$ converges to, or is
-assumed to converge to in probability, as sample size
-increases. However, the unbiased estimator $\theta^*$ generally cannot
-be computed exactly since $B(\cdot)$ is typically not available in
-closed form and $\bar{\theta}$ is not known. Therefore, we may not be
-able to produce a new estimator that is unbiased, but we can
-approximate the solution of @eq-bias_eq to produce an estimator with
-asymptotically smaller bias than the original $\hat{\theta}$.
+$\bar{\theta}$ is the value that the original estimator $\hat{\theta}$
+converges to, or is assumed to converge to in probability, as the
+sample size increases. However, the unbiased estimator $\theta^*$
+generally cannot be computed exactly since $B(\cdot)$ is typically not
+available in closed form and $\bar{\theta}$ is not known. Instead, we
+can approximate the solution of ([-@eq-bias_eq]) to produce an
+estimator with asymptotically smaller bias than $\hat{\theta}$.
 
-Bias reduction methods operate explicitly or implicitly, we denote the explicit estimator as $\theta^\dagger$ and the implicit estimator as $\tilde{\theta}$. In explicit methods, we aim to approximate the bias of an estimator, then subtract this bias from the original estimator to produce a reduced-bias estimator. In particular, such methods replace $B(\theta)$ with $B^*$, which is computed from the available data, before computing $\theta^\dagger = \hat{\theta} - B^*$. Implicit methods compute a reduced-bias estimator by replacing $B(\theta)$ with $\hat{B}(\tilde{\theta})$, which is an estimator of the whole bias function at the desired estimator. Then we solve the implicit equation $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for $\tilde{\theta}$. 
-Examples of explicit bias reduction methods include the bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife [@quenouille1956notes; @efron1982jackknife], which are both examined in this paper, while a notable example of an implicit method is the bias-reducing adjusted score equations of @firth1993bias.
+Typically, bias reduction methods operate explicitly or
+implicitly. Explicit methods aim to approximate the bias of an
+estimator, and then subtract this bias from the original estimator to
+produce a reduced-bias estimator. In particular, such methods replace
+$B(\theta)$ in ([-@eq-bias_eq]) with an estimate $B^*$, which is
+computed from the available data, before computing $\theta^\dagger =
+\hat{\theta} - B^*$. Implicit methods, on the other hand, compute a
+reduced-bias estimator by replacing $B(\theta)$ with
+$\hat{B}(\tilde{\theta})$, which is an estimator of the bias function
+at the desired estimator, and solve the implicit equation
+$\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for
+$\tilde{\theta}$. 
 
-The main bias reduction technique to be examined in this paper is reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical], which can operate implicitly or explicitly. This method requires only the SEM likelihood and its first three derivatives, so can be readily implemented, either in closed form, or numerically using packages such as `{numDeriv}` [@gilbert2022numderiv]. Since the bias is approximated analytically, RBM-estimation is likely to be noticeably faster than simulation based methods such as the bootstrap and jackknife. When estimation is by maximising a log-likelihood, as is the case for SEMs, implicit RBM-estimation works by adding an appropriate penalty to the log-likelihood, so that rather than maximising $\ell(\theta)$, we instead maximise
+Prominent examples of explicit bias reduction methods include the
+bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife
+[@quenouille1956notes; @efron1982jackknife]. The bootstrap involves
+generating $B$ bootstrap samples $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling
+with replacement from the original data set. Then, the model is fitted
+to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(1)}, \ldots, $\hat\theta^{*}_{(B)}$.
+The bootstrap bias-corrected estimator is then computed as
+$$
+\hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B \hat\theta^{*}_{(b)} \, ,
+$$ 
+where $B$ is the number of bootstrap samples. The jackknife involves
+obtaining estimates $\hat\theta_{(i)}$ by fitting the model to the $n$
+subsamples of size $n - 1$ that result by leaving out one observation
+at a time. The jackknife bias-corrected estimator is then computed as
+$$
+\hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n
+\hat\theta_{(i)} \, . 
+$$
 
+<!-- which are both examined -->
+<!-- in this paper, while a notable example of an implicit method is the -->
+<!-- bias-reducing adjusted score equations of @firth1993bias. -->
+
+Reduced-bias M-estimation [RB$M$-estimation, @kosmidis2024empirical]
+is a recently-introduced, general-purpose bias reduction method, which
+can operate implicitly or explicitly, and requires only the
+log-likelihood function, and its first three derivatives to
+approximate the bias function. As a result, RB$M$ estimation can be
+readily implemented, either using closed-form derivatives, or through
+numerical differentiation routines, such as those provided by
+[e.g. using the `{numDeriv}` R package @gilbert2022numderiv]. When
+estimation is by maximising a log-likelihood, as is the case for
+maximum likelihood estimation of SEMs, implicit RBM-estimation is
+equivalent to maximizing the penalized log-likelihood
 $$
 \ell(\theta) + P(\theta)
 $$
+where 
+$$ P(\theta) =
+-\frac{1}{2}\operatorname{tr}\big\{j(\theta)^{-1} e(\theta)\big\} \,, 
+$$
+with $j(\theta)$ the negative Hessian matrix $-\nabla \nabla^T
+\ell(\theta)$ and $e(\theta)$ having $(k, l)$th element
+$$ 
+[e(\theta)]_{kl} = \sum_{i=1}^n \left\{
+\frac{\partial \ell_i(\theta)}{\partial \theta_l} \frac{\partial
+\ell_i(\theta)}{\partial \theta_k} \right\} \,, 
+$$ 
+where $\ell_i(\theta)$ is the $i$-th contribution to the
+log-likelihood, such that $\ell(\theta) = \sum_{i=1}^n
+\ell_i(\theta)$.
 
-for an appropriate penalty term $P(\theta)$. The penalty term is chosen such that the resulting estimator, $\tilde{\theta}$, has asymptotically reduced bias compared to $\hat{\theta}$, while still retaining the same asymptotic properties.  @kosmidis2024empirical show that a bias-reducing penalty that applies to generic $M$-estimation problems is 
+The explicit RB$M$ estimator is defined as
 $$
-P(\theta) = -\frac{1}{2}\operatorname{tr}\big\{j(\theta)^{-1} e(\theta)\big\},
-$$
-where $j(\theta)$ is the negative Hessian matrix $-\nabla \nabla^T \ell(\theta)$ and $e(\theta)$ is the first order information, a matrix with elements computed as 
-$$
-[e(\theta)]_{kl} = \sum_{i=1}^n \left\{ \frac{\partial \ell_i(\theta)}{\partial \theta_l}  \frac{\partial \ell_i(\theta)}{\partial \theta_k} \right\},
-$$
-where $\ell_i(\theta)$ is the $i$-th contribution to the log-likelihood, such that $\ell(\theta) = \sum_{i=1}^n \ell_i(\theta)$.
-
-We define the explicit version of RBM-estimation by obtaining an explicit expression for the bias and subtracting this from the maximum likelihood estimator. The explicit estimator is
-$$
-\theta^\dagger = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}),
+\theta^\dagger = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}) \,,
 $$
 where $A(\hat\theta) = \nabla P(\theta)\Big|_{\theta=\hat\theta}$.
 
-There are advantages and disadvantages to the implicit and explicit approaches. Computing $\theta^\dagger$ is a single step procedure so is likely to be faster to compute then $\tilde{\theta}$. Indeed, computing $\theta^\dagger$ can be seen as performing one step of a quasi-Newton Raphson procedure for computing $\tilde{\theta}$ starting at $\hat\theta$ [see @kosmidis2024empirical, Supplementary Material document, Section S4]. However, the explicit approach contains no safeguards on what value the final estimator can take, so may result in an estimate outside the parameter space. The implicit approach allows such constraints to be incorporated into the optimisation procedure, and may be more stable as it does not require $\hat{\theta}$, so is useful in cases where obtaining $\hat{\theta}$ is unstable. 
+Explicit and implicit RB$M$ estimation have advantages and
+disadvantages. Computing $\theta^\dagger$ is a single step procedure,
+so is likely to be faster to compute then $\tilde{\theta}$. However,
+the explicit approach provides no safeguards on what value the final
+estimator can take, and it may result in an estimate outside the
+parameter space. The implicit approach allows appropriate constraints
+to be incorporated into the optimization process, and is typically
+more stable as it does not require the value of
+$\hat{\theta}$. Overall, both explicit and implicit RB$M$ estimation
+is typically noticeably faster than simulation based methods such as
+the bootstrap and jackknife, because it does not require repeated
+fits.
 
 <!-- DISCUSSION: The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability. -->
 
@@ -482,28 +533,28 @@ The corresponding path diagram is shown in @fig-path-twofac.
 % --------------------------------------------------------
 % 1) LATENT VARIABLES
 % --------------------------------------------------------
-\node[latent] (eta1) at (-1.5, -2) {$\eta_{1}$};
-\node[latent] (eta2) at ( 3, -2) {$\eta_{2}$};
+\node[latent] (eta1) at (-1.5, -2) {$\eta_{i1}$};
+\node[latent] (eta2) at ( 3, -2) {$\eta_{i2}$};
 
 % --------------------------------------------------------
 % 2) OBSERVED VARIABLES + ERROR TERMS
 %    Place y1..y3 (for eta1) on the left, y4..y6 (for eta2) on the right.
 % --------------------------------------------------------
-\node[obs] (y1) at (-3, 0) {$y_{1}$};
-\node[obs] (y2) at (-1.5, 0) {$y_{2}$};
-\node[obs] (y3) at ( 0, 0) {$y_{3}$};
+\node[obs] (y1) at (-3, 0) {$y_{i1}$};
+\node[obs] (y2) at (-1.5, 0) {$y_{i2}$};
+\node[obs] (y3) at ( 0, 0) {$y_{i3}$};
 
-\node[obs] (y4) at ( 1.5, 0) {$y_{4}$};
-\node[obs] (y5) at ( 3, 0) {$y_{5}$};
-\node[obs] (y6) at ( 4.5, 0) {$y_{6}$};
+\node[obs] (y4) at ( 1.5, 0) {$y_{i4}$};
+\node[obs] (y5) at ( 3, 0) {$y_{i5}$};
+\node[obs] (y6) at ( 4.5, 0) {$y_{i6}$};
 
 % Error terms above each observed variable
-\node[error] (e1) at (-3, 1.5) {$\epsilon_{1}$};
-\node[error] (e2) at (-1.5, 1.5) {$\epsilon_{2}$};
-\node[error] (e3) at ( 0, 1.5) {$\epsilon_{3}$};
-\node[error] (e4) at ( 1.5, 1.5) {$\epsilon_{4}$};
-\node[error] (e5) at ( 3, 1.5) {$\epsilon_{5}$};
-\node[error] (e6) at ( 4.5, 1.5) {$\epsilon_{6}$};
+\node[error] (e1) at (-3, 1.5) {$\epsilon_{i1}$};
+\node[error] (e2) at (-1.5, 1.5) {$\epsilon_{i2}$};
+\node[error] (e3) at ( 0, 1.5) {$\epsilon_{i3}$};
+\node[error] (e4) at ( 1.5, 1.5) {$\epsilon_{i4}$};
+\node[error] (e5) at ( 3, 1.5) {$\epsilon_{i5}$};
+\node[error] (e6) at ( 4.5, 1.5) {$\epsilon_{i6}$};
 
 % --------------------------------------------------------
 % 3) PATHS FROM ERROR TERMS TO OBSERVED VARIABLES
@@ -517,8 +568,8 @@ The corresponding path diagram is shown in @fig-path-twofac.
 
 % --------------------------------------------------------
 % 4) FACTOR LOADINGS
-%    \eta_1 -> y1, y2, y3
-%    \eta_2 -> y4, y5, y6
+%    \eta_{i1} -> y1, y2, y3
+%    \eta_{i2} -> y4, y5, y6
 % --------------------------------------------------------
 \draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{11}$} (y1);
 \draw[->] (eta1) -- node[pos=0.5, right] {$\Lambda_{21}$} (y2);
@@ -582,8 +633,8 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 %-------------------------------------------------------
 % 1) LATENT FACTORS (intercept i, slope s)
 %-------------------------------------------------------
-\node[latent] (i) at (-2,-3) {$i$};
-\node[latent] (s) at ( 2,-3) {$s$};
+\node[latent] (i) at (-2,-3) {$\delta_{i0}$};
+\node[latent] (s) at ( 2,-3) {$\delta_{i1}$};
 \node[intercept] (int1) at (-2,-4.2) {\footnotesize 1};
 \node[intercept] (int2) at (2,-4.2) {\footnotesize 1};
 
@@ -616,10 +667,10 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
   \pgfmathsetmacro{\x}{(\j*1.3 - 6.5)}
 
   % Observed variable y_j
-  \node[obs] (y\j) at (\x,0) {$y_{\j}$};
+  \node[obs] (y\j) at (\x,0) {$y_{i\j}$};
 
   % Error term epsilon_j above y_j
-  \node[error] (e\j) at (\x,1.5) {$\epsilon_{\j}$};
+  \node[error] (e\j) at (\x,1.5) {$\epsilon_{i\j}$};
 
   % Arrow from error to observed
   \draw[->] (e\j) -- (y\j);
@@ -648,20 +699,27 @@ In this subsection, we briefly describe these methods and their implementation i
 
 #### Bootstrap and jackknife
 
-The bootstrap and jackknife methods [@quenouille1956notes;@tukey1958bias;@hall1988bootstrap;@efron1982jackknife;@efron1992bootstrap] are resampling techniques that provide an empirical way of estimating the bias inherent in parameter estimates, which is then subtracted from the original estimate to obtain a bias-corrected estimate [@quenouille1949approximate;@efron1994introduction].
-Although similar, the two methods differ in their approach to resampling.
-The bootstrap involves generating numerous replicated data sets $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the original data set, and subsequently refitting the model to each bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.
-The bootstrap bias-corrected estimator is computed as:
-$$
-\hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B \hat\theta^{*}_{(b)},
-$$
-where $B$ is the number of bootstrap samples.
-In our study, $B=500$ was utilised.
-On the other hand, the jackknife method involves obtaining estimates $\hat\theta_{(i)}$ by repeatedly fitting the model to $n$ subsamples of size $n-1$, systematically leaving out one observation at a time from the data set.
-The jackknife bias-corrected estimator is then computed as:
-$$
-\hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n \hat\theta_{(i)}.
-$$
+The bootstrap and jackknife methods
+[@quenouille1956notes;@tukey1958bias;@hall1988bootstrap;@efron1982jackknife;@efron1992bootstrap]
+are resampling techniques that provide an empirical way of estimating
+the bias inherent in parameter estimates, which is then subtracted
+from the original estimate to obtain a bias-corrected estimate
+[@quenouille1949approximate;@efron1994introduction].  Although
+similar, the two methods differ in their approach to resampling.  The
+bootstrap involves generating numerous replicated data sets
+$\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the
+original data set, and subsequently refitting the model to each
+bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.  The
+bootstrap bias-corrected estimator is computed as: $$
+\hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B
+\hat\theta^{*}_{(b)}, $$ where $B$ is the number of bootstrap samples.
+In our study, $B=500$ was utilised.  On the other hand, the jackknife
+method involves obtaining estimates $\hat\theta_{(i)}$ by repeatedly
+fitting the model to $n$ subsamples of size $n-1$, systematically
+leaving out one observation at a time from the data set.  The
+jackknife bias-corrected estimator is then computed as: $$
+\hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n
+\hat\theta_{(i)}.  $$
 
 Confidence intervals can be constructed in several ways [@davison1997bootstrap], but here we use the normal approximation interval. 
 This method centers the bias-corrected estimate, assumes approximate normality of its sampling distribution, and uses standard errors derived from the variability across resamples.
