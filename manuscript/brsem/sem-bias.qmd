@@ -50,13 +50,12 @@ authors:
 date-modified: last-modified
 title: Bias-Reduced Estimation of Structural Equation Models
 abstract: |
-  [**IK: A BIT MORE DESCRIPTIVE HERE**] An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
+  [**IK: A bit more descriptive here**] An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:
   - Structural Equation Models
   - Growth Curve Models
   - Bias Reduction
 ---
-
 
 
 ```{r}
@@ -86,10 +85,10 @@ clinical psychology, developmental research, and neuroscience
 consequence of studying rare populations.  For example, research
 involving children with burned facial injuries is inherently limited
 by the small number of individuals who meet these specific criteria
-[**IK: ANY REFERENCE?**].  Similarly, studies focusing on rare genetic
+[**IK: any reference?**].  Similarly, studies focusing on rare genetic
 disorders, elite athletes, or unique cultural groups often face strict
 limitations in sample size due to the rarity of the target
-population. [**IK: ANY REFERENCE?**]  In such contexts, the use of
+population. [**IK: any reference?**]  In such contexts, the use of
 SEMs remains desirable for testing complex theoretical models, but the
 challenges posed by small samples become unavoidable and cannot be
 ignored.
@@ -171,9 +170,8 @@ the use of restricted maximum likelihood (REML) has been found to
 result in less biased estimates of the variance components
 [@corbeil1976restricted; @patterson1971recovery]. In a paper focusing
 on small sample corrections for Wald tests in SEMs, @ozenne2020small
-describe an analytic method to correct for the finite-sample bias in
-SEMs based on technology originating from the generalized estimating
-equation (GEE) literature [@kauermann2001note].  Importantly, their
+describe an analytic method to correct for the asymptotic bias in the
+ML estimation of SEMs with exogenous variables.  Importantly, their
 method only targets the (observed or latent) (co)variance parameters
 in the model, and parameters like regression coefficients and factor
 loadings are not affected. More general strategies towards reducing
@@ -211,38 +209,39 @@ estimators) derived from asymptotically unbiased estimating
 functions. That framework operates either explicitly, by subtracting
 an estimate of the bias from the original estimator, or implicitly, by
 finding the roots of adjusted estimating functions. Notably,
-reduced-bias $M$-estimation (RB$M$) requires only a bias approximation
+reduced-bias M-estimation (RBM) requires only a bias approximation
 that involves the first and second derivatives of the estimating
 functions with respect to the parameters, eliminating the need for
 complex expectations under the model, and hence being more robust to
-model mis-specification than other popular bias reduction methods,
-such as that of @firth1993bias. Explicit RB$M$ estimation requires
-just the original estimates and an evaluation of the bias
-approximation, and the implicit version requires the computation of
-the root of adjusted score equations, with an adjustment that directly
-depends on that bias approximation. As a result, RB$M$ estimation
-requires no re-sampling or repeated fitting of the SEM.  Furthermore,
-in contrast to existing bias-reduction techniques for SEMs, the RB$M$
-approach is fully general and, hence, applicable to any SEM
-specification, while simultaneously targeting all model parameters,
-and the RB$M$ estimators have the same asymptotic distribution as the
-original estimators, ensuring that standard inference and model
-selection procedures apply directly.
+model mis-specification and easier to apply than other popular bias
+reduction methods, such as that of @firth1993bias, which require
+expectations of products of log-likelihood derivatives with respect to
+the assumed model. Explicit RBM estimation requires just the original
+estimates and an evaluation of the bias approximation, and the
+implicit version requires the computation of the root of adjusted
+score equations, with an adjustment that directly depends on that bias
+approximation. As a result, RBM estimation requires no re-sampling or
+repeated fitting of the SEM.  Furthermore, in contrast to existing
+bias-reduction techniques for SEMs, the RBM approach is fully general
+and, hence, applicable to any SEM specification, while simultaneously
+targeting all model parameters, and the RBM estimators have the same
+asymptotic distribution as the original estimators, ensuring that
+standard inference and model selection procedures apply directly.
 
 Motivated by these appealing properties, the goal of this paper is to
-investigate the performance of the RB$M$ estimation framework for
+investigate the performance of the RBM estimation framework for
 SEM. The RBM method is straightforward to implement for any
 SEM specification, and we provide accompanying R code in the
 supplementary materials to facilitate its application.
 
-[**IK: REVISIT**] The remainder of the paper is structured as follows.  We begin by
+[**IK: revisit**] The remainder of the paper is structured as follows.  We begin by
 briefly outlining the SEM framework and introducing the notation used
 throughout the paper.  We then present a concise overview of several
 bias-reduction techniques, including the method proposed by
 @ozenne2020small, the jackknife and bootstrap approaches, and the
-recently introduced RB$M$ method.  Following this, we report the results
+recently introduced RBM method.  Following this, we report the results
 of a comprehensive simulation study designed to evaluate the
-performance of the RB$M$ approach in comparison to existing
+performance of the RBM approach in comparison to existing
 alternatives.  Finally, we conclude with a discussion of the findings
 and offer practical recommendations for applied researchers.
 
@@ -324,7 +323,7 @@ $$
 \mu(\theta) &= \nu + \Lambda (I - B)^{-1} \alpha \,,\\
 \Sigma(\theta) &= \Lambda (I - B)^{-1} \Psi (I-B)^{-\top} \Lambda^\top + \Theta \,,
 \end{aligned}
-$$
+$$ {#eq-marg-mom}
 
 where for an invertible matrix $A$, $A^{-\top} = (A^{-1})^\top$.
 
@@ -385,6 +384,8 @@ of zeros.
 <!-- with desirable properties, such as being always finite in models with -->
 <!-- categorical responses [@kosmidis2021finite]. -->
 
+### Bias reduction
+
 The maximum likelihood estimator, as used for SEMs, is an example of a
 typically biased estimator which under regularity conditions from
 @cox1979theoretical, has bias with asymptotic order
@@ -424,6 +425,8 @@ at the desired estimator, and solve the implicit equation
 $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for
 $\tilde{\theta}$. 
 
+### Resampling-based methods
+
 Prominent examples of explicit bias reduction methods include the
 bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife
 [@quenouille1956notes; @efron1982jackknife]. The bootstrap involves
@@ -443,15 +446,77 @@ $$
 \hat\theta_{(i)} \, . 
 $$
 
-<!-- which are both examined -->
-<!-- in this paper, while a notable example of an implicit method is the -->
-<!-- bias-reducing adjusted score equations of @firth1993bias. -->
+Although intuitive and straightforward to implement, the bootstrap and
+jackknife each have their limitations.  In SEM estimation with small
+samples, convergence issues and estimator instability can lead to
+unreliable resampled estimates [@dhaene2022resampling], while in large
+samples, the procedures can be computationally intensive.
+Additionally, the jackknife may underestimate variability for
+nonlinear estimators [@efron1994introduction], and the bootstrap can
+perform poorly when the sampling distribution is skewed or parameters
+are near the boundary of the parameter space [@davison1997bootstrap]
+[**IK: Can we cite the specific section where this is mentioned?**].
 
-Reduced-bias M-estimation [RB$M$-estimation, @kosmidis2024empirical]
+
+### Alternative approaches to reducing bias {#sec-alternative}
+
+Restricted maximum likelihood (REML), while formally not a bias
+reduction technique, is frequently used for correcting biases in the
+estimation of variance components [@patterson1971recovery] in linear
+mixed effects [@corbeil1976restricted]. A range of SEMs can be
+expresses as linear mixed effects model
+[@bauer2003estimating;@cheung2013implementing], where $y \mid b \sim
+\text{N}(X \beta + Z b, \sigma^2 I)$, where $X$ and $Z$ are the fixed
+and random model matrices, respectively, $\beta$ is the vector of
+fixed effects, and $b \sim N(0, \Sigma_u)$ is the vector of random
+effects.  REML estimates are obtained by maximising a marginal
+likelihood function based on residuals from a least squares fit of the
+model $Y \sim \text{N}(X\beta)$. That marginal likelihood ends up not
+involving the fixed effects parameters. Specifically, REML maximizes
+[@fitzmaurice2011applied] 
+$$ 
+\ell_{\text{REML}}(\theta) =
+- \frac{1}{2} \log |V| - \frac{1}{2} \log | X^\top V^{-1} X | 
+- \frac{1}{2} (y - X\hat{\beta}_V)^\top V^{-1} (y - X\hat{\beta}_V) \, ,
+$$
+
+where $V = Z\Sigma_u Z^\top + \sigma^2 I$ is the variance-covariance
+matrix of the marginal distribution of $y$ and $\hat\beta_V = (X^\top
+V^{-1}X)^{-1}X^\top V^{-1} y$.
+
+The REML estimators of the variance components have, typically,
+smaller bias than the ML estimators, which is particularly useful with
+small sample sizes and complex covariance structures.
+
+<!-- Confidence intervals are constructed in the usual way using Wald-type -->
+<!-- intervals based on the inverse of the observed information matrix, -->
+<!-- though their accuracy may be limited for variance components near the -->
+<!-- boundary or in small samples.  For further details, see, for example, -->
+<!-- @harville1977maximum, @skrondal2004generalized, and -->
+<!-- @bates2015fitting. [**IK: discuss?**] -->
+
+In a paper focusing on small sample corrections for Wald tests in SEMs
+with exogenous covariates, @ozenne2020small [Section 4] derive the
+asymptotic bias of $\hat{\Sigma} = n^{-1} \sum_{i = 1}^n (y_i -
+\mu(\hat\theta))^\top (y_i - \mu(\hat\theta))$ as an estimator of
+$\Sigma(\theta)$, based on methods from the generalized estimating
+equation (GEE) literature [@kauermann2001note]. @ozenne2020small show
+that that asymptotic bias a negative definite matrix. Based on this
+observation they devise an iterative scheme that use the ML estimator
+of $\Lambda$ and $B$, and aims to correct the bias in the estimation
+of the variance parameters $\Psi$ and $\Theta$, by correcting the bias
+of the \hat{\Sigma} as an estimator of $\Sigma(\theta)$. Importantly,
+that method focuses only on the variance parameters in the model, and
+the bias of the estimators of regression coefficients and factor
+loadings is not targeted.
+
+### Reduced-bias M-estimation {#sec-resampling}
+
+Reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical]
 is a recently-introduced, general-purpose bias reduction method, which
 can operate implicitly or explicitly, and requires only the
 log-likelihood function, and its first three derivatives to
-approximate the bias function. As a result, RB$M$ estimation can be
+approximate the bias function. As a result, RBM estimation can be
 readily implemented, either using closed-form derivatives, or through
 numerical differentiation routines, such as those provided by
 [e.g. using the `{numDeriv}` R package @gilbert2022numderiv]. When
@@ -474,15 +539,15 @@ $$
 $$ 
 where $\ell_i(\theta)$ is the $i$-th contribution to the
 log-likelihood, such that $\ell(\theta) = \sum_{i=1}^n
-\ell_i(\theta)$.
+\ell_i(\theta)$. AAA
 
-The explicit RB$M$ estimator is defined as
+The explicit RBM estimator is defined as
 $$
 \theta^\dagger = \hat{\theta} + j(\hat{\theta})^{-1} A(\hat{\theta}) \,,
 $$
 where $A(\hat\theta) = \nabla P(\theta)\Big|_{\theta=\hat\theta}$.
 
-Explicit and implicit RB$M$ estimation have advantages and
+Explicit and implicit RBM estimation have advantages and
 disadvantages. Computing $\theta^\dagger$ is a single step procedure,
 so is likely to be faster to compute then $\tilde{\theta}$. However,
 the explicit approach provides no safeguards on what value the final
@@ -490,20 +555,26 @@ estimator can take, and it may result in an estimate outside the
 parameter space. The implicit approach allows appropriate constraints
 to be incorporated into the optimization process, and is typically
 more stable as it does not require the value of
-$\hat{\theta}$. Overall, both explicit and implicit RB$M$ estimation
+$\hat{\theta}$. Overall, both explicit and implicit RBM estimation
 is typically noticeably faster than simulation based methods such as
 the bootstrap and jackknife, because it does not require repeated
 fits.
+
+
 
 <!-- DISCUSSION: The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability. -->
 
 ## Simulation Study
 
-To evaluate the effectiveness of our proposed explicit and implicit bias reduction methods, we conducted an extensive simulation study mirroring the work done by @dhaene2022resampling.
-We replicated the models and experimental settings exactly, allowing for a direct comparison with existing resampling-based and other methods for bias correction.
-This section describes the models, simulation scenarios, and the outcome of interest of our simulations.
-
 ### Models
+
+We evaluate the effectiveness of explicit and implicit RBM estimation
+through an extensive simulation study that uses the models and
+experimental settings in @dhaene2022resampling, who have compared
+their adaptations of the resampling-based methods in @sec-resampling
+to SEMs to the alternative methods for bias correction in
+@sec-alternative. In this way, we can perform a direct comparison of
+the performance of RBM estimation with previously-proposed methods.
 
 Two distinct structural equation models (SEM) were considered: a) A two-factor SEM with a latent regression; and b) a latent growth curve model (GCM), 
 These models represent commonly used models used by practitioners and researchers alike in the social sciences.
@@ -690,80 +761,80 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 Path diagram for the growth curve model.
 :::
 
-### Competitor methods
+<!-- ### Competitor methods -->
 
-[I wonder if this should go in the section prior.]{bg-colour="#FFEA00"}
+<!-- [I wonder if this should go in the section prior.]{bg-colour="#FFEA00"} -->
 
-In @dhaene2022resampling, the authors compared four bias reduction methods applied to the two SEM models above, namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML).
-In this subsection, we briefly describe these methods and their implementation in the context of our simulation study.
+<!-- In @dhaene2022resampling, the authors compared four bias reduction methods applied to the two SEM models above, namely the bootstrap, jackknife, Ozenne et al.'s [-@ozenne2020small] method, and Restricted Maximum Likelihood (REML). -->
+<!-- In this subsection, we briefly describe these methods and their implementation in the context of our simulation study. -->
 
-#### Bootstrap and jackknife
+<!-- #### Bootstrap and jackknife -->
 
-The bootstrap and jackknife methods
-[@quenouille1956notes;@tukey1958bias;@hall1988bootstrap;@efron1982jackknife;@efron1992bootstrap]
-are resampling techniques that provide an empirical way of estimating
-the bias inherent in parameter estimates, which is then subtracted
-from the original estimate to obtain a bias-corrected estimate
-[@quenouille1949approximate;@efron1994introduction].  Although
-similar, the two methods differ in their approach to resampling.  The
-bootstrap involves generating numerous replicated data sets
-$\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the
-original data set, and subsequently refitting the model to each
-bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.  The
-bootstrap bias-corrected estimator is computed as: $$
-\hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B
-\hat\theta^{*}_{(b)}, $$ where $B$ is the number of bootstrap samples.
-In our study, $B=500$ was utilised.  On the other hand, the jackknife
-method involves obtaining estimates $\hat\theta_{(i)}$ by repeatedly
-fitting the model to $n$ subsamples of size $n-1$, systematically
-leaving out one observation at a time from the data set.  The
-jackknife bias-corrected estimator is then computed as: $$
-\hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n
-\hat\theta_{(i)}.  $$
+<!-- The bootstrap and jackknife methods -->
+<!-- [@quenouille1956notes;@tukey1958bias;@hall1988bootstrap;@efron1982jackknife;@efron1992bootstrap] -->
+<!-- are resampling techniques that provide an empirical way of estimating -->
+<!-- the bias inherent in parameter estimates, which is then subtracted -->
+<!-- from the original estimate to obtain a bias-corrected estimate -->
+<!-- [@quenouille1949approximate;@efron1994introduction].  Although -->
+<!-- similar, the two methods differ in their approach to resampling.  The -->
+<!-- bootstrap involves generating numerous replicated data sets -->
+<!-- $\{y^{*}_{(b)}\}_{b=1}^B$ by sampling with replacement from the -->
+<!-- original data set, and subsequently refitting the model to each -->
+<!-- bootstrap sample to obtain estimates $\hat\theta^{*}_{(b)}$.  The -->
+<!-- bootstrap bias-corrected estimator is computed as: $$ -->
+<!-- \hat\theta_{\text{boot}} = 2\hat\theta - \frac{1}{B}\sum_{b=1}^B -->
+<!-- \hat\theta^{*}_{(b)}, $$ where $B$ is the number of bootstrap samples. -->
+<!-- In our study, $B=500$ was utilised.  On the other hand, the jackknife -->
+<!-- method involves obtaining estimates $\hat\theta_{(i)}$ by repeatedly -->
+<!-- fitting the model to $n$ subsamples of size $n-1$, systematically -->
+<!-- leaving out one observation at a time from the data set.  The -->
+<!-- jackknife bias-corrected estimator is then computed as: $$ -->
+<!-- \hat\theta_{\text{jack}} = n\hat\theta - (n-1)\frac{1}{n}\sum_{i=1}^n -->
+<!-- \hat\theta_{(i)}.  $$ -->
 
-Confidence intervals can be constructed in several ways [@davison1997bootstrap], but here we use the normal approximation interval. 
-This method centers the bias-corrected estimate, assumes approximate normality of its sampling distribution, and uses standard errors derived from the variability across resamples.
+<!-- Confidence intervals can be constructed in several ways [@davison1997bootstrap], but here we use the normal approximation interval.  -->
+<!-- This method centers the bias-corrected estimate, assumes approximate normality of its sampling distribution, and uses standard errors derived from the variability across resamples. -->
 
-Although intuitive and straightforward to implement, the bootstrap and jackknife each have their limitations. 
-In small samples, convergence issues and estimator instability can lead to unreliable resampled estimates [@dhaene2022resampling], while in large samples, the procedures can be computationally intensive. 
-Additionally, the jackknife may underestimate variability for nonlinear estimators [@efron1994introduction], and the bootstrap can perform poorly when the sampling distribution is skewed or parameters are near the boundary of the parameter space [@davison1997bootstrap].
+<!-- Although intuitive and straightforward to implement, the bootstrap and jackknife each have their limitations.  -->
+<!-- In small samples, convergence issues and estimator instability can lead to unreliable resampled estimates [@dhaene2022resampling], while in large samples, the procedures can be computationally intensive.  -->
+<!-- Additionally, the jackknife may underestimate variability for nonlinear estimators [@efron1994introduction], and the bootstrap can perform poorly when the sampling distribution is skewed or parameters are near the boundary of the parameter space [@davison1997bootstrap]. -->
 
-#### REML
+<!-- #### REML -->
 
-REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components [@patterson1971recovery], particularly within the linear mixed effects framework [@corbeil1976restricted].
-As noted earlier, the latent growth curve models may be expressed as a linear mixed model [@bauer2003estimating;@cheung2013implementing], where the latent intercept and slope are treated as random effects with model equations
-$$
-\begin{gathered}
-y_i = X_i \beta + Z_i b_i + \epsilon_i \\
-u_i \sim N(0, \Sigma_u) \\
-\epsilon_i \sim N(0, \sigma^2I) \\
-\end{gathered}
-$$
-Here, $y_i\in\mathbb R^p$ are the observed item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $b_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors.
-Specifically, the latent GCM in @fig-path-growth has $X_i$ and $Z_i$, for each $i$, both being $10 \times 2$ matrices where the first column contains all 1s and the second column contains the time points 0 to 9 in increments of 1.
-Further, the 2-vector $\beta$ in fact contains the latent intercepts $\alpha_1$ and $\alpha_2$, while the vector $b_i$ represents the two latent factors.
-Therefore, the covariance matrix $\Sigma_u$ contains elements $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$.
+<!-- REML, while not an explicit bias reduction technique, is frequently employed in the estimation of variance components [@patterson1971recovery], particularly within the linear mixed effects framework [@corbeil1976restricted]. -->
+<!-- As noted earlier, the latent growth curve models may be expressed as a linear mixed model [@bauer2003estimating;@cheung2013implementing], where the latent intercept and slope are treated as random effects with model equations -->
+<!-- $$ -->
+<!-- \begin{gathered} -->
+<!-- y_i = X_i \beta + Z_i b_i + \epsilon_i \\ -->
+<!-- u_i \sim N(0, \Sigma_u) \\ -->
+<!-- \epsilon_i \sim N(0, \sigma^2I) \\ -->
+<!-- \end{gathered} -->
+<!-- $$ -->
+<!-- Here, $y_i\in\mathbb R^p$ are the observed item responses as before, $X_i$ and $Z_i$ are the fixed and random design matrices, respectively, $\beta$ is the vector of fixed effects, $b_i$ is the vector of random effects, and $\epsilon_i$ is the vector of residual errors. -->
+<!-- Specifically, the latent GCM in @fig-path-growth has $X_i$ and $Z_i$, for each $i$, both being $10 \times 2$ matrices where the first column contains all 1s and the second column contains the time points 0 to 9 in increments of 1. -->
+<!-- Further, the 2-vector $\beta$ in fact contains the latent intercepts $\alpha_1$ and $\alpha_2$, while the vector $b_i$ represents the two latent factors. -->
+<!-- Therefore, the covariance matrix $\Sigma_u$ contains elements $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$. -->
 
-Linear mixed models elicit a Gaussian likelihood.
-However, unlike standard ML, REML estimates are obtained by maximising a likelihood function derived from linearly transformed data, designed to remove fixed-effects parameters. 
-Specifically, REML maximises [@fitzmaurice2011applied]
-$$
-\ell_{\text{REML}}(\theta) 
-= \text{const.} 
-- \frac{1}{2} \log |V| 
-- \frac{1}{2} \| y - X\hat{\beta} \|_{V^{-1}}^2 
-- \frac{1}{2} \log | X^\top V^{-1} X |,
-$$
-where $y$, $X$, and $Z$ represent the vertically stacked versions of $y_i$, $X_i$, and $Z_i$ across all $n$ observations, respectively, and $V=Z\Sigma_u Z^\top + \sigma^2I$ is the variance-covariance matrix of these stacked observations.
-The term $\hat\beta = (X^\top V^{-1}X)^{-1}X^\top V^{-1} y$ represents the generalised least squares estimates of the fixed-effects parameters.
+<!-- Linear mixed models elicit a Gaussian likelihood. -->
+<!-- However, unlike standard ML, REML estimates are obtained by maximising a likelihood function derived from linearly transformed data, designed to remove fixed-effects parameters.  -->
+<!-- Specifically, REML maximises [@fitzmaurice2011applied] -->
+<!-- $$ -->
+<!-- \ell_{\text{REML}}(\theta)  -->
+<!-- = \text{const.}  -->
+<!-- - \frac{1}{2} \log |V|  -->
+<!-- - \frac{1}{2} \| y - X\hat{\beta} \|_{V^{-1}}^2  -->
+<!-- - \frac{1}{2} \log | X^\top V^{-1} X |, -->
+<!-- $$ -->
+<!-- where $y$, $X$, and $Z$ represent the vertically stacked versions of $y_i$, $X_i$, and $Z_i$ across all $n$ observations, respectively, and $V=Z\Sigma_u Z^\top + \sigma^2I$ is the variance-covariance matrix of these stacked observations. -->
+<!-- The term $\hat\beta = (X^\top V^{-1}X)^{-1}X^\top V^{-1} y$ represents the generalised least squares estimates of the fixed-effects parameters. -->
 
-Variance parameters estimated this way yield less biased estimates, and is particularly beneficial for data characterised by small sample sizes and complex covariance structures.
-Confidence intervals are constructed in the usual way using Wald-type intervals based on the inverse of the observed information matrix, though their accuracy may be limited for variance components near the boundary or in small samples.
-For further details, see, for example, @harville1977maximum, @skrondal2004generalized, and @bates2015fitting.
+<!-- Variance parameters estimated this way yield less biased estimates, and is particularly beneficial for data characterised by small sample sizes and complex covariance structures. -->
+<!-- Confidence intervals are constructed in the usual way using Wald-type intervals based on the inverse of the observed information matrix, though their accuracy may be limited for variance components near the boundary or in small samples. -->
+<!-- For further details, see, for example, @harville1977maximum, @skrondal2004generalized, and @bates2015fitting. -->
 
-#### Ozenne et al.'s method
+<!-- #### Ozenne et al.'s method -->
 
-[Add description of @ozenne2020small method.]{bg-colour="#FFEA00"}
+<!-- [Add description of @ozenne2020small method.]{bg-colour="#FFEA00"} -->
 
 ### Simulation scenarios
 
