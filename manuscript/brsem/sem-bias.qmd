@@ -539,7 +539,7 @@ $$
 $$ 
 where $\ell_i(\theta)$ is the $i$-th contribution to the
 log-likelihood, such that $\ell(\theta) = \sum_{i=1}^n
-\ell_i(\theta)$. AAA
+\ell_i(\theta)$. 
 
 The explicit RBM estimator is defined as
 $$
@@ -570,25 +570,66 @@ fits.
 
 We evaluate the effectiveness of explicit and implicit RBM estimation
 through an extensive simulation study that uses the models and
-experimental settings in @dhaene2022resampling, who have compared
-their adaptations of the resampling-based methods in @sec-resampling
-to SEMs to the alternative methods for bias correction in
-@sec-alternative. In this way, we can perform a direct comparison of
-the performance of RBM estimation with previously-proposed methods.
+experimental settings in @dhaene2022resampling. @dhaene2022resampling
+have compared their SEM adaptations of the resampling-based methods
+for bias reduction in @sec-resampling to the alternative methods for
+bias correction in @sec-alternative. In this way, we can perform a
+direct comparison of the performance of RBM estimation with
+previously-proposed methods.
 
-Two distinct structural equation models (SEM) were considered: a) A two-factor SEM with a latent regression; and b) a latent growth curve model (GCM), 
-These models represent commonly used models used by practitioners and researchers alike in the social sciences.
+We consider two distinct SEMs: a) A two-factor SEM with a latent
+regression; and b) a latent growth curve model (GCM). Both models
+represent commonly-used models by practitioners and researchers in the
+social sciences and beyond.
 
-The two-factor SEM contains two latent variables, $\eta_{1}$ and $\eta_{2}$, each indicated by three observed variables: 
-$y_{1}$, $y_{2}$, $y_{3}$ for $\eta_{1}$ and $y_{4}$, $y_{5}$, $y_{6}$ for $\eta_{2}$. 
-Each observed measure has an associated error term $\epsilon_{j}\sim\operatorname{N}(0,\Theta_{jj})$. 
-The latent regression path from $\eta_{1}$ to $\eta_{2}$ is labelled $\beta$. 
-Factor loadings are represented by $\Lambda_{ij}$, and the latent variances by $\Psi_{11}$ and $\Psi_{22}$.
-Altogether, the model has 13 estimable parameters, as specified in @tbl-truth-twofac.
-The corresponding path diagram is shown in @fig-path-twofac.
+The two-factor SEM contains two latent variables, $\eta_{i1}$ and
+$\eta_{i2}$, each measured by three observed variables: $y_{i1}$,
+$y_{i2}$, $y_{i3}$ for $\eta_{i1}$ and $y_{i4}$, $y_{i5}$, $y_{u6}$
+for $\eta_{i2}$., and $\eta_{i1}$ is regressed on $\eta_{i2}$. In
+([-@eq-measurement]) and ([-@eq-structural]), the two-factor SEM has
+$\nu = (\nu_1, \ldots, \nu_6)^\top$, $\alpha = (0, 0)^\top$ and
+$$ 
+\Lambda = \begin{bmatrix}
+\Lambda_{11} & 0 \\
+\Lambda_{21} & 0 \\
+\Lambda_{31} & 0 \\
+0 & \Lambda_{42} \\
+0 & \Lambda_{52} \\
+0 & \Lambda_{62} \\
+\end{bmatrix} \quad \text{and} \quad
+B = \begin{bmatrix}
+0 & 0 \\
+\beta & 0 \\
+\end{bmatrix} \, ,
+$$
+and
+$$
+\Theta = \begin{bmatrix} 
+\Theta_{11} & 0 & \cdots & 0 \\
+0 & \Theta_{22} & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \Theta_{66} \\
+\end{bmatrix} \quad \text{and} \quad
+\Psi = \begin{bmatrix}
+\Psi_{11} & 0 \\
+0 & \Psi_{22} \\
+\end{bmatrix} \, .
+$$
 
-::: {#fig-path-twofac}
-```{r pathtwofac, engine = "tikz", out.width = "90%"}
+If we fix the scale of $\Lambda$ by setting $\Lambda_{11} =
+\Lambda_{41} = 1$ we establish an identifiable parameterization, and
+the two-factor SEM we consider has 19 estimable parameters. The
+maximum likelihood estimator of $\nu$ is simply the vector of sample
+means $\bar{y}_{.1}, \ldots, \bar{y}_{.6}$, and fixing $\nu$ to that
+leaves $13$ parameters to be estimated.<!--
+which we fix as shown in @tbl-truth-twofac --> The corresponding path
+diagram is shown in @fig-path-twofac.
+
+[**IK: Discuss. Does the RBM implementation consider $\nu$?**]
+
+```{r engine = "tikz", out.width = "90%"}
+#| label: fig-path-twofac
+#| fig-cap: "The path diagram for the two-factor SEM."
 \begin{tikzpicture}
 \node[inner sep=3pt] {%
 \begin{tikzpicture}[%
@@ -670,23 +711,60 @@ The corresponding path diagram is shown in @fig-path-twofac.
 };
 \end{tikzpicture}
 ```
-The path diagram for the two-factor structural equation model. 
-:::
 
-The latent GCM on the other hand characterises longitudinally observed continuous variables measured across ten time points $y_{1},\dots,y_{10}$ using two latent factors labelled $i$ for *intercept*, and $s$ for *slope*.
-The intercept factor loadings are fixed to unity, while slope factor loadings increment from 0 to 9. 
-Latent variances and covariance are represented by parameters $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$. 
-Additionally, latent intercepts for both growth factors are freely estimated, representing average initial status and growth trajectory, respectively. 
+The latent GCM characterizes longitudinally observed continuous
+variables measured across ten time points $y_{i1}, \dots, y_{i10}$
+using two latent factors labelled $\delta_{i0}$ for *intercept*, and
+$\delta_{i1}$ for *slope*. In ([-@eq-measurement]) and
+([-@eq-structural]), the latent GCM has $\nu = (0, \ldots, 0)^\top$, $\alpha = (\alpha_1, \alpha_2)^\top$,
+$$
+\Lambda = \begin{bmatrix}
+1 & 0 \\
+1 & 1 \\
+\vdots & \vdots \\
+1 & 9 \\
+\end{bmatrix} \quad \text{and} \quad 
+B = \begin{bmatrix}
+0 & 0 \\
+0 & 0 \\
+\end{bmatrix} \, ,
+$$
+and
+$$
+\Theta = \begin{bmatrix} 
+\sigma^2 & 0 & \cdots & 0 \\
+0 & \sigma^2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \sigma^2 \\
+\end{bmatrix} \quad \text{and} \quad
+\Psi = \begin{bmatrix}
+\Psi_{11} & \Psi_{12} \\
+\Psi_{12} & \Psi_{22} \\
+\end{bmatrix} \, .
+$$
 
-This model, illustrated in @fig-path-growth, involves a total of 6 parameters (see @tbl-truth-growth).
-The reduced number of parameters is due to constraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM.
-The reason for this is that the latent GCM model can equivalently be viewed as a random intercept and random slope (multilevel) model, where repeated observations over time are nested within individuals. 
-Under this hierarchical perspective, it is customary to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion. 
-This equivalence also motivates our examination of Restricted Maximum Likelihood (REML) estimation, which is commonly employed in multilevel modelling contexts to reduce bias in the estimation of variance components, particularly when dealing with limited sample sizes.
-A description of the REML method is provided in the next subsection.
+Hence, the latent CGM model has $6$ parameters to be estimated.  The
+corresponding path diagram is shown in @fig-path-growth. Furthermore,
+the latent CGM model can be written in the equivalent linear mixed
+effects model form as $y_i \mid \zeta \sim N(\Lambda \alpha + \Lambda
+\zeta, \sigma^2 I)$ with $\zeta \sim N(0, \Psi)$. Hence, REML in
+@sec-alternative can be used for the estimation of the variance
+parameters. 
 
-::: {#fig-path-growth}
-```{r pathgrowth, engine = "tikz"}
+
+<!-- The intercept factor loadings are fixed to unity, while slope factor loadings increment from 0 to 9.  -->
+<!-- Latent variances and covariance are represented by parameters $\Psi_{11}$, $\Psi_{22}$, and $\Psi_{12}$.  -->
+<!-- Additionally, latent intercepts for both growth factors are freely estimated, representing average initial status and growth trajectory, respectively.  -->
+
+<!-- This model, illustrated in @fig-path-growth, involves a total of 6 parameters (see @tbl-truth-growth). -->
+<!-- The reduced number of parameters is due to constraining all error variances $\operatorname{Var}(\epsilon_{j})$ to be equal (to $\Theta$) across all measurement occasions, rather than being subscripted by $j$ as in the regular SEM. -->
+<!-- The reason for this is that the latent GCM model can equivalently be viewed as a random intercept and random slope (multilevel) model, where repeated observations over time are nested within individuals.  -->
+<!-- Under this hierarchical perspective, it is customary to assume homogeneous measurement error variances across repeated measures, reflecting consistent reliability of observations at each measurement occasion.  -->
+<!-- This equivalence also motivates our examination of Restricted Maximum Likelihood (REML) estimation, which is commonly employed in multilevel modelling contexts to reduce bias in the estimation of variance components, particularly when dealing with limited sample sizes. -->
+
+```{r engine = "tikz"}
+#| label: fig-path-growth
+#| fig-cap: "The path diagram for the latent growth curve model."
 \usetikzlibrary{shapes.geometric,arrows,calc,positioning}
 \begin{tikzpicture}
 \node[inner sep=3pt] {%
@@ -758,8 +836,6 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 };
 \end{tikzpicture}
 ```
-Path diagram for the growth curve model.
-:::
 
 <!-- ### Competitor methods -->
 
@@ -865,19 +941,19 @@ tibble(
   ) |>
   unnest(c(truth, param)) |> 
   mutate(param = case_when(
-    param == "fx=~x2" ~ "$\\Lambda_{2,1}$",
-    param == "fx=~x3" ~ "$\\Lambda_{3,1}$",
-    param == "fy=~y2" ~ "$\\Lambda_{5,2}$",
-    param == "fy=~y3" ~ "$\\Lambda_{6,2}$",
+    param == "fx=~x2" ~ "$\\Lambda_{21}$",
+    param == "fx=~x3" ~ "$\\Lambda_{31}$",
+    param == "fy=~y2" ~ "$\\Lambda_{52}$",
+    param == "fy=~y3" ~ "$\\Lambda_{62}$",
     param == "fy~fx"  ~ "$\\beta$",
-    param == "x1~~x1" ~ "$\\Theta_{1,1}$",
-    param == "x2~~x2" ~ "$\\Theta_{2,2}$",
-    param == "x3~~x3" ~ "$\\Theta_{3,3}$",
-    param == "y1~~y1" ~ "$\\Theta_{4,4}$",
-    param == "y2~~y2" ~ "$\\Theta_{5,5}$",
-    param == "y3~~y3" ~ "$\\Theta_{6,6}$",
-    param == "fx~~fx" ~ "$\\Psi_{1,1}$",
-    param == "fy~~fy" ~ "$\\Psi_{2,2}$"
+    param == "x1~~x1" ~ "$\\Theta_{11}$",
+    param == "x2~~x2" ~ "$\\Theta_{22}$",
+    param == "x3~~x3" ~ "$\\Theta_{33}$",
+    param == "y1~~y1" ~ "$\\Theta_{44}$",
+    param == "y2~~y2" ~ "$\\Theta_{55}$",
+    param == "y3~~y3" ~ "$\\Theta_{66}$",
+    param == "fx~~fx" ~ "$\\Psi_{11}$",
+    param == "fy~~fy" ~ "$\\Psi_{22}$"
   )) |>
   mutate(truth = as.character(truth)) |>
   pivot_wider(names_from = rel, values_from = truth) |>
@@ -900,10 +976,10 @@ tibble(
   unnest(c(truth, param)) |>
   distinct(rel, truth, param, .keep_all = TRUE) |>
   mutate(param = case_when(
-    param == "v" ~ "$\\theta$",
-    param == "i~~i" ~ "$\\Psi_{1,1}$",
-    param == "s~~s" ~ "$\\Psi_{2,2}$",
-    param == "i~~s" ~ "$\\Psi_{1,2}$",
+    param == "v" ~ "$\\sigma^2$",
+    param == "i~~i" ~ "$\\Psi_{11}$",
+    param == "s~~s" ~ "$\\Psi_{22}$",
+    param == "i~~s" ~ "$\\Psi_{12}$",
     param == "i~1" ~ "$\\alpha_1$",
     param == "s~1" ~ "$\\alpha_2$",
   )) |>
@@ -1224,7 +1300,7 @@ plot_df |>
 
 Comparisons with the resampling-based approaches of @dhaene2022resampling--including the Jackknife, Bootstrap--and the analytic Ozenne method, showed that our methods consistently improved relative mean bias across all reliability settings and distributional scenarios. 
 @fig-meanbias-twofac and @fig-rmse-twofac demonstrate the relative mean bias and RMSE of our methods compared to aforementioned methods, respectively.
-For brevity, we excluded the Kurtosis scenario from the plots, as it produced roughly similar results to the normal distribution.
+For brevity, we excluded the Kurtosis scenario from the plots [**IK: can we report those in the appendix?**], as it produced roughly similar results to the normal distribution.
 The full table of results are available in the Appendix.
 
 While the bias performance of our methods was generally comparable to these established approaches, the resampling-based methods tended to achieve slightly lower bias at the cost of greater variability, particularly pronounced in scenarios with non-normal errors. 
@@ -1277,7 +1353,7 @@ plot_drcomp |>
 
 The GCM saw more successful estimation cases than the two-factor SEM, even at smaller sample sizes and low reliability.
 We focus on the normal distribution and low reliability (0.5) scenario as this is considered a more challenging case for estimation.
-In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting. 
+In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting [**IK: We need to elaborate a bit more on this**]. 
 The four remaining parameters are all the components in the factor covariance matrix $\Psi$, as well as the equality constrained error variance $\Theta_{1,1}$.
 
 @fig-centdist-growth displays the distribution of estimates for the growth curve model, highlighting the centered distributions of estimates across methods.
