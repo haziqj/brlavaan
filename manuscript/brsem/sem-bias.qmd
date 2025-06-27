@@ -321,11 +321,10 @@ vector and variance-covariance matrix as
 $$
 \begin{aligned}
 \mu(\theta) &= \nu + \Lambda (I - B)^{-1} \alpha \,,\\
-\Sigma(\theta) &= \Lambda (I - B)^{-1} \Psi (I-B)^{-\top} \Lambda^\top + \Theta \,,
+\Sigma(\theta) &= \Sigma^*(\theta) + \Theta \,,
 \end{aligned}
 $$ {#eq-marg-mom}
-
-where for an invertible matrix $A$, $A^{-\top} = (A^{-1})^\top$.
+with $\Sigma^*(\theta) = \Lambda (I - B)^{-1} \Psi (I-B)^{-\top} \Lambda^\top$, and $A^{-\top} = (A^{-1})^\top$.
 
 Then, given independent response vectors $y_1, \dots, y_n$ with $y_i \sim \text{N}\big(\mu(\theta), \Sigma(\theta)\big)$,
 maximum likelihood estimation proceeds by maximizing the SEM log likelihood
@@ -602,19 +601,20 @@ B = \begin{bmatrix}
 \beta & 0 \\
 \end{bmatrix} \, ,
 $$
-and
-$$
-\Theta = \begin{bmatrix} 
-\Theta_{11} & 0 & \cdots & 0 \\
-0 & \Theta_{22} & \cdots & 0 \\
-\vdots & \vdots & \ddots & \vdots \\
-0 & 0 & \cdots & \Theta_{66} \\
-\end{bmatrix} \quad \text{and} \quad
-\Psi = \begin{bmatrix}
-\Psi_{11} & 0 \\
-0 & \Psi_{22} \\
-\end{bmatrix} \, .
-$$
+and $\Theta$ and $\Psi$ are diagonal matrices with $\Theta_{11}, \ldots, \Theta_{66}$ and $\Psi_{11}, \Psi_{22}$ in their diagonals, respectively.
+
+<!-- $$ -->
+<!-- \Theta = \begin{bmatrix}  -->
+<!-- \Theta_{11} & 0 & \cdots & 0 \\ -->
+<!-- 0 & \Theta_{22} & \cdots & 0 \\ -->
+<!-- \vdots & \vdots & \ddots & \vdots \\ -->
+<!-- 0 & 0 & \cdots & \Theta_{66} \\ -->
+<!-- \end{bmatrix} \quad \text{and} \quad -->
+<!-- \Psi = \begin{bmatrix} -->
+<!-- \Psi_{11} & 0 \\ -->
+<!-- 0 & \Psi_{22} \\ -->
+<!-- \end{bmatrix} \, . -->
+<!-- $$ -->
 
 If we fix the scale of $\Lambda$ by setting $\Lambda_{11} =
 \Lambda_{41} = 1$ we establish an identifiable parameterization, and
@@ -729,19 +729,20 @@ B = \begin{bmatrix}
 0 & 0 \\
 \end{bmatrix} \, ,
 $$
-and
-$$
-\Theta = \begin{bmatrix} 
-\sigma^2 & 0 & \cdots & 0 \\
-0 & \sigma^2 & \cdots & 0 \\
-\vdots & \vdots & \ddots & \vdots \\
-0 & 0 & \cdots & \sigma^2 \\
-\end{bmatrix} \quad \text{and} \quad
-\Psi = \begin{bmatrix}
-\Psi_{11} & \Psi_{12} \\
-\Psi_{12} & \Psi_{22} \\
-\end{bmatrix} \, .
-$$
+and $\Theta$ is a diagonal $9 \times 9$ matrix with all diagonal elements equal to $\sigma^2$, and $\Psi$ is a $2 \times 2$ matrix with variances $\Psi_{11}$ and $\Psi_{22}$ in its diagonal and covariance $\Psi_{12}$.
+
+<!-- $$ -->
+<!-- \Theta = \begin{bmatrix}  -->
+<!-- \sigma^2 & 0 & \cdots & 0 \\ -->
+<!-- 0 & \sigma^2 & \cdots & 0 \\ -->
+<!-- \vdots & \vdots & \ddots & \vdots \\ -->
+<!-- 0 & 0 & \cdots & \sigma^2 \\ -->
+<!-- \end{bmatrix} \quad \text{and} \quad -->
+<!-- \Psi = \begin{bmatrix} -->
+<!-- \Psi_{11} & \Psi_{12} \\ -->
+<!-- \Psi_{12} & \Psi_{22} \\ -->
+<!-- \end{bmatrix} \, . -->
+<!-- $$ -->
 
 Hence, the latent CGM model has $6$ parameters to be estimated.  The
 corresponding path diagram is shown in @fig-path-growth. Furthermore,
@@ -915,15 +916,61 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 ### Simulation scenarios
 
 <!-- Assessing bias reduction under these various settings is crucial because estimation methods may behave differently when a departure from ideal condition occurs. -->
-To thoroughly assess robustness and performance of the proposed methods, we considered multiple scenarios varying by three experimental factors: 
 
-- Sample size $n=15,20,50,100,1000$
-- Reliability of the observed variables $\text{rel}=0.5,0.8$
-- Distribution of $\eta$ and $\epsilon$, one of "Normal", "Kurtosis", or "Non-normal".
+We assess the robustness and performance of RBM estimation, by
+considering all possible combinations of three experimental
+factors. The first factor is the sample size $n \in \{15, 20, 50,
+100, 1000\}$. The second factor is the average reliability of the
+items, which is defined as 
+$$
+R(\theta) = \frac{1}{p}\sum_{j = 1}^p \frac{\Sigma^*_{jj}(\theta)}{\Sigma_{jj}(\theta)} \, .
+$$
+with $\Sigma^*(\theta)$ and $\Sigma(\theta)$ as in
+([-@eq-marg-mom]). For $\theta$, we consider the two parameters
+settings in @tbl-truth-growth for the two-factor model, and the the
+two parameters settings in @tbl-truth-growth for the latent CGM, which
+result in reliability being either about 0.5 (low) or about 0.8
+(high). The third factor is the distribution of $\eta$ and $\epsilon$,
+which we set to be either "normal", "kurtosis" or "non-normal".
+
 
 Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error. 
 Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques. 
 The chosen values of 0.8 and 0.5 are justified as they represent two distinct and informative measurement scenarios: a reliability of 0.8 simulates a close to ideal condition where the indicators capture 80% of the true variability, thereby reflecting a high-quality measurement scenario, while a reliability of 0.5 simulates a more challenging condition.
+
+
+```{r}
+#| eval: false
+
+reli <- function(Lambda, B, Psi, Theta) {
+    imbinv <- solve(diag(nrow(B)) - B)
+    Ss <- Lambda %*% imbinv %*% Psi %*% t(imbinv) %*% t(Lambda)
+    mean(diag(Ss) / diag(Ss + Theta))
+}
+
+## Two factor
+Lambda <- cbind(c(1, 0.7, 0.6, 0, 0, 0), c(0, 0, 0, 1, 0.7, 0.6))
+B <- cbind(c(0, 0.25), c(0, 0))
+Theta_h <- diag(c(0.25, 0.1225, 0.09, 0.25, 0.1225, 0.09))
+Theta_l <- diag(c(1, 0.49, 0.36, 1, 0.49, 0.36))
+Psi_l <- Psi_h <- diag(c(1, 1))
+
+c("low" = reli(Lambda, B, Psi_l, Theta_l),
+  "high" = reli(Lambda, B, Psi_h, Theta_h))
+
+## GCM
+Lambda <- cbind(1, 0:9)
+B <- matrix(0, 2, 2)
+Psi_h <- cbind(c(550, 40), c(40, 100))
+Psi_l <- cbind(c(275, 20), c(20, 50))
+Theta_h <- diag(rep(500, 10))
+Theta_l <- diag(rep(1300, 10))
+
+c("low" = reli(Lambda, B, Psi_l, Theta_l), 
+  "high" = reli(Lambda, B, Psi_h, Theta_h))
+
+
+```
 
 ::: {#tbl-panel layout-ncol=2}
 
@@ -1183,6 +1230,7 @@ Across all evaluated conditions, our proposed methods (eRBM and iRBM) consistent
 Root mean square error (RMSE), however, remained approximately equivalent across all methods, indicating similar levels of overall variability, a result visually corroborated by the comparative distribution plots.
 Our bias-reduction methods also provided notable improvements in confidence interval coverage, with increases of up to approximately 5% over ML, again primarily in smaller-sample scenarios.
 
+[**IK: Does "results.RData" have kurtosis and non-normal results?**]
 ```{r}
 #| label: fig-centdist-twofac
 #| fig-cap: 'Centered distributions of estimates for the two-factor model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
@@ -1366,6 +1414,8 @@ RMSE values remained comparable across methods, indicating consistent variabilit
 Notably, our bias-reduced methods achieved better calibration in terms of median bias. Specifically, our methods consistently resulted in probabilities of underestimating parameters closer to the nominal 50% level, whereas ML tended to systematically overshoot, thus introducing bias.
 It was interesting to see that the variance $\Psi_{1,1}$ for the latent factor $\eta_1$ benefited the most from the bias-reduction methods.
 For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and the bias was reduced by 30 units (10.9%) at best in the $n=15$ scenario.
+
+[**IK: Should `plot_df` ve `plot_df50` below?**]
 
 ```{r}
 #| label: fig-centdist-growth
