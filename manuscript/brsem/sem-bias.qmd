@@ -226,7 +226,9 @@ bias-reduction techniques for SEMs, the RBM approach is fully general
 and, hence, applicable to any SEM specification, while simultaneously
 targeting all model parameters, and the RBM estimators have the same
 asymptotic distribution as the original estimators, ensuring that
-standard inference and model selection procedures apply directly.
+standard inference and model selection procedures apply directly,
+including those that are robust to departures of the normality
+assumptions.
 
 Motivated by these appealing properties, the goal of this paper is to
 investigate the performance of the RBM estimation framework for
@@ -559,6 +561,12 @@ is typically noticeably faster than simulation based methods such as
 the bootstrap and jackknife, because it does not require repeated
 fits.
 
+The RBM estimators have the same asymptotic distribution as the
+original estimators, ensuring that standard inference and model
+selection procedures apply directly, including those that are robust
+to departures of the normality assumptions. For example, estimation of
+standard errors for use in hypothesis tests or confidence intervals
+can proceed using robust estimators of those [**IK: add citations**].
 
 
 <!-- DISCUSSION: The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability. -->
@@ -927,11 +935,12 @@ R(\theta) = \frac{1}{p}\sum_{j = 1}^p \frac{\Sigma^*_{jj}(\theta)}{\Sigma_{jj}(\
 $$
 with $\Sigma^*(\theta)$ and $\Sigma(\theta)$ as in
 ([-@eq-marg-mom]). For $\theta$, we consider the two parameters
-settings in @tbl-truth-growth for the two-factor model, and the the
+settings in @tbl-truth-twofac for the two-factor model, and the the
 two parameters settings in @tbl-truth-growth for the latent CGM, which
 result in reliability being either about 0.5 (low) or about 0.8
 (high). The third factor is the distribution of $\eta$ and $\epsilon$,
 which we set to be either "normal", "kurtosis" or "non-normal".
+
 
 
 Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error. 
@@ -980,7 +989,7 @@ c("low" = reli(Lambda, B, Psi_l, Theta_l),
 #| html-table-processing: none
 #| tbl-cap: 'Two-factor model parameters.'
 tibble(
-  rel = paste0("Reliability = ", c(0.8, 0.5))
+  rel = paste0("Reliability: ", c(0.8, 0.5))
 ) |>
   mutate(
     truth = list(truth_twofac(0.8), truth_twofac(0.5)),
@@ -1014,7 +1023,7 @@ tibble(
 #| html-table-processing: none
 #| tbl-cap: 'Growth curve model parameters.'
 tibble(
-  rel = paste0("Reliability = ", c(0.8, 0.5))
+  rel = paste0("Reliability: ", c(0.8, 0.5))
 ) |>
   mutate(
     truth = list(truth_growth(0.8), truth_growth(0.5)),
@@ -1132,6 +1141,8 @@ In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ 
   $$
   \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)}_j - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)} \leq \theta \leq \hat{\theta}^{(r)}_j + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)}\right)
   $$
+
+[**IK: Describe how we compute confidence intervals**]
 
 Results summarising these outcomes are discussed in detail in the next section.
 
@@ -1450,7 +1461,7 @@ p1 <-
   labs(x = NULL, y = NULL, fill = "Method", subtitle =  glue::glue("{plot_df50$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df50$rel[1])}"))
 
 p2 <-
-  plot_df |>
+  plot_df50 |>
   filter(param %in% growthpars) |> 
   summarise(count = n(), .by = dist:param) |>
   ggplot(aes(count, param, fill = method)) +
@@ -1477,7 +1488,7 @@ cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
 #| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the growth curve model. Vertical dashed lines indicate the ideal values for each metric.'
 #| fig-height: 7
 #| out-width: 100%
-plot_df |>
+plot_df50 |>
   filter(param %in% growthpars) |> 
   summarise(
     B = mean(bias, na.rm = TRUE, trim = 0.05),
@@ -1527,7 +1538,8 @@ plot_df |>
     legend.key.height = unit(1, "pt"), 
     legend.key.width = unit(9, "pt")
   ) +  
-  labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
+    labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df50$rel[1])}"))
+
 ```
 
 Next, we compared our methods to the competitor methods, including REML.
