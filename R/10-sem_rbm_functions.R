@@ -508,7 +508,6 @@ fit_sem <- function(
       jinv <- try(solve(j), silent = !TRUE)
       if (se == "standard") {
         V <- jinv
-        sds <- sqrt(diag(jinv))
       } else if (se == "robust.huber.white") {
         e <- information_matrix(
           x = as.numeric(est),
@@ -518,9 +517,13 @@ fit_sem <- function(
           lavoptions = lavoptions,
           kind = "first.order"
         )
+        if (lavmodel@ceq.simple.only) {
+          K <- lavmodel@ceq.simple.K
+          e <- t(K) %*% e %*% K
+        }
         V <- jinv %*% e %*% jinv
-        sds <- sqrt(diag(V))
       }
+      sds <- sqrt(diag(V))
     }
   }
 
@@ -528,6 +531,7 @@ fit_sem <- function(
   idx <- lavpartable$free[lavpartable$free > 0]
   est <- est[idx]
   sds <- sds[idx]
+  V   <- V[idx, idx, drop = FALSE]
   names(est) <- names(lavaan::coef(fit0))
 
   list(
