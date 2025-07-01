@@ -563,9 +563,10 @@ fits.
 
 The RBM estimators have the same asymptotic distribution as the
 original estimators, ensuring that standard inference and model
-selection procedures apply directly, including those that are robust
-to departures of the normality assumptions. For example, estimation of
-standard errors for use in hypothesis tests or confidence intervals
+selection procedures apply directly. This includes procedures that are
+robust to departures from the normality assumptions in
+([-@eq-measurement]) and ([-@eq-structural]). For example, estimation
+of standard errors for use in test statistics or confidence intervals
 can proceed using robust estimators of those [**IK: add citations**].
 
 
@@ -938,14 +939,17 @@ with $\Sigma^*(\theta)$ and $\Sigma(\theta)$ as in
 settings in @tbl-truth-twofac for the two-factor model, and the the
 two parameters settings in @tbl-truth-growth for the latent CGM, which
 result in reliability being either about 0.5 (low) or about 0.8
-(high). The third factor is the distribution of $\eta$ and $\epsilon$,
-which we set to be either "normal", "kurtosis" or "non-normal".
+(high).  Low reliability indicates that much of the variance in the
+data is attributable to measurement error, and can exacerbate finite
+sample bias, particularly in the estimation of variance components,
+impacting both estimation and inference performance. The third factor
+is the distribution of $\eta$ and $\epsilon$, which we set to be
+either "normal", "kurtosis" or "non-normal".
 
 
-
-Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error. 
-Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques. 
-The chosen values of 0.8 and 0.5 are justified as they represent two distinct and informative measurement scenarios: a reliability of 0.8 simulates a close to ideal condition where the indicators capture 80% of the true variability, thereby reflecting a high-quality measurement scenario, while a reliability of 0.5 simulates a more challenging condition.
+<!-- Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error.  -->
+<!-- Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques.  -->
+<!-- The chosen values of 0.8 and 0.5 are justified as they represent two distinct and informative measurement scenarios: a reliability of 0.8 simulates a close to ideal condition where the indicators capture 80% of the true variability, thereby reflecting a high-quality measurement scenario, while a reliability of 0.5 simulates a more challenging condition. -->
 
 
 ```{r}
