@@ -2,7 +2,7 @@
 
 source(here::here("experiments/brsem/_setup.R"))
 
-simu_res_growth <- vector("list", length = nrow(simu_id))
+simu_res_serobust_growth <- vector("list", length = nrow(simu_id))
 for (i in seq_len(nrow(simu_id))) {
   dist  <- simu_id$dist[i]
   model <- "growth"
@@ -12,7 +12,7 @@ for (i in seq_len(nrow(simu_id))) {
   # seeds <- NULL
 
   cli::cli_inform(">>> {Sys.time()} <<<\n\n[{i} / {nrow(simu_id)}] Now running {model} models ({dist}) rel = {rel}, n = {n}\n")
-  simu_res_growth[[i]] <- sim_fun(
+  simu_res_serobust_growth[[i]] <- sim_fun(
     dist = dist,
     model = model,
     rel = rel,
@@ -28,10 +28,10 @@ for (i in seq_len(nrow(simu_id))) {
     seeds = seeds
   )
   cat("\n")
-  save(simu_res_growth, file = here::here("experiments/brsem/simu_res_serobust_growth.RData"))
+  save(simu_res_serobust_growth, file = here::here("experiments/brsem/simu_res_serobust_growth.RData"))
 }
 
-# bind_rows(simu_res_growth) |>
+# bind_rows(simu_res_serobust_growth) |>
 #   mutate(seOK = map_lgl(se, ~!any(is.na(.x)))) |>
 #   summarise(
 #     count = sum(converged & seOK & Sigma_OK, na.rm = TRUE) / B * 100,
@@ -41,7 +41,7 @@ for (i in seq_len(nrow(simu_id))) {
 #   print(n = Inf)
 #
 #
-# simu_res_growth[[1]] |>
+# simu_res_serobust_growth[[1]] |>
 #   mutate(param = map(est, names), .before = est) |>
 #   unnest(c(param, est, se, truth)) |>
 #   drop_na(param) |>
