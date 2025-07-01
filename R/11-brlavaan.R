@@ -210,7 +210,7 @@ create_lav_from_fitsem <- function(
   #   else if (fit$estimator == "IBRMP") "IMP-BR ML"
   #   else if (fit$estimator == "EBRM") "EXP-BR ML"
   # Change vcov slot
-  fit0@vcov$se <- "standard"
+  fit0@vcov$se <- fit$se
   fit0@vcov$vcov <- fit$vcov
 
   # fit0@test <- fit_lav@test

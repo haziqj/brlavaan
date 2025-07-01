@@ -286,14 +286,26 @@ fit_sem <- function(
     if (!is.null(lavargs$estimator.args$plugin_pen))
       plugin_pen <- lavargs$estimator.args$plugin_pen
   }
-  if ("information" %in% names(lavargs)) information <- lavargs$information
-  else information <- "observed"
-  if ("estimator" %in% names(lavargs)) estimator <- lavargs$estimator
-  else estimator <- "ML"
+  # Default estimator is ML and observed information for se
+  if ("information" %in% names(lavargs))
+    information <- lavargs$information
+  else
+    information <- "observed"
+  if ("se" %in% names(lavargs))
+    se <- lavargs$se
+  else
+    se <- "standard"
+  if ("estimator" %in% names(lavargs))
+    estimator <- lavargs$estimator
+  else
+    estimator <- "ML"
 
   # Validate arguments
   rbm <- validate_rbm(rbm)
-  if (estimator != "ML") cli::cli_abort("Bias reduction methods are currently only available for ML estimation.")
+  if (estimator != "ML")
+    cli::cli_abort("Bias reduction methods are currently only available for ML estimation.")
+  if (!(se %in% c("none", "standard", "robust.huber.white")))
+    cli::cli_abort("Bias reduction methods are currently only for standard and robust (Huber White) standard errors.")
 
   # Which method?
   is_ML     <- rbm == "none"
@@ -469,31 +481,47 @@ fit_sem <- function(
   }
 
   # Standard errors ------------------------------------------------------------
-  j <- information_matrix(
-    x = as.numeric(est),
-    lavmodel = lavmodel,
-    lavsamplestats = lavsamplestats,
-    lavdata = lavdata,
-    lavoptions = lavoptions,
-    kind = information
-  )
-  if (lavmodel@ceq.simple.only) {
-    K <- lavmodel@ceq.simple.K
-    j <- t(K) %*% j %*% K
-  }
-  if (check_mat(j)) {
-    sds <- rep(NA, length(est))
-    jinv <- NULL
-
-    # EXPERIMENTAL
-    if (TRUE) {
-      jinv <- try(solve(Matrix::nearPD(j)$mat), silent = !TRUE)
-      sds <- sqrt(diag(jinv))
-    }
-
+  sds <- rep(NA, length(est))
+  V <- NULL
+  if (se == "none") {
+    # Do nothing
   } else {
-    jinv <- try(solve(j), silent = !TRUE)
-    sds <- sqrt(diag(jinv))
+    j <- information_matrix(
+      x = as.numeric(est),
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      kind = information
+    )
+    if (lavmodel@ceq.simple.only) {
+      K <- lavmodel@ceq.simple.K
+      j <- t(K) %*% j %*% K
+    }
+    if (check_mat(j)) {
+      # Case: Information matrix is not positive definite
+      if (FALSE) {  ### EXPERIMENTAL ###
+        V <- try(solve(Matrix::nearPD(j)$mat), silent = !TRUE)
+        sds <- sqrt(diag(V))
+      }
+    } else {
+      jinv <- try(solve(j), silent = !TRUE)
+      if (se == "standard") {
+        V <- jinv
+        sds <- sqrt(diag(jinv))
+      } else if (se == "robust.huber.white") {
+        e <- information_matrix(
+          x = as.numeric(est),
+          lavmodel = lavmodel,
+          lavsamplestats = lavsamplestats,
+          lavdata = lavdata,
+          lavoptions = lavoptions,
+          kind = "first.order"
+        )
+        V <- jinv %*% e %*% jinv
+        sds <- sqrt(diag(V))
+      }
+    }
   }
 
   # Unpack estimators and se
@@ -509,9 +537,10 @@ fit_sem <- function(
     converged = res$convergence == 0L,
     scaled_grad = scaled_grad,
     optim = res,
-    vcov = jinv,
+    vcov = V,
     Sigma = Sigma,
     information = information,
+    se = se,
     lavfun = lavfun,
     estimator = estimator,
     rbm = rbm,
