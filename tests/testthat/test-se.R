@@ -1,7 +1,14 @@
 set.seed(17)
 REL <- 0.8
-dat <- gen_data_twofac(n = 100, rel = REL, dist = "Normal")
-mod <- txt_mod_twofac(REL)
+MOD <- "growth"
+
+if (MOD == "twofac") {
+  dat <- gen_data_twofac(n = 100, rel = REL, dist = "Normal")
+  mod <- txt_mod_twofac(REL)
+} else if (MOD== "growth") {
+  dat <- gen_data_growth(n = 100, rel = REL, dist = "Normal")
+  mod <- txt_mod_growth(REL)
+}
 tru <- truth(dat)
 
 test_that("No standard errors", {
@@ -13,7 +20,7 @@ test_that("No standard errors", {
 test_that("Standard argument for se", {
   # Observed information
   fit1 <- sem(mod, dat, se = "standard", information = "observed")
-  fit2 <- fit_sem(mod, dat, rbm = "none", se = "standard", information = "observed")
+  fit2 <- fit_sem(mod, dat, rbm = "none", se = "standard", information = "observed", debug = !TRUE)
   fit3 <- brsem(mod, dat, estimator.args = list(rbm = "none"),
                 se = "standard")  # default information is observed
   expect_equal(sqrt(diag(fit1@vcov$vcov)), fit2$stderr, tolerance = 1e-5)
