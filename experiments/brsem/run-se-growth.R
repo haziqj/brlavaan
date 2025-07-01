@@ -1,4 +1,6 @@
-source(here::here("experiments/_setup.R"))
+# 1/7/25: Want to rerun experiments with sandwich vcov for improved SEs
+
+source(here::here("experiments/brsem/_setup.R"))
 
 simu_res_growth <- vector("list", length = nrow(simu_id))
 for (i in seq_len(nrow(simu_id))) {
@@ -18,15 +20,17 @@ for (i in seq_len(nrow(simu_id))) {
     nsimu = B,
     nboot = 500L,
     lavsim = FALSE,
-    whichsims = c("ML", "eRBM", "iRBM", "Ozenne", "REML", "JB", "BB"),
+    whichsims = c("ML", "eRBM", "iRBM", "Ozenne"),
     bounds = "none",
+    information = "observed",
+    se = "robust.huber.white",
     data_scale = 1 / 10,
     seeds = seeds
   )
   cat("\n")
-  save(simu_res_growth, file = here::here("experiments/brsem/simu_res_growth.RData"))
+  save(simu_res_growth, file = here::here("experiments/brsem/simu_res_serobust_growth.RData"))
 }
-#
+
 # bind_rows(simu_res_growth) |>
 #   mutate(seOK = map_lgl(se, ~!any(is.na(.x)))) |>
 #   summarise(
@@ -36,21 +40,16 @@ for (i in seq_len(nrow(simu_id))) {
 #   pivot_wider(names_from = method, values_from = count) |>
 #   print(n = Inf)
 #
-# mycols <- RColorBrewer::brewer.pal(8, "Paired")
-# names(mycols) <- c("eRBM", "iRBM", "JB", "BB", "lav", "ML", "REML", "Ozenne")
 #
-# bind_rows(simu_res_growth) |>
-#   unnest(c(est, se, truth)) |>
-#   mutate(param = names(truth)) |>
-#   distinct(seed, sim, dist, model, rel, n, method, param, .keep_all = TRUE) |>
-#   filter(param %in% c("i~~i", "s~~s", "i~~s", "v"), !is.na(se), Sigma_OK, converged) |>
+# simu_res_growth[[1]] |>
+#   mutate(param = map(est, names), .before = est) |>
+#   unnest(c(param, est, se, truth)) |>
+#   drop_na(param) |>
+#   filter(abs(est) < 10) |>
 #   summarise(
-#     bias = mean((est - truth) / truth, trim = 0.05),
-#     .by = c(dist, model, rel, n, method, param)
+#     bias = mean((est - truth) / truth, na.rm = TRUE),
+#     .by = dist:param
 #   ) |>
-#   ggplot(aes(n, bias, col = method)) +
-#   geom_line() +
-#   facet_grid(param ~ rel + dist) +
-#   scale_x_log10() +
-#   scale_colour_manual(values = mycols)
-#
+#   mutate(method = factor(method, levels = c("ML", "eRBM", "iRBM"))) |>
+#   ggplot(aes(param, bias, fill = method)) +
+#   geom_col(position = "dodge")

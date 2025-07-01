@@ -2,7 +2,7 @@ library(brlavaan)
 library(tidyverse)
 library(furrr)
 theme_set(theme_bw())
-load(here::here("experiments/simu_id.RData"))
+load(here::here("experiments/brsem/simu_id.RData"))
 
 ncores <- future::availableCores() - 1
 future::plan(multisession, workers = ncores)
@@ -19,6 +19,8 @@ sim_fun <- function(
     lavsim = FALSE,
     whichsims = c("ML", "eRBM", "iRBM", "Ozenne", "REML"),
     bounds = "standard",
+    information = NULL,
+    se = NULL,
     data_scale = 1,
     seeds = NULL
   ) {
@@ -77,7 +79,9 @@ sim_fun <- function(
       maxgrad = FALSE,
       fn.scale = 1,
       bounds = bounds,
-      start = true_vals
+      start = true_vals,
+      information = information,
+      se = se
     )
 
     fit_list <- list()
@@ -98,9 +102,10 @@ sim_fun <- function(
     # D&R SIMS -----------------------------------------------------------------
     if (model == "growth") {
       fit_lav <- try(growth(mod, dat, start = true_vals, bounds = bounds,
-                            ceq.simple = TRUE))
+                            information = information, se = se, ceq.simple = TRUE))
     } else if (model == "twofac") {
-      fit_lav <- try(sem(mod, dat, bounds = bounds, meanstructure = TRUE))
+      fit_lav <- try(sem(mod, dat, bounds = bounds, meanstructure = TRUE,
+                         information = information, se = se))
     }
     if (!inherits(fit_lav, "try-error")) {
       out <- list()
