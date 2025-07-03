@@ -1,12 +1,13 @@
 set.seed(17)
+N <- 100
 REL <- 0.8
-MOD <- "growth"
+MOD <- "twofac"
 
 if (MOD == "twofac") {
-  dat <- gen_data_twofac(n = 100, rel = REL, dist = "Normal")
+  dat <- gen_data_twofac(n = N, rel = REL, dist = "Normal")
   mod <- txt_mod_twofac(REL)
 } else if (MOD== "growth") {
-  dat <- gen_data_growth(n = 100, rel = REL, dist = "Normal")
+  dat <- gen_data_growth(n = N, rel = REL, dist = "Normal")
   mod <- txt_mod_growth(REL)
 }
 tru <- truth(dat)
