@@ -192,7 +192,8 @@ res <-
 plot_df <-
   res |>
   filter(method %in% c("ML", "eRBM", "iRBM")) |>
-  filter( converged, !is.na(se)) |>
+  filter(converged, !is.na(se)) |>
+  filter(param %in% c(twofacpars, growthpars)) |>
   # for each kind of model, filter bad standard errors
   filter(!(model == "twofac" & abs(se) > 5)) |>
   filter(!(model == "growth" & abs(se) > 500)) |>
@@ -206,7 +207,8 @@ plot_df <-
 plot_df50 <-
   res |>
   filter(method %in% c("ML", "eRBM", "iRBM")) |>
-  filter( converged, !is.na(se)) |>
+  filter(converged, !is.na(se)) |>
+  filter(param %in% c(twofacpars, growthpars)) |>
   # for each kind of model, filter bad standard errors
   filter(!(model == "twofac" & abs(se) > 5)) |>
   filter(!(model == "growth" & abs(se) > 500)) |>
@@ -457,3 +459,5 @@ save(twofacpars, growthpars, mycols, simu_id,
      bias_growth_80_df, bias_growth_50_df, covr_growth_df,
      tab_bias, tab_covr,
      file = here::here("experiments/brsem/results.RData"))
+
+save(twofacpars, growthpars, mycols, simu_id, res, file = here::here("experiments/brsem/full_res.RData"))
