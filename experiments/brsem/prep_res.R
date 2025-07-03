@@ -28,7 +28,9 @@ data_files <- paste0("experiments/brsem/", c(
   "simu_res_twofac_mp1.RData",
   "simu_res_twofac_mp2.RData",
   "simu_res_twofac_mp3.RData",
-  "simu_res_growth.RData"
+  "simu_res_growth.RData",
+  "simu_res_serobust_twofac.RData",
+  "simu_res_serobust_growth.RData"
 ))
 if (any(!file.exists(here::here(data_files)))) {
   cat("Downloading data files...\n")
@@ -77,22 +79,19 @@ simu_res <- c(simu_res_twofac, simu_res_growth)
 # $ converged <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, …
 # $ Sigma_OK  <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE,…
 
-# Load new simulations about standard errors
+# Add new simulations about robust standard errors
 load(here::here("experiments/brsem/simu_res_serobust_twofac.RData"))
 load(here::here("experiments/brsem/simu_res_serobust_growth.RData"))
 simu_res_serobust <- c(simu_res_serobust_twofac, simu_res_serobust_growth)
 
-new_simu_res <-
-map2(simu_res, simu_res_serobust, function(X, Y) {
-  left_join(
-    X,
-    select(Y, seed, sim, dist, model, rel, n, method, serob = se)
-  ) |>
-    select(seed:se, serob, everything())
-})
-
-old_simu_res <- simu_res
-simu_res <- new_simu_res
+simu_res <-
+  map2(simu_res, simu_res_serobust, function(X, Y) {
+    left_join(
+      X,
+      select(Y, seed, sim, dist, model, rel, n, method, serob = se)
+    ) |>
+      select(seed:se, serob, everything())
+  })
 
 ## ----- Convergence statistics ------------------------------------------------
 res_ours_nested <-
@@ -177,7 +176,9 @@ if (!file.exists(dr_data_file)) {
   load(dr_data_file)
 }
 
-# For two-factor model BB & JB, get from res_dr
+# For two-factor model BB & JB, get from res_dr (more stable and "nicer" results
+# compared to ours -- but the BB & JB for growth models were rerun by us, and
+# results similar to D&R 2022)
 res <-
   res |>
   filter(!(method %in% c("Bootstrap", "Jackknife") & model == "twofac")) |>
