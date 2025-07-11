@@ -48,7 +48,7 @@ authors:
     affiliations:
       - ref: warwick
 date-modified: last-modified
-title: Bias-Reduced Estimation of Structural Equation Models
+title: Bias-reduced estimation of structural equation models
 abstract: |
   [**IK: A bit more descriptive here**] An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
 keywords:
@@ -426,7 +426,7 @@ at the desired estimator, and solve the implicit equation
 $\hat{\theta} - \tilde{\theta} = \hat{B}(\tilde{\theta})$ for
 $\tilde{\theta}$. 
 
-### Resampling-based methods
+### Resampling-based methods {#sec-resampling}
 
 Prominent examples of explicit bias reduction methods include the
 bootstrap [@efron1994introduction; @hall1988bootstrap] and jackknife
@@ -472,16 +472,16 @@ and random model matrices, respectively, $\beta$ is the vector of
 fixed effects, and $b \sim N(0, \Sigma_u)$ is the vector of random
 effects.  REML estimates are obtained by maximising a marginal
 likelihood function based on residuals from a least squares fit of the
-model $Y \sim \text{N}(X\beta)$. That marginal likelihood ends up not
+model $y \sim \text{N}(X\beta, \sigma^2 I)$. That marginal likelihood ends up not
 involving the fixed effects parameters. Specifically, REML maximizes
 [@fitzmaurice2011applied] 
 $$ 
 \ell_{\text{REML}}(\theta) =
-- \frac{1}{2} \log |V| - \frac{1}{2} \log | X^\top V^{-1} X | 
-- \frac{1}{2} (y - X\hat{\beta}_V)^\top V^{-1} (y - X\hat{\beta}_V) \, ,
+- \frac{1}{2} \log |V(\theta)| - \frac{1}{2} \log | X^\top V(\theta)^{-1} X | 
+- \frac{1}{2} (y - X\hat{\beta}_{V(\theta)})^\top V(\theta)^{-1} (y - X\hat{\beta}_{V(\theta)}) \, ,
 $$
 
-where $V = Z\Sigma_u Z^\top + \sigma^2 I$ is the variance-covariance
+where $V(\theta) = Z\Sigma_u Z^\top + \sigma^2 I$ is the variance-covariance
 matrix of the marginal distribution of $y$ and $\hat\beta_V = (X^\top
 V^{-1}X)^{-1}X^\top V^{-1} y$.
 
@@ -511,7 +511,7 @@ that method focuses only on the variance parameters in the model, and
 the bias of the estimators of regression coefficients and factor
 loadings is not targeted.
 
-### Reduced-bias M-estimation {#sec-resampling}
+### Reduced-bias M-estimation {#sec-rbm}
 
 Reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical]
 is a recently-introduced, general-purpose bias reduction method, which
@@ -572,7 +572,7 @@ can proceed using robust estimators of those [**IK: add citations**].
 
 <!-- DISCUSSION: The implicit approach also allows extra plug in penalties to be added to achieve extra desired properties such as finiteness of estimators. Such penalties are discussed in @kosmidis2024empirical, and for SEMs specifically, are the subject of future work with the aim of increasing estimation stability. -->
 
-## Simulation Study
+## Simulation Study {#sec-simulation}
 
 ### Models
 
@@ -633,8 +633,6 @@ means $\bar{y}_{.1}, \ldots, \bar{y}_{.6}$, and fixing $\nu$ to that
 leaves $13$ parameters to be estimated.<!--
 which we fix as shown in @tbl-truth-twofac --> The corresponding path
 diagram is shown in @fig-path-twofac.
-
-[**IK: Discuss. Does the RBM implementation consider $\nu$?**]
 
 ```{r engine = "tikz", out.width = "90%"}
 #| label: fig-path-twofac
@@ -753,9 +751,9 @@ and $\Theta$ is a diagonal $9 \times 9$ matrix with all diagonal elements equal 
 <!-- \end{bmatrix} \, . -->
 <!-- $$ -->
 
-Hence, the latent CGM model has $6$ parameters to be estimated.  The
+Hence, the latent GCM model has $6$ parameters to be estimated.  The
 corresponding path diagram is shown in @fig-path-growth. Furthermore,
-the latent CGM model can be written in the equivalent linear mixed
+the latent GCM model can be written in the equivalent linear mixed
 effects model form as $y_i \mid \zeta \sim N(\Lambda \alpha + \Lambda
 \zeta, \sigma^2 I)$ with $\zeta \sim N(0, \Psi)$. Hence, REML in
 @sec-alternative can be used for the estimation of the variance
@@ -922,71 +920,35 @@ intercept/.style={regular polygon, regular polygon sides=3, draw, inner sep=0pt,
 
 <!-- [Add description of @ozenne2020small method.]{bg-colour="#FFEA00"} -->
 
-### Simulation scenarios
+### Simulation settings
 
 <!-- Assessing bias reduction under these various settings is crucial because estimation methods may behave differently when a departure from ideal condition occurs. -->
 
 We assess the robustness and performance of RBM estimation, by
 considering all possible combinations of three experimental
 factors. The first factor is the sample size $n \in \{15, 20, 50,
-100, 1000\}$. The second factor is the average reliability of the
-items, which is defined as 
+100, 1000\}$. 
+
+The second factor is the average reliability of the items, which is
+defined as
 $$
 R(\theta) = \frac{1}{p}\sum_{j = 1}^p \frac{\Sigma^*_{jj}(\theta)}{\Sigma_{jj}(\theta)} \, .
 $$
 with $\Sigma^*(\theta)$ and $\Sigma(\theta)$ as in
 ([-@eq-marg-mom]). For $\theta$, we consider the two parameters
-settings in @tbl-truth-twofac for the two-factor model, and the the
-two parameters settings in @tbl-truth-growth for the latent CGM, which
+settings in @tbl-truth-twofac for the two-factor model, and the 
+two parameters settings in @tbl-truth-growth for the latent GCM, which
 result in reliability being either about 0.5 (low) or about 0.8
 (high).  Low reliability indicates that much of the variance in the
-data is attributable to measurement error, and can exacerbate finite
+data is attributable to measurement error, and can result in finite
 sample bias, particularly in the estimation of variance components,
-impacting both estimation and inference performance. The third factor
-is the distribution of $\eta$ and $\epsilon$, which we set to be
-either "normal", "kurtosis" or "non-normal".
-
+impacting both estimation and inference performance. 
 
 <!-- Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error.  -->
 <!-- Lower reliability (indicating high measurement error) can exacerbate finite sample bias, particularly in the estimation of variance components, and thus influence the overall performance of bias-correction techniques.  -->
 <!-- The chosen values of 0.8 and 0.5 are justified as they represent two distinct and informative measurement scenarios: a reliability of 0.8 simulates a close to ideal condition where the indicators capture 80% of the true variability, thereby reflecting a high-quality measurement scenario, while a reliability of 0.5 simulates a more challenging condition. -->
 
-
-```{r}
-#| eval: false
-
-reli <- function(Lambda, B, Psi, Theta) {
-    imbinv <- solve(diag(nrow(B)) - B)
-    Ss <- Lambda %*% imbinv %*% Psi %*% t(imbinv) %*% t(Lambda)
-    mean(diag(Ss) / diag(Ss + Theta))
-}
-
-## Two factor
-Lambda <- cbind(c(1, 0.7, 0.6, 0, 0, 0), c(0, 0, 0, 1, 0.7, 0.6))
-B <- cbind(c(0, 0.25), c(0, 0))
-Theta_h <- diag(c(0.25, 0.1225, 0.09, 0.25, 0.1225, 0.09))
-Theta_l <- diag(c(1, 0.49, 0.36, 1, 0.49, 0.36))
-Psi_l <- Psi_h <- diag(c(1, 1))
-
-c("low" = reli(Lambda, B, Psi_l, Theta_l),
-  "high" = reli(Lambda, B, Psi_h, Theta_h))
-
-## GCM
-Lambda <- cbind(1, 0:9)
-B <- matrix(0, 2, 2)
-Psi_h <- cbind(c(550, 40), c(40, 100))
-Psi_l <- cbind(c(275, 20), c(20, 50))
-Theta_h <- diag(rep(500, 10))
-Theta_l <- diag(rep(1300, 10))
-
-c("low" = reli(Lambda, B, Psi_l, Theta_l), 
-  "high" = reli(Lambda, B, Psi_h, Theta_h))
-
-
-```
-
 ::: {#tbl-panel layout-ncol=2}
-
 
 ```{r}
 #| label: tbl-truth-twofac
@@ -1056,19 +1018,35 @@ tibble(
   fmt_markdown("param")
 ```
 
-True parameter values used in the simulations for the each reliability setting.
+True parameter values used in the simulation experiment of @sec-simulation.
 :::
 
-Distribution-free estimation methods exist for SEM, which are initially derived from the Gaussian likelihood, but is generally thought to be quite robust to non-normality. [Any reference to support the latter statement?]{bg-colour="#ffaA00"}
-Investigating the effect of departing from the baseline normality assumption in SEM is also of interest.
-This was done by replacing the normal distribution of *both* the latent factors and the measurement errors with one that has higher-order moments, yet still retains the same covariance structure.
-In other words, every simulated dataset is constructed to have the same underlying covariance matrix, but the distributional shape (e.g., the bell-shaped curve in the normal case or the altered spread and tail behaviour in the non-normal and kurtosis cases) differs. 
-The `{covsim}` [@gronneberg2022covsim] package was used for this purpose.
-The function allows to generate multivariate data with a target covariance matrix while controlling for the excess kurtosis and skewness of the distribution.
-In the baseline Normal distribution, both the skewness and excess kurtosis were set to $0$.
-In the "Kurtosis" condition, excess kurtosis was set to $6$ (with skewness held at $0$) to induce heavier tails; and in the "Non-normal" condition, skewness was set to $-2$ with excess kurtosis of $6$, producing asymmetric heavy-tailed distributions.
-@fig-compare-dist compares the shapes of the distributions for the three conditions.
-Once the data were generated, the observed variables were computed as per equations ... for each model.
+The third factor is the distribution of $\eta$ and $\epsilon$, which
+we set to be either "normal" or "non-normal", for both the latent
+factors and the measurement errors. We simulate datasets to have the
+covariance matrix ([-@eq-marg-mom]), as dictated by the parameters
+settings in @tbl-truth-twofac and @tbl-truth-growth, for the
+two-factor model and the latent GCM, respectively, but determine the
+distribution of the latent factors and the measurement errors using
+the `{covsim}` [@gronneberg2022covsim] R package. The `{covsim}` R
+package allows to generate multivariate data with a target covariance
+matrix while controlling for the excess kurtosis and skewness of the
+distribution. In the case of the normal distribution, both the
+skewness and excess kurtosis are set to $0$. In the non-normal case,
+skewness is set to $-2$ with excess kurtosis of $6$, producing
+asymmetric, heavy-tailed distributions.  @fig-compare-dist shows the
+shapes of the distributions for normal and non-normal distributions.
+
+<!-- Distribution-free estimation methods exist for SEM, which are initially derived from the Gaussian likelihood, but is generally thought to be quite robust to non-normality. [Any reference to support the latter statement?]{bg-colour="#ffaA00"} -->
+<!-- Investigating the effect of departing from the baseline normality assumption in SEM is also of interest. -->
+<!-- This was done by replacing the normal distribution of *both* the latent factors and the measurement errors with one that has higher-order moments, yet still retains the same covariance structure. -->
+<!-- In other words, every simulated dataset is constructed to have the same underlying covariance matrix, but the distributional shape (e.g., the bell-shaped curve in the normal case or the altered spread and tail behaviour in the non-normal and kurtosis cases) differs.  -->
+<!-- The `{covsim}` [@gronneberg2022covsim] package was used for this purpose. -->
+<!-- The function allows to generate multivariate data with a target covariance matrix while controlling for the excess kurtosis and skewness of the distribution. -->
+<!-- In the baseline Normal distribution, both the skewness and excess kurtosis were set to $0$. -->
+<!-- In the "Kurtosis" condition, excess kurtosis was set to $6$ (with skewness held at $0$) to induce heavier tails; and in the "Non-normal" condition, skewness was set to $-2$ with excess kurtosis of $6$, producing asymmetric heavy-tailed distributions. -->
+<!-- @fig-compare-dist compares the shapes of the distributions for the three conditions. -->
+<!-- Once the data were generated, the observed variables were computed as per equations ... for each model. -->
 
 ```{r}
 #| label: fig-compare-dist
@@ -1083,8 +1061,8 @@ Sigma <- matrix(c(1, rho, rho, 1), nrow = 2)
 dat <- list()
 dat$Normal <-
   covsim::rIG(n, Sigma, skewness = rep(0, 2), excesskurtosis = rep(0, 2))[[1]]
-dat$Kurtosis <-  # kurtosis
-  covsim::rIG(n, Sigma, skewness = rep(0, 2), excesskurtosis = rep(6, 2))[[1]]
+## dat$Kurtosis <-  # kurtosis
+##   covsim::rIG(n, Sigma, skewness = rep(0, 2), excesskurtosis = rep(6, 2))[[1]]
 dat$`Non-normal` <-  # non-normal
   covsim::rIG(n, Sigma, skewness = rep(-2, 2), excesskurtosis = rep(6, 2))[[1]]
 
@@ -1122,37 +1100,96 @@ cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
 
 ### Performance measures
 
-Across these $5\times 2 \times 3 = 30$ distinct scenarios, 1000 replications of the data were generated and for each replication we fitted the model using ML, our two bias reduction methods (eBR and iBR), and other competitor methods.
-The performance of each method was evaluated using the criteria below.
-In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ be the parameter estimates from the $r$-th replication, and $\theta$ be the true parameter value.
+Across the $5 \times 2 \times 2 = 20$ distinct experimental settings
+for sample size $n$, reliability $R(\theta)$ and distribution for each
+of the two-factor model and latent GCM model, we simulate 1000 [**IK: 2000?***]
+independent data sets, and the corresponding model is estimated using
+ML estimation, explicit and implicit RBM estimation (eRBM and iRBM,
+respectively), the method in @ozenne2020small [Section 4], and the
+bootstrap and jacknife adaptations in @dhaene2022resampling. Due to
+the equivalence of the latent GCM model with a linear mixed effects
+model, REML is also used to estimate the latent GCM model.
 
-1. Mean bias
-  $$
-  \operatorname{Bias}(\hat{\theta}) = \frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)} - \theta)
-  $$
+The performance of each method is first evaluated in terms of the
+number of samples that result in acceptable estimates. We define acceptable
+estimates are those that result i) from successful convergence of the
+optimization procedure that computes them, ii) in positive definite $\Sigma(\theta)$ at
+the estimates, and iii) in all estimated standard errors [**IK: are
+these based on just the hessian of the objective? Hessian of the
+objective is what we should use here.**] for the estimators being
+within acceptable numerical ranges. For the two-factor model and the
+latent GCM, we require all estimated standard errors to be less than
+5 and 500, respectively, reflecting differences in the scaling of
+observed variables.
 
-2. Probability of underestimation (median)
-  $$
-  \operatorname{P}(\hat{\theta}^{(r)}_j < \theta_j) = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}(\hat{\theta}^{(r)}_j < \theta_j)
-  $$
+We evaluate the methods in terms of simulation-based estimates of
+relative mean bias $\sum_{r=1}^{R}(\dot{\theta}^{(r)} - \theta) / R$,
+probability of underestimation
+$\sum_{r=1}^{R}\mathbb{1}(\dot{\theta}^{(r)}_j < \theta_j)/R$, and root
+mean squared error $\sqrt{\sum_{r=1}^{R}(\dot{\theta}^{(r)}_j -
+\theta_j)^2 / R}$, where $R$ is the number of samples that resulted in
+acceptable estimates for each method, and $\dot{\theta}^{(r)}_j$ is
+the $j$th component of the vector of estimates from the $r$th sample
+that resulted in acceptable estimates. In that way, the relative mean
+bias, probability of underestimation, and root mean squared error that
+we estimate are conditional on the estimator taking an acceptable
+value. We also evaluate the methods in terms of the simulation-based
+estimate of the conditional coverage of $95\%$ Wald-type confidence
+intervals at the estimates
+$$
+ \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\dot{\theta}^{(r)}_j - 1.96 s^{(r)}_j \leq \theta_j \leq \dot{\theta}^{(r)}_j + 1.96 s^{(r)}_j\right) \, ,
+ $$
+where $s_j^{(r)}$ is the estimated standard error corresponding to
+$\hat\theta^{(r)}_r$. As mentioned in @sec-rbm, the RBM estimators
+have the same asymptotic distribution as the ML estimator. Hence, we
+can estimate standard errors using the variance-covariance matrix of
+the asymptotic distribution of the ML estimator under model
+mis-specification. Specifically, $s^{(r)}_j$ is taken to be the square
+root of the $j$th diagonal element of $j(\dot\theta^{(r)})^{-1}
+e(\dot\theta^{(r)}) j(\dot\theta^{(r)})^{-1}$ for ML, eRBM, iRBM, and
+the method in @ozenne2020small [Section 4]. For bootstrap and
+jackknife, $s^{(r)}_j$ is taken to be the bootstrap and jackknife
+estimate of the standard error [**IK: add a reference that corresponds
+to what @dhaene2022resampling [Section 5.3] refer to **]. We do not
+consider alternative internals for bootstrap, like basic, studentized,
+percentile and BCa intervals [see, @davison1997bootstrap, for details]
+as they have been found to perform similarly to the normal
+approximation interval in the experimental settings we consider here
+[see @dhaene2022resampling]. For REML, which can be used to estimate the GCM model,
+$s^{(r)}_j$ is obtained from the square root of the corresponding
+diagonal element of the output of `vcov.merMod()` method of `{lme4}` R
+package [@bates2015fitting] for fitting LMMs.
 
-3. Root Mean Square Error (RMSE)
-  $$
-  \text{RMSE}(\hat{\theta}_j) = \sqrt{\frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)}_j - \theta_j)^2}
-  $$
+<!-- . -->
+<!-- In what follows, let $r=1,\dots,R$ index the replications, $\hat{\theta}^{(r)}$ be the parameter estimates from the $r$-th replication, and $\theta$ be the true parameter value. -->
 
-4. Coverage of 95% Wald Confidence Intervals
-  $$
-  \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)}_j - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)} \leq \theta \leq \hat{\theta}^{(r)}_j + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)}\right)
-  $$
+<!-- 1. Mean bias -->
+<!--   $$ -->
+<!--   \operatorname{Bias}(\hat{\theta}) = \frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)} - \theta) -->
+<!--   $$ -->
 
-[**IK: Describe how we compute confidence intervals**]
+<!-- 2. Probability of underestimation (median) -->
+<!--   $$ -->
+<!--   \operatorname{P}(\hat{\theta}^{(r)}_j < \theta_j) = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}(\hat{\theta}^{(r)}_j < \theta_j) -->
+<!--   $$ -->
 
-Results summarising these outcomes are discussed in detail in the next section.
+<!-- 3. Root Mean Square Error (RMSE) -->
+<!--   $$ -->
+<!--   \text{RMSE}(\hat{\theta}_j) = \sqrt{\frac{1}{R}\sum_{r=1}^{R}(\hat{\theta}^{(r)}_j - \theta_j)^2} -->
+<!--   $$ -->
+
+<!-- 4. Coverage of 95% Wald Confidence Intervals -->
+<!--   $$ -->
+<!--   \text{Coverage} = \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\hat{\theta}^{(r)}_j - 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)} \leq \theta \leq \hat{\theta}^{(r)}_j + 1.96\sqrt{\widehat{\text{Var}}(\hat{\theta}^{(r)}_j)}\right) -->
+<!--   $$ -->
+
+<!-- [**IK: Describe how we compute confidence intervals**] -->
+
+<!-- Results summarising these outcomes are discussed in detail in the next section. -->
 
 ## Results
 
-### Success rates
+### Rates of acceptable estimates
 
 
 ```{r}
@@ -1169,10 +1206,12 @@ boot_probs <- data.frame(dist = rep(c("Normal", "Kurtosis", "Non-normal"), each 
 
 ```{r}
 #| label: tbl-convsucc
-#| tbl-cap: 'Success rates for estimation of the two-factor model for the ML, eBR, and iBR methods. Highlighted in red are the scenarios which produced success rates below 50%.'
+#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor model using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%. [**IK: We still get kurtosis here, which I manually filtered out; has `res_conv` been updated with the new simulation results?**]'
 #| html-table-processing: none
 
-gt(res_conv |> left_join(boot_probs, by = c("dist", "n"))) |>
+gt(res_conv[-grep("ML", names(res_conv))] |>
+   left_join(boot_probs, by = c("dist", "n")) |>
+    filter(dist != "Kurtosis")) |>
   tab_spanner(
     columns = matches("twofac.*0\\.8"),
     label = "Reliability = 0.8",
@@ -1210,27 +1249,58 @@ gt(res_conv |> left_join(boot_probs, by = c("dist", "n"))) |>
   ) |>
   data_color(
     columns = -all_of("n"),
-    domain = c(0, 1.1),
+    domain = c(0, 1.01),
     palette = c("red3", "white",  "white")
   ) |>
   tab_options(table.font.size = "11px")
 ```
 
-Before evaluating parameter estimates, we first examined the success rate of the estimation methods across all simulation scenarios. 
-A successful estimation was determined if 
-1) the optimiser reported successful convergence; and 
-2) standard errors of estimates fell within acceptable numerical ranges. 
-Specifically, for the two-factor model, all standard errors were required to be less than 5, whereas for the growth curve model, reflecting differences in the scaling of observed variables, standard errors needed to be less than 500. 
-Additionally, in all cases, we required that the implied covariance matrix $\hat{\Sigma}$ to be positive definite.
+<!-- Before evaluating parameter estimates, we first examined the success rate of the estimation methods across all simulation scenarios.  -->
+<!-- A successful estimation was determined if  -->
+<!-- 1) the optimiser reported successful convergence; and  -->
+<!-- 2) standard errors of estimates fell within acceptable numerical ranges.  -->
+<!-- Specifically, for the two-factor model, all standard errors were required to be less than 5, whereas for the growth curve model, reflecting differences in the scaling of observed variables, standard errors needed to be less than 500.  -->
+<!-- Additionally, in all cases, we required that the implied covariance matrix $\hat{\Sigma}$ to be positive definite. -->
 
-In summarising the results we first filtered out the unsuccessful estimation cases.
-Our eRBM and iRBM methods demonstrated high success rates overall across simulation conditions, with a few exceptions. 
-For sample sizes $n \geq 50$, the success rates were consistently above 85%, reaching 100% convergence for all scenarios with $n=100$ and $n=1000$.
+For the experiments we carried out, nearly all estimates from
+jackknife (minimal rate of acceptable estimates is $98.9\%$, as also
+reported in @dhaene2022resampling [Section 6]), and all estimates from
+ML and the method in @ozenne2020small [Section 4] have been acceptable
+[**IK: is this correct?**]. The same holds for REML estimates for the
+latent GCM. For eRBM, iRBM and bootstrap, @tbl-convsucc shows the
+rates of acceptable estimates for each of the two-factor and latent
+GCM model, for all combinations of experimental factors we considered.
 
-However, we observed notably lower success rates for smaller sample sizes ($n=15,20$), especially pronounced in the two-factor model when employing the eRBM. 
-Since convergence criteria were met by the maximum likelihood step, these failures stemmed specifically from numerical instabilities arising during the computation of the derivatives required for the correction term.
-Moreover, it is possible that the post-hoc correction brings the parameter estimates outside the feasible parameter space, leading to non-positive definite covariance matrices.
-Consequently, caution should be exercised when interpreting eRBM estimates obtained from very small sample scenarios in the two-factor setting.
+The bootstrap rates are computed based on the summaries in
+@dhaene2022resampling [Table 1]. In all cases, the rates of acceptable
+estimates increase as the sample size increases. For sample sizes $n
+\geq 50$, all rates of acceptable estimates were above $85\%$,
+reaching $100\%$ for $n = 100$ and $n = 1000$.
+
+For the two factor model and $n = 15$ and $n = 20$, bootstrap and eRBM
+results in low rates, most notably in the low reliability setting,
+with the bootstrap rates being substantially lower the eRBM ones. For
+the latent GCM, bootstrap produced almost no acceptable estimates for
+$n = 15$ and $n = 20$, while eRBM produced acceptable estimates in all
+cases [**IK: just quickly checking: is there any chance that we mixed
+the rates for eRBM and iRBM for GCM, while computing `res_conv`?**].
+
+Since the ML estimates have been acceptable in all samples, the
+non-acceptable eRBM estimates are due to the post-hoc correction
+resulting non-positive definite estimate of $\Sigma(\theta)$ or
+excessively large estimated standard errors. As a post-hoc correction,
+bootstrap can also result in non-positive definite estimates of
+$\Sigma(\theta)$ or excessively large estimated standard errors, but,
+in addition, its rates are impacted by non-acceptable ML estimates
+from bootstrap samples. Hence, caution should be exercised when using
+eRBM or bootstrap in very small sample scenarios.
+
+The rates of acceptable estimates from iRBM are at least $80%$ in all
+cases. The vast majority of failures where due to unsuccessful
+convergence of the optimization procedure we used [**IK: say
+which**]. Trying a set of candidate optimization procedures on each
+sample, and keeping the estimates from those that succeed, would
+substantially increase the rate of acceptable estimates for iRBM.
 
 ### Two-factor model results
 
