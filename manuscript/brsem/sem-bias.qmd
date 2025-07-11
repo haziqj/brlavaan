@@ -1111,16 +1111,15 @@ the equivalence of the latent GCM model with a linear mixed effects
 model, REML is also used to estimate the latent GCM model.
 
 The performance of each method is first evaluated in terms of the
-number of samples that result in acceptable estimates. We define acceptable
-estimates are those that result i) from successful convergence of the
-optimization procedure that computes them, ii) in positive definite $\Sigma(\theta)$ at
-the estimates, and iii) in all estimated standard errors [**IK: are
-these based on just the hessian of the objective? Hessian of the
-objective is what we should use here.**] for the estimators being
-within acceptable numerical ranges. For the two-factor model and the
-latent GCM, we require all estimated standard errors to be less than
-5 and 500, respectively, reflecting differences in the scaling of
-observed variables.
+number of samples that result in acceptable estimates. We define
+acceptable estimates are those that result i) from successful
+convergence of the optimization procedure that computes them, ii) in
+positive definite $\Sigma(\theta)$ at the estimates, and iii) in the
+diagonal elements of $j(\theta)^{-1}$ at the estimates being within
+acceptable numerical ranges. For the two-factor model and the latent
+GCM, we require all those elements to be less than 5 and 500,
+respectively, reflecting differences in the scaling of observed
+variables.
 
 We evaluate the methods in terms of simulation-based estimates of
 relative mean bias $\sum_{r=1}^{R}(\dot{\theta}^{(r)} - \theta) / R$,
