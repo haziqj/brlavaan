@@ -6,55 +6,69 @@ authors:
     # corresponding: true
     url: "https://haziqj.ml"
     affiliations:
-      - name: Universiti Brunei Darussalam
-        id: ubd
-        department: Mathematical Sciences, Faculty of Science
-        address: Universiti Brunei Darussalam, Jalan Tungku Link
-        city: Bandar Seri Begawan
-        country: Brunei
-        postal-code: BE 1410
-      - name: London School of Economics and Political Science
-        id: lse
-        department: Department of Statistics
-        address: Columbia House, Houghton Street
-        city: London
-        country: United Kingdom
-        postal-code: WC2A 2AE
+      - ref: kaust
+      - ref: ubd
   - name: Yves Rosseel
     orcid: 0000-0002-4129-4477
     email: Yves.Rosseel@UGent.be
     affiliations:
-      - name: Ghent University
-        id: ugent
-        department: Department of data analysis
-        address: Henri Dunantlaan 2
-        city: Gent
-        country: Belgium
-        postal-code: 9000
+      - ref: ugent    
   - name: Oliver Kemp
     # orcid: 
     email: Oliver.Kemp@warwick.ac.uk
     affiliations:
-      - name: University of Warwick
-        id: warwick
-        department: Department of Statistics
-        address: Mathematical Sciences Building, University of Warwick
-        city: Coventry
-        country: United Kingdom
-        postal-code: CV4 7AL
+      - ref: warwick
   - name: Ioannis Kosmidis
     email: ioannis.kosmidis@warwick.ac.uk
     orcid: 0000-0003-1556-0302
     affiliations:
       - ref: warwick
+affiliations:
+  - name: King Abdullah University of Science and Technology
+    id: kaust
+    department: Computer, Electrical and Mathematical Sciences and Engineering (CEMSE) Division
+    address: King Abdullah University of Science and Technology
+    city: Thuwal
+    country: Kingdom of Saudi Arabia
+    postal-code: 23955-6900      
+  - name: Universiti Brunei Darussalam
+    id: ubd
+    department: Mathematical Sciences, Faculty of Science
+    address: Universiti Brunei Darussalam, Jalan Tungku Link
+    city: Bandar Seri Begawan
+    country: Brunei
+    postal-code: BE 1410
+  - name: London School of Economics and Political Science
+    id: lse
+    department: Department of Statistics
+    address: London School of Economics and Political Science, Columbia House, Houghton Street
+    city: London
+    country: United Kingdom
+    postal-code: WC2A 2AE   
+  - name: University of Warwick
+    id: warwick
+    department: Department of Statistics
+    address: Mathematical Sciences Building, University of Warwick
+    city: Coventry
+    country: United Kingdom
+    postal-code: CV4 7AL
+  - name: Ghent University
+    id: ugent
+    department: Department of data analysis
+    address: Henri Dunantlaan 2
+    city: Gent
+    country: Belgium
+    postal-code: 9000    
 date-modified: last-modified
 title: Bias-reduced estimation of structural equation models
 abstract: |
-  [**IK: A bit more descriptive here**] An exploration of explicit and implicit bias-reduced maximum likelihood estimation for structural equation models (SEMs) and latent growth curve models (LGCMs) is presented. Comparisons to prior work on resampling-based methods like Bootstrap and Jackknife are made. Performance of our methods are favourable.
+  Finite-sample bias is a pervasive challenge in structural equation modeling (SEM), especially when sample sizes are small or measurement reliability is low. While methods ranging from analytic bias corrections to resampling-based techniques have been proposed, each carries trade-offs in scope, computational burden, and statistical performance. We extend the recent Reduced-Bias M-estimation (RBM) framework of @kosmidis2024empirical to SEMs and latent growth curve models (GCMs), offering both explicit and implicit bias-adjusted estimators. Our methods require only first- and second-order derivatives of the log-likelihood, rendering them straightforward to implement and computationally efficient compared to resampling-based alternatives such as bootstrap and jackknife. Through extensive simulations of two-factor SEMs and growth curve models under varied conditions, we demonstrate that RBM estimators consistently reduce mean bias and improve confidence-interval coverage relative to maximum likelihood (ML). Notably, RBM approaches maintain robustness under non-normality and outperform REML in GCM experiments. These results suggest that RBM offers a promising, practical, and broadly applicable tool for mitigating bias in SEM, particularly in small-sample research contexts.
 keywords:
-  - Structural Equation Models
-  - Growth Curve Models
-  - Bias Reduction
+  - Structural equation modelling
+  - Bias reduction
+  - Latent variable models
+  - Growth curve models
+  - Small sample estimation
 ---
 
 
