@@ -10,12 +10,25 @@ notebook-links: false
 format:
   html:
     number-sections: true
-    # other-links:
-    #   - text: PRELIM RESULTS
-    #     icon: database      
-    #     href: results.html       
-  # docx:
-  #   output-file: jamil2025bias
+    fontsize: 110%
+    lightbox: true
+    # page-layout: full
+    grid:
+      sidebar-width: 200px
+      body-width: 900px
+      margin-width: 0px
+    include-in-header:
+      # https://github.com/quarto-dev/quarto-cli/discussions/9248
+      text: |
+        <style>
+          span.math.display {
+            display: block;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;  /* optional: prevents math from wrapping */
+          }
+        </style>
+
   tandf-pdf:
     link-citations: true
     keep-tex: true
@@ -34,7 +47,7 @@ execute:
   cache: true
   echo: false
 
-bibliography: 
+bibliography:
   - ../refs-HJ.bib
   - ../refs-OK.bib
 
