@@ -84,14 +84,13 @@ clinical psychology, developmental research, and neuroscience
 [@vandeschoot2020small]. Small samples are also often an inevitable
 consequence of studying rare populations.  For example, research
 involving children with burned facial injuries is inherently limited
-by the small number of individuals who meet these specific criteria
-[**IK: any reference?**].  Similarly, studies focusing on rare genetic
-disorders, elite athletes, or unique cultural groups often face strict
+by the small number of individuals who meet these specific criteria [@quezada2016explanatory].  Similarly, studies focusing on rare genetic
+disorders [@figueroa2021structural], elite athletes [@hodge2009athlete;@fabbricatore2023componentbased], or unique cultural groups [@manuela2013pacific] often face strict
 limitations in sample size due to the rarity of the target
-population. [**IK: any reference?**]  In such contexts, the use of
+population. In such contexts, the use of
 SEMs remains desirable for testing complex theoretical models, but the
 challenges posed by small samples become unavoidable and cannot be
-ignored.
+ignored. [**HJ: YR to check references**]
 
 When the sample size is small, SEMs face a range of well-documented
 difficulties, involving non-convergence of estimation algorithms,
@@ -455,8 +454,7 @@ samples, the procedures can be computationally intensive.
 Additionally, the jackknife may underestimate variability for
 nonlinear estimators [@efron1994introduction], and the bootstrap can
 perform poorly when the sampling distribution is skewed or parameters
-are near the boundary of the parameter space [@davison1997bootstrap]
-[**IK: Can we cite the specific section where this is mentioned?**].
+are near the boundary of the parameter space [@davison1997bootstrap, Sec. 5.2].
 
 
 ### Alternative approaches to reducing bias {#sec-alternative}
@@ -520,7 +518,7 @@ log-likelihood function, and its first three derivatives to
 approximate the bias function. As a result, RBM estimation can be
 readily implemented, either using closed-form derivatives, or through
 numerical differentiation routines, such as those provided by
-[e.g. using the `{numDeriv}` R package @gilbert2022numderiv]. When
+the `{numDeriv}` R package [@gilbert2022numderiv]. When
 estimation is by maximising a log-likelihood, as is the case for
 maximum likelihood estimation of SEMs, implicit RBM-estimation is
 equivalent to maximizing the penalized log-likelihood
@@ -1053,7 +1051,7 @@ shapes of the distributions for normal and non-normal distributions.
 #| fig-cap: 'Scatterplots illustrating the three distributional conditions used in the simulation study. Each plot displays 1000 randomly generated observations drawn from a distribution with zero mean vector and covariance matrix $\begin{bmatrix} 1 & 0.3 \\ 0.3 & 1 \end{bmatrix}$. Marginal density plots on the axes highlight differences in symmetry and tail behavior across conditions.'
 #| out-width: 100%
 #| fig-width: 9
-#| fig-height: 3.2
+#| fig-height: 3.8
 
 n <- 1000
 rho <- 0.3
@@ -1102,7 +1100,7 @@ cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
 
 Across the $5 \times 2 \times 2 = 20$ distinct experimental settings
 for sample size $n$, reliability $R(\theta)$ and distribution for each
-of the two-factor model and latent GCM model, we simulate 1000 [**IK: 2000?***]
+of the two-factor model and latent GCM model, we simulate 2000 
 independent data sets, and the corresponding model is estimated using
 ML estimation, explicit and implicit RBM estimation (eRBM and iRBM,
 respectively), the method in @ozenne2020small [Section 4], and the
@@ -1205,7 +1203,7 @@ boot_probs <- data.frame(dist = rep(c("Normal", "Kurtosis", "Non-normal"), each 
 
 ```{r}
 #| label: tbl-convsucc
-#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor model using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%. [**IK: We still get kurtosis here, which I manually filtered out; has `res_conv` been updated with the new simulation results?**]'
+#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor model using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%. [**IK: We still get kurtosis here, which I manually filtered out; has `res_conv` been updated with the new simulation results? HJ: Yes. This comment can be deleted.**]'
 #| html-table-processing: none
 
 gt(res_conv[-grep("ML", names(res_conv))] |>
@@ -1265,7 +1263,7 @@ For the experiments we carried out, nearly all estimates from
 jackknife (minimal rate of acceptable estimates is $98.9\%$, as also
 reported in @dhaene2022resampling [Section 6]), and all estimates from
 ML and the method in @ozenne2020small [Section 4] have been acceptable
-[**IK: is this correct?**]. The same holds for REML estimates for the
+[**IK: is this correct? HJ: Yes, for ML all are 100%, Ozenne minimal rate was 99.3% at twofact n=15 non-normal data**]. The same holds for REML estimates for the
 latent GCM. For eRBM, iRBM and bootstrap, @tbl-convsucc shows the
 rates of acceptable estimates for each of the two-factor and latent
 GCM model, for all combinations of experimental factors we considered.
@@ -1282,7 +1280,7 @@ with the bootstrap rates being substantially lower the eRBM ones. For
 the latent GCM, bootstrap produced almost no acceptable estimates for
 $n = 15$ and $n = 20$, while eRBM produced acceptable estimates in all
 cases [**IK: just quickly checking: is there any chance that we mixed
-the rates for eRBM and iRBM for GCM, while computing `res_conv`?**].
+the rates for eRBM and iRBM for GCM, while computing `res_conv`? HJ: Double checked this--no mixup. iRBM slightly more non-convergence compared to eRBM for gorwth models.**].
 
 Since the ML estimates have been acceptable in all samples, the
 non-acceptable eRBM estimates are due to the post-hoc correction
@@ -1314,7 +1312,7 @@ Across all evaluated conditions, our proposed methods (eRBM and iRBM) consistent
 Root mean square error (RMSE), however, remained approximately equivalent across all methods, indicating similar levels of overall variability, a result visually corroborated by the comparative distribution plots.
 Our bias-reduction methods also provided notable improvements in confidence interval coverage, with increases of up to approximately 5% over ML, again primarily in smaller-sample scenarios.
 
-[**IK: Does "results.RData" have kurtosis and non-normal results?**]
+[**IK: Does "results.RData" have kurtosis and non-normal results? HJ: Yes, I kept them... But we talked about not presenting the Kurtosis results.**]
 ```{r}
 #| label: fig-centdist-twofac
 #| fig-cap: 'Centered distributions of estimates for the two-factor model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
@@ -1485,8 +1483,9 @@ plot_drcomp |>
 
 The GCM saw more successful estimation cases than the two-factor SEM, even at smaller sample sizes and low reliability.
 We focus on the normal distribution and low reliability (0.5) scenario as this is considered a more challenging case for estimation.
-In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting [**IK: We need to elaborate a bit more on this**]. 
-The four remaining parameters are all the components in the factor covariance matrix $\Psi$, as well as the equality constrained error variance $\Theta_{1,1}$.
+In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting.
+The latent intercepts correspond directly to fixed effects ($\beta$) in linear mixed models and are typically well-identified in growth models due to their fixed measurement structure and role in capturing the overall mean trajectory.
+As such, they are less informative for evaluating the estimation performance than the four remaining variance and covariance parameters, namely the elements of the factor covariance matrix $\Psi$, and the equality-constrained residual variance $\Theta_{1,1}$.
 
 @fig-centdist-growth displays the distribution of estimates for the growth curve model, highlighting the centered distributions of estimates across methods.
 Parameter estimates exhibited markedly lower variability--or at least, produced fewer outlier estimates in the boxplots--compared to the two-factor model
@@ -1498,8 +1497,6 @@ RMSE values remained comparable across methods, indicating consistent variabilit
 Notably, our bias-reduced methods achieved better calibration in terms of median bias. Specifically, our methods consistently resulted in probabilities of underestimating parameters closer to the nominal 50% level, whereas ML tended to systematically overshoot, thus introducing bias.
 It was interesting to see that the variance $\Psi_{1,1}$ for the latent factor $\eta_1$ benefited the most from the bias-reduction methods.
 For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and the bias was reduced by 30 units (10.9%) at best in the $n=15$ scenario.
-
-[**IK: Should `plot_df` ve `plot_df50` below?**]
 
 ```{r}
 #| label: fig-centdist-growth
