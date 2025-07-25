@@ -500,18 +500,6 @@ where $V(\theta) = Z\Sigma_u Z^\top + \sigma^2 I$ is the variance-covariance mat
 
 The REML estimators of the variance components have, typically, smaller bias than the ML estimators, which is particularly useful with small sample sizes and complex covariance structures.
 
-<!-- Confidence intervals are constructed in the usual way using Wald-type -->
-
-<!-- intervals based on the inverse of the observed information matrix, -->
-
-<!-- though their accuracy may be limited for variance components near the -->
-
-<!-- boundary or in small samples.  For further details, see, for example, -->
-
-<!-- @harville1977maximum, @skrondal2004generalized, and -->
-
-<!-- @bates2015fitting. [**IK: discuss?**] -->
-
 In a paper focusing on small sample corrections for Wald tests in SEMs with exogenous covariates, @ozenne2020small [Section 4] derive the asymptotic bias of $\hat{\Sigma} = n^{-1} \sum_{i = 1}^n (y_i - \mu(\hat\theta))^\top (y_i - \mu(\hat\theta))$ as an estimator of $\Sigma(\theta)$, based on methods from the generalized estimating equation (GEE) literature [@kauermann2001note].
 @ozenne2020small show that that asymptotic bias a negative definite matrix.
 Based on this observation they devise an iterative scheme that use the ML estimator of $\Lambda$ and $B$, and aims to correct the bias in the estimation of the variance parameters $\Psi$ and $\Theta$, by correcting the bias of the $\hat{\Sigma}$ as an estimator of $\Sigma(\theta)$.
@@ -966,9 +954,9 @@ The first factor is the sample size $n \in \{15, 20, 50,
 100, 1000\}$.
 
 The second factor is the average reliability of the items, which is defined as $$
-R(\theta) = \frac{1}{p}\sum_{j = 1}^p \frac{\Sigma^*_{jj}(\theta)}{\Sigma_{jj}(\theta)} \, .
+Q(\theta) = \frac{1}{p}\sum_{j = 1}^p \frac{\Sigma^*_{jj}(\theta)}{\Sigma_{jj}(\theta)} \, .
 $$ with $\Sigma^*(\theta)$ and $\Sigma(\theta)$ as in ([-@eq-marg-mom]).
-For $\theta$, we consider the two parameters settings in @tbl-truth-twofac for the two-factor model, and the two parameters settings in @tbl-truth-growth for the latent GCM, which result in reliability being either about 0.5 (low) or about 0.8 (high).
+For $\theta$, we consider the two parameters settings in @tbl-truth-twofac for the two-factor SEM, and the two parameters settings in @tbl-truth-growth for the latent GCM, which result in reliability being either about 0.5 (low) or about 0.8 (high).
 Low reliability indicates that much of the variance in the data is attributable to measurement error, and can result in finite sample bias, particularly in the estimation of variance components, impacting both estimation and inference performance.
 
 <!-- Reliability in this context refers to the extent to which an observed indicator accurately reflects the underlying latent construct, with higher reliability indicating that a greater proportion of the indicator’s variance is attributable to the true score, and a lower proportion to measurement error.  -->
@@ -981,7 +969,7 @@ Low reliability indicates that much of the variance in the data is attributable 
 ```{r}
 #| label: tbl-truth-twofac
 #| html-table-processing: none
-#| tbl-cap: 'Two-factor model parameters.'
+#| tbl-cap: 'Two-factor SEM parameters.'
 tibble(
   rel = paste0("Reliability: ", c(0.8, 0.5))
 ) |>
@@ -1049,7 +1037,7 @@ True parameter values used in the simulation experiment of @sec-simulation.
 :::
 
 The third factor is the distribution of $\eta$ and $\epsilon$, which we set to be either "normal" or "non-normal", for both the latent factors and the measurement errors.
-We simulate datasets to have the covariance matrix ([-@eq-marg-mom]), as dictated by the parameters settings in @tbl-truth-twofac and @tbl-truth-growth, for the two-factor model and the latent GCM, respectively, but determine the distribution of the latent factors and the measurement errors using the `{covsim}` [@gronneberg2022covsim] R package.
+We simulate datasets to have the covariance matrix ([-@eq-marg-mom]), as dictated by the parameters settings in @tbl-truth-twofac and @tbl-truth-growth, for the two-factor SEM and the latent GCM, respectively, but determine the distribution of the latent factors and the measurement errors using the `{covsim}` [@gronneberg2022covsim] R package.
 The `{covsim}` R package allows to generate multivariate data with a target covariance matrix while controlling for the excess kurtosis and skewness of the distribution.
 In the case of the normal distribution, both the skewness and excess kurtosis are set to $0$.
 In the non-normal case, skewness is set to $-2$ with excess kurtosis of $6$, producing asymmetric, heavy-tailed distributions.
@@ -1125,25 +1113,26 @@ allplots <- imap(dat, \(x, idx) {
 cowplot::plot_grid(plotlist = allplots, nrow = 1, labels = "auto")
 ```
 
-### Performance measures
+### Performance metrics {#sec-perf}
 
-Across the $5 \times 2 \times 2 = 20$ distinct experimental settings for sample size $n$, reliability $R(\theta)$ and distribution for each of the two-factor model and latent GCM model, we simulate 2000 independent data sets, and the corresponding model is estimated using ML estimation, explicit and implicit RBM estimation (eRBM and iRBM, respectively), the method in @ozenne2020small [Section 4], and the bootstrap and jacknife adaptations in @dhaene2022resampling.
+Across the $5 \times 2 \times 2 = 20$ distinct experimental settings for sample size $n$, reliability $Q(\theta)$ and distribution for each of the two-factor SEM and latent GCM, we simulate 2000 independent data sets, and the corresponding model is estimated using ML estimation, explicit and implicit RBM estimation (eRBM and iRBM, respectively), the method in @ozenne2020small [Section 4], and the bootstrap and jacknife adaptations in @dhaene2022resampling.
 Due to the equivalence of the latent GCM model with a linear mixed effects model, REML is also used to estimate the latent GCM model.
 
 The performance of each method is first evaluated in terms of the number of samples that result in acceptable estimates.
 We define acceptable estimates are those that result i) from successful convergence of the optimization procedure that computes them, ii) in positive definite $\Sigma(\theta)$ at the estimates, and iii) in the diagonal elements of $j(\theta)^{-1}$ at the estimates being within acceptable numerical ranges.
-For the two-factor model and the latent GCM, we require all those elements to be less than 5 and 500, respectively, reflecting differences in the scaling of observed variables.
+For the two-factor SEM and the latent GCM, we require all those elements to be less than 5 and 500, respectively, reflecting differences in the scaling of observed variables.
 
-We evaluate the methods in terms of simulation-based estimates of relative mean bias $\sum_{r=1}^{R}(\dot{\theta}^{(r)} - \theta) / R$, probability of underestimation $\sum_{r=1}^{R}\mathbb{1}(\dot{\theta}^{(r)}_j < \theta_j)/R$, and root mean squared error $\sqrt{\sum_{r=1}^{R}(\dot{\theta}^{(r)}_j -
+We evaluate the methods in terms of simulation-based estimates of relative mean bias $\sum_{r=1}^{R}\dot{\theta_j}^{(r)} / (R \theta_j) - 1$, probability of underestimation $\sum_{r=1}^{R}\mathbb{1}(\dot{\theta}^{(r)}_j < \theta_j)/R$, and root mean squared error (RMSE) $\sqrt{\sum_{r=1}^{R}(\dot{\theta}^{(r)}_j -
 \theta_j)^2 / R}$, where $R$ is the number of samples that resulted in acceptable estimates for each method, and $\dot{\theta}^{(r)}_j$ is the $j$th component of the vector of estimates from the $r$th sample that resulted in acceptable estimates.
 In that way, the relative mean bias, probability of underestimation, and root mean squared error that we estimate are conditional on the estimator taking an acceptable value.
-We also evaluate the methods in terms of the simulation-based estimate of the conditional coverage of $95\%$ Wald-type confidence intervals at the estimates $$
+
+Despite that the aim of bias reduction techniques is not to directly improve inferential performance, we also evaluate the methods in terms of the simulation-based estimate of the conditional coverage of $95\%$ Wald-type confidence intervals at the estimates $$
  \frac{1}{R}\sum_{r=1}^{R}\mathbb{1}\left(\dot{\theta}^{(r)}_j - 1.96 s^{(r)}_j \leq \theta_j \leq \dot{\theta}^{(r)}_j + 1.96 s^{(r)}_j\right) \, ,
  $$ where $s_j^{(r)}$ is the estimated standard error corresponding to $\hat\theta^{(r)}_r$.
 As mentioned in @sec-rbm, the RBM estimators have the same asymptotic distribution as the ML estimator.
 Hence, we can estimate standard errors using the variance-covariance matrix of the asymptotic distribution of the ML estimator under model mis-specification.
 Specifically, $s^{(r)}_j$ is taken to be the square root of the $j$th diagonal element of $j(\dot\theta^{(r)})^{-1}
-e(\dot\theta^{(r)}) j(\dot\theta^{(r)})^{-1}$ for ML, eRBM, iRBM, and the method in @ozenne2020small \[Section 4\]. For bootstrap and jackknife, $s^{(r)}_j$ is taken to be the bootstrap and jackknife estimate of the standard error \[**IK: add a reference that corresponds to what @dhaene2022resampling** [**Section 5.3**] **refer to** \].
+e(\dot\theta^{(r)}) j(\dot\theta^{(r)})^{-1}$ for ML, eRBM, iRBM, and the method in @ozenne2020small [Section 4]. For bootstrap and jackknife, $s^{(r)}_j$ is taken to be the bootstrap and jackknife estimate of the standard error \[**IK: add a reference that corresponds to what @dhaene2022resampling [Section 5.3] refers to in terms of jackknife and bootstrap standard errors.** \].
 We do not consider alternative internals for bootstrap, like basic, studentized, percentile and BCa intervals [see, @davison1997bootstrap, for details] as they have been found to perform similarly to the normal approximation interval in the experimental settings we consider here [see @dhaene2022resampling].
 For REML, which can be used to estimate the GCM model, $s^{(r)}_j$ is obtained from the square root of the corresponding diagonal element of the output of `vcov.merMod()` method of `{lme4}` R package [@bates2015fitting] for fitting LMMs.
 
@@ -1204,7 +1193,7 @@ boot_probs <- data.frame(dist = rep(c("Normal", "Kurtosis", "Non-normal"), each 
 
 ```{r}
 #| label: tbl-convsucc
-#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor model using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%. [**IK: We still get kurtosis here, which I manually filtered out; has `res_conv` been updated with the new simulation results? HJ: Yes. This comment can be deleted.**]'
+#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor SEM using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%.'
 #| html-table-processing: none
 
 gt(res_conv[-grep("ML", names(res_conv))] |>
@@ -1222,7 +1211,7 @@ gt(res_conv[-grep("ML", names(res_conv))] |>
   ) |>
   tab_spanner(
     columns = starts_with("twofac"),
-    label = "Two-factor model"
+    label = "Two-factor SEM"
   ) |>
   tab_spanner(
     columns = matches("growth.*0\\.8"),
@@ -1261,12 +1250,11 @@ gt(res_conv[-grep("ML", names(res_conv))] |>
 
 <!-- 2) standard errors of estimates fell within acceptable numerical ranges.  -->
 
-<!-- Specifically, for the two-factor model, all standard errors were required to be less than 5, whereas for the growth curve model, reflecting differences in the scaling of observed variables, standard errors needed to be less than 500.  -->
+<!-- Specifically, for the two-factor SEM, all standard errors were required to be less than 5, whereas for the growth curve model, reflecting differences in the scaling of observed variables, standard errors needed to be less than 500.  -->
 
 <!-- Additionally, in all cases, we required that the implied covariance matrix $\hat{\Sigma}$ to be positive definite. -->
 
-For the experiments we carried out, nearly all estimates from jackknife (minimal rate of acceptable estimates is $98.9\%$, as also reported in @dhaene2022resampling \[Section 6\]), and all estimates from ML and the method in @ozenne2020small [Section 4] have been acceptable \[**IK: is this correct? HJ: Yes, for ML all are 100%, Ozenne minimal rate was 99.3% at twofact n=15 non-normal data**\].
-The same holds for REML estimates for the latent GCM.
+For the experiments we carried out nearly all estimates from jackknife and the method of @ozenne2020small have been acceptable, with minimum rates of acceptable estimates $98.9\%$ [as also reported in @dhaene2022resampling, Section 6] and $99.3\%$, respectively, across the settings we consider. Furthermore, all estimates from ML for both the two-factor SEM and the latent GCM and from REML for the latent GCM have been acceptable.
 For eRBM, iRBM and bootstrap, @tbl-convsucc shows the rates of acceptable estimates for each of the two-factor and latent GCM model, for all combinations of experimental factors we considered.
 
 The bootstrap rates are computed based on the summaries in @dhaene2022resampling [Table 1].
@@ -1275,34 +1263,107 @@ For sample sizes $n
 \geq 50$, all rates of acceptable estimates were above $85\%$, reaching $100\%$ for $n = 100$ and $n = 1000$.
 
 For the two factor model and $n = 15$ and $n = 20$, bootstrap and eRBM results in low rates, most notably in the low reliability setting, with the bootstrap rates being substantially lower the eRBM ones.
-For the latent GCM, bootstrap produced almost no acceptable estimates for $n = 15$ and $n = 20$, while eRBM produced acceptable estimates in all cases \[**IK: just quickly checking: is there any chance that we mixed the rates for eRBM and iRBM for GCM, while computing `res_conv`? HJ: Double checked this--no mixup. iRBM slightly more non-convergence compared to eRBM for gorwth models.**\].
+For the latent GCM, bootstrap produced almost no acceptable estimates for $n = 15$ and $n = 20$, while eRBM produced acceptable estimates in all cases.
 
 Since the ML estimates have been acceptable in all samples, the non-acceptable eRBM estimates are due to the post-hoc correction resulting non-positive definite estimate of $\Sigma(\theta)$ or excessively large estimated standard errors.
 As a post-hoc correction, bootstrap can also result in non-positive definite estimates of $\Sigma(\theta)$ or excessively large estimated standard errors, but, in addition, its rates are impacted by non-acceptable ML estimates from bootstrap samples.
 Hence, caution should be exercised when using eRBM or bootstrap in very small sample scenarios.
 
-The rates of acceptable estimates from iRBM are at least $80%$ in all cases.
-The vast majority of failures where due to unsuccessful convergence of the optimization procedure we used \[**IK: say which**\].
-Trying a set of candidate optimization procedures on each sample, and keeping the estimates from those that succeed, would substantially increase the rate of acceptable estimates for iRBM.
+The rates of acceptable estimates from iRBM are at least $80\%$ in all cases.
+The vast majority of failures where due to unsuccessful convergence of the `nlminb()` R method that was used for optimization. Trying a set of candidate optimization procedures on each sample, and keeping the estimates from those that succeed, would substantially increase the rate of acceptable estimates for iRBM.
 
-### Two-factor model results
+### Two-factor SEM
 
-We first focus on the two-factor model under the scenario with normally distributed errors and high reliability (0.8), as this scenario yielded the highest convergence rates across all estimation methods, enabling a fair and direct comparison.
-Similar to the work by @dhaene2022resampling, we focus our evaluation on a subset of key parameters, namely the error variance for item $y_1$, $\Theta_{1,1}$, the second factor loading for item $y_1$, $\Lambda_{2,1}$, the two variance parameters for the latent factors, $\Psi_{1,1}$ and $\Psi_{2,2}$, and the regression coefficient $\beta$.
-This selection spans a range of parameter types, providing a comprehensive overview of estimation performance across different components of the model.
+ 
+@fig-meanbias-twofac and @fig-rmse-twofac show the estimates of
+relative mean bias and RMSE, respectively, based on samples that
+resulted in acceptable estimates for the two-factor SEM, for all
+estimation methods we consider. We focus the comparison on a subset of
+parameters from each type, including the error variance $\Theta_{11}$,
+the factor loading $\Lambda_{21}$, the two variance parameters
+$\Psi_{11}$ and $\Psi_{22}$ for the latent factors, and the regression
+coefficient $\beta$. As is apparent, iRBM consistently improves
+relative mean bias compared to ML estimation for moderate to large
+samples sizes, across all reliability settings and distributional
+scenarios. It is difficult to assess the performance of iRBM and eRBM
+for $n = 15$, especially for non-normal errors, due to the small
+number of samples that resulted in acceptable estimates.
 
-The distribution plots of the centred parameter estimates (see @fig-centdist-twofac) revealed substantial variability across all methods at smaller sample sizes.
-However, variability decreased notably as the sample size increased.
-@fig-perf-twofac presents the performance metrics for the two-factor model, including relative bias, RMSE, probability of underestimation, and coverage rates.
-Across all evaluated conditions, our proposed methods (eRBM and iRBM) consistently achieved reductions in mean bias compared to maximum likelihood (ML), particularly at smaller sample sizes ($n = 15, 20, 50$).
-Root mean square error (RMSE), however, remained approximately equivalent across all methods, indicating similar levels of overall variability, a result visually corroborated by the comparative distribution plots.
-Our bias-reduction methods also provided notable improvements in confidence interval coverage, with increases of up to approximately 5% over ML, again primarily in smaller-sample scenarios.
+[**IK: Add cross-references to supplementary material tables. What is relative median bias there? Why not report PU directly?**]
 
-\[**IK: Does "results.RData" have kurtosis and non-normal results? HJ: Yes, I kept them... But we talked about not presenting the Kurtosis results.**\]
+```{r}
+#| label: fig-meanbias-twofac
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor SEM.'
+#| out-width: 100%
+lwd <- 0.4
+plot_drcomp |>
+   mutate(param = forcats::fct_recode(param, 
+                                      'Theta[11]' = 'Theta["1,1"]',
+                                      'Psi[11]' = 'Psi["1,1"]',
+                                      'Psi[22]' = 'Psi["2,2"]',
+                                      "beta" = "beta",
+                                      'Lambda[21]' = 'Lambda["2,1"]')) |>
+  filter(model == "twofac", !method %in% c("lav")) |>
+  ggplot(aes(n, relbias, col = method)) +
+  geom_line(linewidth = lwd, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_color_manual(values = mycols) +
+  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
+  scale_y_continuous(labels = scales::percent) +
+  # coord_cartesian(ylim = c(-0.3, 0.3)) +
+  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
+  theme_bw() +
+  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+```
+
+```{r}
+#| label: fig-rmse-twofac
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor SEM.'
+#| out-width: 100%
+
+plot_drcomp |>
+  mutate(param = forcats::fct_recode(param, 
+                                     'Theta[11]' = 'Theta["1,1"]',
+                                     'Psi[11]' = 'Psi["1,1"]',
+                                     'Psi[22]' = 'Psi["2,2"]',
+                                     "beta" = "beta",
+                                     'Lambda[21]' = 'Lambda["2,1"]')) |>
+  filter(model == "twofac", !method %in% c("lav")) |>
+  mutate(method = fct_rev(method)) |>
+  ggplot(aes(n, rmse, fill = method)) +
+  geom_col(position = "dodge", width = 0.75) +
+  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
+  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
+  scale_fill_manual(values = mycols) +
+  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
+  theme_bw() +
+  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
+  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
+```
+
+@fig-centdist-twofac shows the distributions of centred parameter
+estimates from ML, eRBM, and iRBM, with normally distributed errors
+and high reliability (0.8), which is the scenario that resulted in the
+highest rates of acceptable estimates for those methods. As expected,
+variability in the estimators decreases as $n$ increases. We also
+observe that the the centred distributions of the iRBM and eRBM
+estimators are shifted closer to zero than the ML estimators.
+
+@fig-perf-twofac presents the performance metrics for the two-factor
+model, including relative bias [**IK: does the figure show bias or
+relative bias?**], RMSE, probability of underestimation, and coverage
+rates of Wald-type confidence intervals. The bias reduction that eRBM
+and iRBM deliver compared to ML are apparent. That reduction in bias
+is accompanied by smaller or similar RMSE. We find no evidence that
+the reduction in bias resulted in an increase in variance. Finally,
+Wald-type confidence intervals based on iRBM or eRBM estimators are
+found to perform notably better than those based on ML estimators.
+
 
 ```{r}
 #| label: fig-centdist-twofac
-#| fig-cap: 'Centered distributions of estimates for the two-factor model (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
+#| fig-cap: 'Centered distributions of estimates for the two-factor SEM (left panel) using normally generated data at 80% reliability. Non-convergence cases and extreme estimates have been excluded. The right panel displays the number of estimates used to compute the summary statistics.'
 #| fig-height: 7.5
 #| out-width: 100%
 
@@ -1314,11 +1375,11 @@ p1 <-
   # geom_vline(xintercept = 0, linetype = "dashed") +
   scale_fill_manual(values = mycols) +
   scale_y_discrete(labels = rev(c(
-    expression(Theta["1,1"]),
-    expression(Psi["1,1"]),
-    expression(Psi["2,2"]),
+    expression(Theta["11"]),
+    expression(Psi["11"]),
+    expression(Psi["22"]),
     expression(beta),
-    expression(Lambda["2,1"])
+    expression(Lambda["21"])
   ))) +
   facet_grid(n ~ .) +
   guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
@@ -1357,7 +1418,7 @@ cowplot::plot_grid(p1, p2, rel_widths = c(1, 1 / 3))
 
 ```{r}
 #| label: fig-perf-twofac
-#| fig-cap: 'Performance metrics (relative bias, RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the two-factor model. Vertical dashed lines indicate the ideal values for each metric.'
+#| fig-cap: 'Performance metrics (relative bias [**IK: Bias or relative bias?**], RMSE, probability of understimation, and coverage) of the ML, eBR, and iBR methods for estimation of the two-factor SEM. Vertical dashed lines indicate the ideal values for each metric. [**IK: Perhaps write PU instead of "Prob. underest." and explain what the acronym means in the caption**]'
 #| fig-height: 7
 #| out-width: 100%
 plot_df |> 
@@ -1398,11 +1459,11 @@ plot_df |>
     )
   ) +
   scale_y_discrete(labels = rev(c(
-    expression(Theta["1,1"]),
-    expression(Psi["1,1"]),
-    expression(Psi["2,2"]),
+    expression(Theta["11"]),
+    expression(Psi["11"]),
+    expression(Psi["22"]),
     expression(beta),
-    expression(Lambda["2,1"])
+    expression(Lambda["21"])
   ))) +
   guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
   theme_bw() +
@@ -1411,27 +1472,44 @@ plot_df |>
     legend.key.height = unit(1, "pt"), 
     legend.key.width = unit(9, "pt")
   ) +
-  labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]} distribution, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
+  labs(x = NULL, y = NULL, fill = NULL, subtitle = glue::glue("{plot_df$dist[1]}, reliability = {gsub('Rel = ', '', plot_df$rel[1])}"))
 ```
 
-Comparisons with the resampling-based approaches of @dhaene2022resampling--including the Jackknife, Bootstrap--and the analytic Ozenne method, showed that our methods consistently improved relative mean bias across all reliability settings and distributional scenarios.
-@fig-meanbias-twofac and @fig-rmse-twofac demonstrate the relative mean bias and RMSE of our methods compared to aforementioned methods, respectively.
-For brevity, we excluded the Kurtosis scenario from the plots \[**IK: can we report those in the appendix?**\], as it produced roughly similar results to the normal distribution.
-The full table of results are available in the Appendix.
 
-While the bias performance of our methods was generally comparable to these established approaches, the resampling-based methods tended to achieve slightly lower bias at the cost of greater variability, particularly pronounced in scenarios with non-normal errors.
-Our eRBM and iRBM methods did not share this disadvantage, providing robust and stable estimates across scenarios.
-One notable exception occurred in non-normal conditions with small sample sizes $(n = 15, 20)$, where the eRBM method encountered estimation difficulties, leading to rejection of approximately 60% of parameter estimates.
-This reduced the observed bias performance in these specific cases.
-Despite this, median bias remained close to zero, suggesting that the inflated mean bias was driven predominantly by a small number of extreme estimates attributable to numerical instabilities.
+### Growth curve model results
+
+@fig-meanbias-growth and @fig-rmse-growth show the estimates of
+relative mean bias and RMSE, respectively, based on samples that
+resulted in acceptable estimates for the latent GCM model, for all
+estimation methods we consider, including REML. As for the two-fact
+model, we focus the comparison on a subset of parameters, including
+the error variance $\sigma^2$, $\Psi_{11}$, $\Psi_{12}$ and
+$\Psi_{22}$. The rates of acceptable estimates have been higher than
+the two-factor SEM, even as smaller sample sizes and low
+reliability. We note that iRBM and eRBM result in a notable decrease
+in finite-sample bias without increasing RMSE both for normal and
+non-normal errors. REML seems to be performing best, except with low
+reliability (0.5), where the bias of the estimator of the latent
+slope-intercept covariance $\Psi_{12}$ is large for small samples. In
+contract, iRBM and eRBM are found to be performing as expected for
+both normal and non-normal errors. As expected, for $n\geq 100$, all
+methods start performing similarly. Bias reductions methods deliver
+marked benefits for small samples.
+
+[**IK: Add cross-references to supplementary material tables. What is relative median bias there? Why not report PU directly?**]
 
 ```{r}
-#| label: fig-meanbias-twofac
-#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| label: fig-meanbias-growth
+#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
 #| out-width: 100%
-lwd <- 0.4
+
 plot_drcomp |>
-  filter(model == "twofac", !method %in% c("lav")) |>
+  mutate(param = forcats::fct_recode(param, 
+                                    'Theta[11]' = 'Theta["1,1"]',
+                                    'Psi[11]' = 'Psi["1,1"]',
+                                    'Psi[22]' = 'Psi["2,2"]',
+                                    'Psi[12]' = 'Psi["1,2"]',)) |>
+  filter(model == "growth", !method %in% c("lav")) |>
   ggplot(aes(n, relbias, col = method)) +
   geom_line(linewidth = lwd, alpha = 1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -1439,49 +1517,70 @@ plot_drcomp |>
   scale_color_manual(values = mycols) +
   scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
   scale_y_continuous(labels = scales::percent) +
-  # coord_cartesian(ylim = c(-0.3, 0.3)) +
+  # coord_cartesian(ylim = c(-0.25, 0.25)) +
   guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
   theme_bw() +
-  labs(x = "Sample size (n)", y = glue("Relative mean bias"), col = NULL)
+  labs(x = "Sample size (n)", y = "Relative mean bias", col = NULL)
 ```
 
 ```{r}
-#| label: fig-rmse-twofac
-#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the two-factor model.'
+#| label: fig-rmse-growth
+#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
 #| out-width: 100%
 
 plot_drcomp |>
-  filter(model == "twofac", !method %in% c("lav")) |>
+   mutate(param = forcats::fct_recode(param, 
+                                    'Theta[11]' = 'Theta["1,1"]',
+                                    'Psi[11]' = 'Psi["1,1"]',
+                                    'Psi[22]' = 'Psi["2,2"]',
+                                    'Psi[12]' = 'Psi["1,2"]',)) |>
+  filter(model == "growth", !method %in% c("lav")) |>
   mutate(method = fct_rev(method)) |>
   ggplot(aes(n, rmse, fill = method)) +
   geom_col(position = "dodge", width = 0.75) +
   scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
   ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
   scale_fill_manual(values = mycols) +
+  # coord_cartesian(ylim = c(0, 280)) +
   guides(fill = guide_legend(nrow = 1, position = "bottom")) +
   theme_bw() +
   theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
   labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
 ```
 
-### Growth curve model results
 
-The GCM saw more successful estimation cases than the two-factor SEM, even at smaller sample sizes and low reliability.
-We focus on the normal distribution and low reliability (0.5) scenario as this is considered a more challenging case for estimation.
-In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting.
-The latent intercepts correspond directly to fixed effects ($\beta$) in linear mixed models and are typically well-identified in growth models due to their fixed measurement structure and role in capturing the overall mean trajectory.
-As such, they are less informative for evaluating the estimation performance than the four remaining variance and covariance parameters, namely the elements of the factor covariance matrix $\Psi$, and the equality-constrained residual variance $\Theta_{1,1}$.
+@fig-centdist-growth shows the distributions of centred parameter
+estimates from ML, eRBM, and iRBM for the latent GCM models, with
+normally distributed errors and low reliability (0.5). As for the
+two-factor SEM, we observe that the the centred distributions of the
+iRBM and eRBM estimators are shifted closer to zero than the ML
+estimators.
 
-@fig-centdist-growth displays the distribution of estimates for the growth curve model, highlighting the centered distributions of estimates across methods.
-Parameter estimates exhibited markedly lower variability--or at least, produced fewer outlier estimates in the boxplots--compared to the two-factor model This is possibly attributable to the more parsimonious structure of the growth model (6 vs 13 parameters).
-@fig-perf-growth presents the performance metrics for the growth curve model, similar to before in the two-factor SEM experiments.
-Also consistent with findings from before, both eRBM and iRBM methods yielded substantial improvements in bias and coverage relative to ML, particularly for small to moderate sample sizes.
+@fig-perf-growth presents the performance metrics @sec-perf for the
+latent GCM. The bias reduction that eRBM and iRBM deliver compared to
+ML are apparent. That reduction in bias is accompanied by similar RMSE
+to ML. Hence, again, we find no evidence that the reduction in bias
+resulted in an increase in variance. Notable, eRBM and iRBM are found
+to also have smaller median bias then ML estimators. Finally,
+Wald-type confidence intervals based on iRBM or eRBM estimators
+perform similarly or better than those based on ML estimators.
 
-RMSE values remained comparable across methods, indicating consistent variability in parameter estimates across different approaches.
-Notably, our bias-reduced methods achieved better calibration in terms of median bias.
-Specifically, our methods consistently resulted in probabilities of underestimating parameters closer to the nominal 50% level, whereas ML tended to systematically overshoot, thus introducing bias.
-It was interesting to see that the variance $\Psi_{1,1}$ for the latent factor $\eta_1$ benefited the most from the bias-reduction methods.
-For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and the bias was reduced by 30 units (10.9%) at best in the $n=15$ scenario.
+
+<!-- We focus on the normal distribution and low reliability (0.5) scenario as this is considered a more challenging case for estimation. -->
+<!-- In total there were six free parameters to estimate, but we excluded the intercepts from analyses as these were not particularly interesting. -->
+<!-- The latent intercepts correspond directly to fixed effects ($\beta$) in linear mixed models and are typically well-identified in growth models due to their fixed measurement structure and role in capturing the overall mean trajectory. -->
+<!-- As such, they are less informative for evaluating the estimation performance than the four remaining variance and covariance parameters, namely the elements of the factor covariance matrix $\Psi$, and the equality-constrained residual variance $\Theta_{1,1}$. -->
+
+<!-- @fig-centdist-growth displays the distribution of estimates for the growth curve model, highlighting the centered distributions of estimates across methods. -->
+<!-- Parameter estimates exhibited markedly lower variability--or at least, produced fewer outlier estimates in the boxplots--compared to the two-factor model This is possibly attributable to the more parsimonious structure of the growth model (6 vs 13 parameters). -->
+<!-- @fig-perf-growth presents the performance metrics for the growth curve model, similar to before in the two-factor SEM experiments. -->
+<!-- Also consistent with findings from before, both eRBM and iRBM methods yielded substantial improvements in bias and coverage relative to ML, particularly for small to moderate sample sizes. -->
+
+<!-- RMSE values remained comparable across methods, indicating consistent variability in parameter estimates across different approaches. -->
+<!-- Notably, our bias-reduced methods achieved better calibration in terms of median bias. -->
+<!-- Specifically, our methods consistently resulted in probabilities of underestimating parameters closer to the nominal 50% level, whereas ML tended to systematically overshoot, thus introducing bias. -->
+<!-- It was interesting to see that the variance $\Psi_{1,1}$ for the latent factor $\eta_1$ benefited the most from the bias-reduction methods. -->
+<!-- For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and the bias was reduced by 30 units (10.9%) at best in the $n=15$ scenario. -->
 
 ```{r}
 #| label: fig-centdist-growth
@@ -1491,16 +1590,16 @@ For context, the true value of this parameter was set to $\Psi_{1,1}=275$, and t
 
 p1 <-
   plot_df50 |>
-  filter(param %in% growthpars) |> 
+  filter(param %in% growthpars) |>
   ggplot(aes(bias, param, fill = method)) +
   geom_boxplot(alpha = 0.8, outlier.size = 0.3, linewidth = 0.3) +
   # geom_vline(xintercept = 0, linetype = "dashed") +
   scale_fill_manual(values = mycols) +
   scale_y_discrete(labels = rev(c(
-    expression(Theta["1,1"]),
-    expression(Psi["1,1"]),
-    expression(Psi["2,2"]),
-    expression(Psi["1,2"])
+    expression(Theta["11"]),
+    expression(Psi["11"]),
+    expression(Psi["22"]),
+    expression(Psi["12"])
   ))) +
   facet_grid(n ~ .) +
   guides(fill = guide_legend(reverse = TRUE, position = "inside")) +
@@ -1580,10 +1679,10 @@ plot_df50 |>
     )
   ) +
   scale_y_discrete(labels = rev(c(
-    expression(Theta["1,1"]),
-    expression(Psi["1,1"]),
-    expression(Psi["2,2"]),
-    expression(Psi["1,2"])
+    expression(Theta["11"]),
+    expression(Psi["11"]),
+    expression(Psi["22"]),
+    expression(Psi["12"])
   ))) +
   guides(fill = guide_legend(reverse = TRUE, position = "bottom")) +
   theme_bw() +
@@ -1596,66 +1695,12 @@ plot_df50 |>
 
 ```
 
-Next, we compared our methods to the competitor methods, including REML.
-It is noted that the constraint of equal error variances across all 10 items contributed to the stabilisation of estimates, promoting bias reduction via averages.
-This is seen clearly in the previous figures, as well as when comparing across methods (see @fig-meanbias-growth).
-In the scenario involving normally distributed data, REML generally provided the lowest relative mean bias among all methods.
-This result was expected given REML’s theoretical optimality in estimating variance components under normality.
-On the flip side, REML exhibited substantially poorer performance under non-normal data conditions, underscoring its lack of robustness against departures from normality.
 
-The results are, on the whole, expected.
-The bias performance of our proposed eRBM and iRBM methods was consistently comparable--and occasionally superior--to existing resampling-based methods (Jackknife, Bootstrap) and the analytic Ozenne approach.
-Unlike REML, our methods maintained robustness in non-normal settings without compromising performance.
-
-In low reliability scenarios, the estimate of the latent slope-intercept covariance $\Psi_{1,2}$ tended to be the most unstable in small samples.
-Our methods did a great job in reducing the bias of this parameter, considering both ML and REML gave much greater bias.
-Notably, for $n\geq 100$, differences between methods converge, with all methods yielding similar performance.
-This emphasises that bias reduction is most valueable in small to moderate sample regimes, where ML is particularly vulnerable.
-
-```{r}
-#| label: fig-meanbias-growth
-#| fig-cap: 'Comparison of relative mean bias of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
-#| out-width: 100%
-
-plot_drcomp |>
-  filter(model == "growth", !method %in% c("lav")) |>
-  ggplot(aes(n, relbias, col = method)) +
-  geom_line(linewidth = lwd, alpha = 1) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
-  scale_color_manual(values = mycols) +
-  scale_x_continuous(labels = c(15, 20, 50, 100, 1000)) +
-  scale_y_continuous(labels = scales::percent) +
-  # coord_cartesian(ylim = c(-0.25, 0.25)) +
-  guides(colour = guide_legend(nrow = 1, reverse = TRUE, position = "top")) +
-  theme_bw() +
-  labs(x = "Sample size (n)", y = "Relative mean bias", col = NULL)
-```
-
-```{r}
-#| label: fig-rmse-growth
-#| fig-cap: 'Comparison of RMSE of the ML, eBR, and iBR methods against the D&R methods for estimation of the growth curve model.'
-#| out-width: 100%
-
-plot_drcomp |>
-  filter(model == "growth", !method %in% c("lav")) |>
-  mutate(method = fct_rev(method)) |>
-  ggplot(aes(n, rmse, fill = method)) +
-  geom_col(position = "dodge", width = 0.75) +
-  scale_x_continuous(breaks = 1:5, labels = c(15, 20, 50, 100, 1000)) +
-  ggh4x::facet_nested(param ~ rel + dist, labeller = label_parsed) +
-  scale_fill_manual(values = mycols) +
-  # coord_cartesian(ylim = c(0, 280)) +
-  guides(fill = guide_legend(nrow = 1, position = "bottom")) +
-  theme_bw() +
-  theme(legend.key.height = unit(1, "pt"), legend.key.width = unit(9, "pt")) +
-  labs(x = "Sample size (n)", y = "RMSE", fill = NULL)
-```
 
 ## Discussion
 
 -   Both the implicit (iRBM) and explicit (eRBM) bias-reduction methods demonstrated high convergence rates across various simulation scenarios, particularly for sample sizes $n\geq 50$.
--   In both the two-factor model and latent GCM, iRBM and eRBM consistently reduced bias compared to maximum likelihood (ML) estimates, especially in small sample sizes. These methods also enhanced the coverage probabilities of confidence intervals. The eRBM and iRBM also showed robustness under non-normal data distributions for the GCM especially.
+-   In both the two-factor SEM and latent GCM, iRBM and eRBM consistently reduced bias compared to maximum likelihood (ML) estimates, especially in small sample sizes. These methods also enhanced the coverage probabilities of confidence intervals. The eRBM and iRBM also showed robustness under non-normal data distributions for the GCM especially.
 -   While resampling-based methods like Jackknife and Bootstrap occasionally achieved slightly lower bias, they often exhibited higher variability. Our methods provided a favourable balance between bias reduction and estimate stability.
 -   Restricted Maximum Likelihood (REML) performed well under normal data conditions but showed significant bias when the data deviated from normality, highlighting its sensitivity to distributional assumptions.
 -   The eRBM and iRBM method offered a computationally efficient alternative to traditional resampling techniques, achieving bias reduction with significantly lower computational cost. Further improvements could be made to the codebase to increase efficiency--at the moment it is a very naive implementation.
