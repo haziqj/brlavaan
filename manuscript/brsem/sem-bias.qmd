@@ -485,7 +485,7 @@ Additionally, the jackknife may underestimate variability for nonlinear estimato
 ### Alternative approaches to reducing bias {#sec-alternative}
 
 Restricted maximum likelihood (REML), while formally not a bias reduction technique, is frequently used for correcting biases in the estimation of variance components [@patterson1971recovery] in linear mixed effects [@corbeil1976restricted].
-A range of SEMs can be expresses as linear mixed effects model [@bauer2003estimating; @cheung2013implementing], where $y \mid b \sim \text{N}(X \beta + Z b, \sigma^2 I)$, where $X$ and $Z$ are the fixed and random model matrices, respectively, $\beta$ is the vector of fixed effects, and $b \sim N(0, \Sigma_u)$ is the vector of random effects.
+A range of SEMs can be expressed as linear mixed effects models [@bauer2003estimating; @cheung2013implementing], where $y \mid b \sim \text{N}(X \beta + Z b, \sigma^2 I)$, where $X$ and $Z$ are the fixed and random model matrices, respectively, $\beta$ is the vector of fixed effects, and $b \sim N(0, \Sigma_u)$ is the vector of random effects.
 REML estimates are obtained by maximising a marginal likelihood function based on residuals from a least squares fit of the model $y \sim \text{N}(X\beta, \sigma^2 I)$.
 That marginal likelihood ends up not involving the fixed effects parameters.
 Specifically, REML maximizes [@fitzmaurice2011applied] 
