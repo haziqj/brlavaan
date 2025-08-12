@@ -555,7 +555,7 @@ In this way, we can perform a direct comparison of the performance of RBM estima
 We consider two distinct SEMs: a) A two-factor SEM with a latent regression; and b) a latent growth curve model (GCM).
 Both models represent commonly-used models by practitioners and researchers in the social sciences and beyond.
 
-The two-factor SEM contains two latent variables, $\eta_{i1}$ and $\eta_{i2}$, each measured by three observed variables: $y_{i1}$, $y_{i2}$, $y_{i3}$ for $\eta_{i1}$ and $y_{i4}$, $y_{i5}$, $y_{u6}$ for $\eta_{i2}$., and $\eta_{i1}$ is regressed on $\eta_{i2}$.
+The two-factor SEM contains two latent variables, $\eta_{i1}$ and $\eta_{i2}$, each measured by three observed variables: $y_{i1}$, $y_{i2}$, $y_{i3}$ for $\eta_{i1}$ and $y_{i4}$, $y_{i5}$, $y_{u6}$ for $\eta_{i2}$, and $\eta_{i1}$ is regressed on $\eta_{i2}$.
 In ([-@eq-measurement]) and ([-@eq-structural]), the two-factor SEM has $\nu = (\nu_1, \ldots, \nu_6)^\top$, $\alpha = (0, 0)^\top$ and $$ 
 \Lambda = \begin{bmatrix}
 \Lambda_{11} & 0 \\
@@ -596,7 +596,7 @@ $$ and $\Theta$ and $\Psi$ are diagonal matrices with $\Theta_{11}, \ldots, \The
 <!-- $$ -->
 
 If we fix the scale of $\Lambda$ by setting $\Lambda_{11} =
-\Lambda_{41} = 1$ we establish an identifiable parameterization, and the two-factor SEM we consider has 19 estimable parameters.
+\Lambda_{42} = 1$ we establish an identifiable parameterization, and the two-factor SEM we consider has 19 estimable parameters.
 The maximum likelihood estimator of $\nu$ is simply the vector of sample means $\bar{y}_{.1}, \ldots, \bar{y}_{.6}$, and fixing $\nu$ to that leaves $13$ parameters to be estimated.<!--
 which we fix as shown in @tbl-truth-twofac --> The corresponding path diagram is shown in @fig-path-twofac.
 
