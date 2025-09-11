@@ -88,14 +88,13 @@ load("results.RData")
 
 ## Introduction
 
-Structural Equation Models (SEMs) are widely used statistical models that allow the to specification, estimation, and testing of complex relationships among observed and latent variables.
+Structural Equation Models (SEMs) are widely used statistical models that allow for the specification, estimation, and testing of complex relationships among observed and latent variables.
 Despite their versatility and theoretical appeal, the practical use of SEMs in empirical research is often challenged by small sample sizes.
 Small samples are particularly common in fields where data collection is expensive, time-consuming, or logistically constrained, such as clinical psychology, developmental research, and neuroscience [@vandeschoot2020small].
 Small samples are also often an inevitable consequence of studying rare populations.
 For example, research involving children with burned facial injuries is inherently limited by the small number of individuals who meet these specific criteria [@quezada2016explanatory].
 Similarly, studies focusing on rare genetic disorders [@figueroa2021structural], elite athletes [@hodge2009athlete; @fabbricatore2023componentbased], or unique cultural groups [@manuela2013pacific] often face strict limitations in sample size due to the rarity of the target population.
 In such contexts, the use of SEMs remains desirable for testing complex theoretical models, but the challenges posed by small samples become unavoidable and cannot be ignored.
-\[**HJ: YR to check references**\]
 
 When the sample size is small, SEMs face a range of well-documented difficulties, involving non-convergence of estimation algorithms, improper solutions such as negative variance estimates (Heywood cases) or non-positive definite estimates of variance-covariance matrices, inflated standard errors, and low power of statistical tests [@deng2018structural; @bentler1999structural; @nevitt2004evaluating].
 
