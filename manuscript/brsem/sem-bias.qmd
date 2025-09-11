@@ -1192,7 +1192,7 @@ boot_probs <- data.frame(dist = rep(c("Normal", "Kurtosis", "Non-normal"), each 
 
 ```{r}
 #| label: tbl-convsucc
-#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor SEM using ML, eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%.'
+#| tbl-cap: 'Rate of acceptable estimates for estimation of the two-factor SEM using eRBM, iRBM and bootstrap. Highlighted in shades of red are the scenarios which produced success rates below 50%.'
 #| html-table-processing: none
 
 gt(res_conv[-grep("ML", names(res_conv))] |>
