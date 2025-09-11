@@ -324,8 +324,8 @@ $$
 y_i = \nu + \Lambda \eta_i + \epsilon_i \, ,
 $$ {#eq-measurement}
 
-where $y_i$ is a $p$-vector of observed variables, $\nu$ is a $p$-vector of measurement intercepts, $\Lambda$ is a $p
-\times q$ matrix of factor loadings, $\eta_i$ is a $q$-vector of latent variables, and $\epsilon_i$ is a $p$-vector of measurement errors, assumed to be normally distributed with mean zero and covariance matrix $\Theta$ $(i = 1, \ldots, n)$.
+where $y_i$ is a random $p$-vector of observed variables, $\nu$ is a $p$-vector of measurement intercepts, $\Lambda$ is a $p
+\times q$ matrix of factor loadings, $\eta_i$ is a random $q$-vector of latent variables, and $\epsilon_i$ is a random $p$-vector of measurement errors with mean zero and covariance matrix $\Theta$ $(i = 1, \ldots, n)$.
 
 The structural part of the model is defined as
 
@@ -333,8 +333,8 @@ $$
 \eta_i =\alpha + B \eta_i + \zeta_i \, ,
 $$ {#eq-structural}
 
-where $\alpha$ is a $q$-vector of factor means, $B$ is a $q
-\times q$ matrix of latent regression coefficients for which $\operatorname{diag}(B) = 0$ and $I-B$ is invertible, and $\zeta_i$ is a $q$-vector of structural disturbances, assumed to be normally distributed with mean zero and covariance matrix $\Psi$.
+where $\alpha$ is a $q$-vector of factor intercepts, $B$ is a $q
+\times q$ matrix of latent regression coefficients for which $\operatorname{diag}(B) = 0$ and $I-B$ is invertible, and $\zeta_i$ is a random $q$-vector of structural disturbances with mean zero and covariance matrix $\Psi$.
 We also assume that $\operatorname{cov}(\eta_i, \epsilon_i) =
 \operatorname{cov}(\epsilon_i, \zeta_i) = 0$.
 
