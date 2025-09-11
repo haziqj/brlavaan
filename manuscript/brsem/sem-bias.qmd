@@ -500,7 +500,7 @@ where $V(\theta) = Z\Sigma_u Z^\top + \sigma^2 I$ is the variance-covariance mat
 The REML estimators of the variance components have, typically, smaller bias than the ML estimators, which is particularly useful with small sample sizes and complex covariance structures.
 
 In a paper focusing on small sample corrections for Wald tests in SEMs with exogenous covariates, @ozenne2020small [Section 4] derive the asymptotic bias of $\hat{\Sigma} = n^{-1} \sum_{i = 1}^n (y_i - \mu(\hat\theta))^\top (y_i - \mu(\hat\theta))$ as an estimator of $\Sigma(\theta)$, based on methods from the generalized estimating equation (GEE) literature [@kauermann2001note].
-@ozenne2020small show that that asymptotic bias a negative definite matrix.
+@ozenne2020small show that asymptotic bias a negative definite matrix \[**YR: please correct this sentence**\].
 Based on this observation they devise an iterative scheme that use the ML estimator of $\Lambda$ and $B$, and aims to correct the bias in the estimation of the variance parameters $\Psi$ and $\Theta$, by correcting the bias of the $\hat{\Sigma}$ as an estimator of $\Sigma(\theta)$.
 Importantly, that method focuses only on the variance parameters in the model, and the bias of the estimators of regression coefficients and factor loadings is not targeted.
 
@@ -508,7 +508,7 @@ Importantly, that method focuses only on the variance parameters in the model, a
 
 Reduced-bias M-estimation [RBM-estimation, @kosmidis2024empirical] is a recently-introduced, general-purpose bias reduction method, which can operate implicitly or explicitly, and requires only the log-likelihood function, and its first three derivatives to approximate the bias function.
 As a result, RBM estimation can be readily implemented, either using closed-form derivatives, or through numerical differentiation routines, such as those provided by the `{numDeriv}` R package [@gilbert2022numderiv].
-When estimation is by maximising a log-likelihood, as is the case for maximum likelihood estimation of SEMs, implicit RBM-estimation is equivalent to maximizing the penalized log-likelihood 
+When estimation is by  \[**YR: 'involves' instead of 'is by'?**\] maximising a log-likelihood, as is the case for maximum likelihood estimation of SEMs, implicit RBM-estimation is equivalent to maximizing the penalized log-likelihood 
 $$
 \ell(\theta) + P(\theta)
 $$ 
