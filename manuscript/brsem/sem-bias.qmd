@@ -1256,7 +1256,7 @@ gt(res_conv[-grep("ML", names(res_conv))] |>
 For the experiments we carried out nearly all estimates from jackknife and the method of @ozenne2020small have been acceptable, with minimum rates of acceptable estimates $98.9\%$ [as also reported in @dhaene2022resampling, Section 6] and $99.3\%$, respectively, across the settings we consider. Furthermore, all estimates from ML for both the two-factor SEM and the latent GCM and from REML for the latent GCM have been acceptable.
 For eRBM, iRBM and bootstrap, @tbl-convsucc shows the rates of acceptable estimates for each of the two-factor and latent GCM model, for all combinations of experimental factors we considered.
 
-The bootstrap rates are computed based on the summaries in @dhaene2022resampling [Table 1].
+The bootstrap rates are based on the summaries in @dhaene2022resampling [Table 1].
 In all cases, the rates of acceptable estimates increase as the sample size increases.
 For sample sizes $n
 \geq 50$, all rates of acceptable estimates were above $85\%$, reaching $100\%$ for $n = 100$ and $n = 1000$.
@@ -1264,12 +1264,12 @@ For sample sizes $n
 For the two factor model and $n = 15$ and $n = 20$, bootstrap and eRBM results in low rates, most notably in the low reliability setting, with the bootstrap rates being substantially lower the eRBM ones.
 For the latent GCM, bootstrap produced almost no acceptable estimates for $n = 15$ and $n = 20$, while eRBM produced acceptable estimates in all cases.
 
-Since the ML estimates have been acceptable in all samples, the non-acceptable eRBM estimates are due to the post-hoc correction resulting non-positive definite estimate of $\Sigma(\theta)$ or excessively large estimated standard errors.
+Since the ML estimates have been acceptable in all samples, the non-acceptable eRBM estimates are due to the post-hoc correction resulting in a non-positive definite estimate of $\Sigma(\theta)$ or excessively large estimated standard errors.
 As a post-hoc correction, bootstrap can also result in non-positive definite estimates of $\Sigma(\theta)$ or excessively large estimated standard errors, but, in addition, its rates are impacted by non-acceptable ML estimates from bootstrap samples.
 Hence, caution should be exercised when using eRBM or bootstrap in very small sample scenarios.
 
 The rates of acceptable estimates from iRBM are at least $80\%$ in all cases.
-The vast majority of failures where due to unsuccessful convergence of the `nlminb()` R method that was used for optimization. Trying a set of candidate optimization procedures on each sample, and keeping the estimates from those that succeed, would substantially increase the rate of acceptable estimates for iRBM.
+The vast majority of failures where due to unsuccessful convergence of the `nlminb()` R method that was used for optimization. Trying different starting values, or a set of candidate optimization procedures on each sample, and keeping the estimates from those that succeed, would substantially increase the rate of acceptable estimates for iRBM.
 
 ### Two-factor SEM
 
@@ -1346,7 +1346,7 @@ estimates from ML, eRBM, and iRBM, with normally distributed errors
 and high reliability (0.8), which is the scenario that resulted in the
 highest rates of acceptable estimates for those methods. As expected,
 variability in the estimators decreases as $n$ increases. We also
-observe that the the centred distributions of the iRBM and eRBM
+observe that the centred distributions of the iRBM and eRBM
 estimators are shifted closer to zero than the ML estimators.
 
 @fig-perf-twofac presents the performance metrics for the two-factor
@@ -1484,13 +1484,13 @@ estimation methods we consider, including REML. As for the two-fact
 model, we focus the comparison on a subset of parameters, including
 the error variance $\sigma^2$, $\Psi_{11}$, $\Psi_{12}$ and
 $\Psi_{22}$. The rates of acceptable estimates have been higher than
-the two-factor SEM, even as smaller sample sizes and low
+the two-factor SEM, even for smaller sample sizes and low
 reliability. We note that iRBM and eRBM result in a notable decrease
 in finite-sample bias without increasing RMSE both for normal and
 non-normal errors. REML seems to be performing best, except with low
 reliability (0.5), where the bias of the estimator of the latent
 slope-intercept covariance $\Psi_{12}$ is large for small samples. In
-contract, iRBM and eRBM are found to be performing as expected for
+contrast, iRBM and eRBM are found to be performing as expected for
 both normal and non-normal errors. As expected, for $n\geq 100$, all
 methods start performing similarly. Bias reductions methods deliver
 marked benefits for small samples.
