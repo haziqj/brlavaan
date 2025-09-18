@@ -13,9 +13,9 @@ NULL
 
 #' @rdname plugin-penalties
 #' @export
-pen_ridge <- function(x, call = FALSE, ...) {
+pen_ridge <- function(x, target = rep(0, length(x)), call = FALSE, ...) {
   if (isTRUE(call)) return("Ridge penalty")
-  sum(x ^ 2)
+  sum((x - target) ^ 2)
 }
 
 #' @rdname plugin-penalties
