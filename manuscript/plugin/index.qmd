@@ -132,10 +132,10 @@ tibble(
 ) |>
   rowwise() |>
   mutate(
-    ridge = brlavaan:::pen_ridge(x),
-    ridge_bounded = brlavaan:::pen_ridge_bound(x, lb = lb, ub = ub),
-    huber_bounded = brlavaan:::pen_huber(x, lb = lb, ub = ub),
-    huber_left_bounded = brlavaan:::pen_huber(x, lb = lb, ub = Inf)
+    Ridge = brlavaan:::pen_ridge(x, (lb+ub)/2),
+    Ridge_bounded = brlavaan:::pen_ridge_bound(x, lb = lb, ub = ub),
+    Huber_bounded = brlavaan:::pen_huber(x, lb = lb, ub = ub),
+    Huber_left_bounded = brlavaan:::pen_huber(x, lb = lb, ub = Inf)
   ) |> 
   pivot_longer(-x) |>
   ggplot(aes(x, value, color = name)) +
@@ -143,7 +143,10 @@ tibble(
   geom_line() +
   geom_vline(xintercept = c(lb, ub), linetype = "dashed") +
   labs(y = "f(x)") +
-  theme_minimal()
+  theme_minimal() +
+  labs(color = "Penalty") +
+  scale_color_discrete(labels = c("Huber bounded", "Huber left bounded", "Ridge", "Ridge bounded"))
+
 ```
 
 ### Comparing Huber penalty thresholds
