@@ -28,7 +28,9 @@ data_files <- paste0("experiments/brsem/", c(
   "simu_res_twofac_mp1.RData",
   "simu_res_twofac_mp2.RData",
   "simu_res_twofac_mp3.RData",
-  "simu_res_growth.RData"
+  "simu_res_growth.RData",
+  "simu_res_serobust_twofac.RData",
+  "simu_res_serobust_growth.RData"
 ))
 if (any(!file.exists(here::here(data_files)))) {
   cat("Downloading data files...\n")
@@ -57,6 +59,40 @@ simu_res_twofac[20:30] <- simu_res_twofac1[20:30]
 load(here::here("experiments/brsem/simu_res_growth.RData"))
 simu_res <- c(simu_res_twofac, simu_res_growth)
 
+# simu_res is a list of length 60
+# 2 models x 2 reliability x 3 distributions x 5 sample sizes = 60 simulations
+#
+# > glimpse(simu_res[[1]])
+# Rows: 13,979
+# Columns: 13
+# $ seed      <dbl> 1235, 1235, 1235, 1235, 1235, 1235, 1235, 1236, 1236, 1236, 1236, …
+# $ sim       <int> 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, …
+# $ dist      <chr> "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Norma…
+# $ model     <chr> "twofac", "twofac", "twofac", "twofac", "twofac", "twofac", "twofa…
+# $ rel       <chr> "0.8", "0.8", "0.8", "0.8", "0.8", "0.8", "0.8", "0.8", "0.8", "0.…
+# $ n         <dbl> 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15…
+# $ method    <chr> "ML", "eRBM", "iRBM", "lav", "Ozenne", "JB", "BB", "ML", "eRBM", "…
+# $ est       <named list> <0.74697154, 0.50594263, 1.40644613, 0.55439543, 0.23777413…
+# $ se        <named list> <0.14227840, 0.10401636, 0.33865785, 0.16550320, 0.15639856…
+# $ truth     <list> <0.7000, 0.6000, 0.7000, 0.6000, 0.2500, 0.2500, 0.1225, 0.0900, …
+# $ timing    <dbl> 0.042, 1.211, 16.191, 0.068, 0.225, 0.889, 275.691, 0.057, 2.293, …
+# $ converged <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, …
+# $ Sigma_OK  <lgl> TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE,…
+
+# Add new simulations about robust standard errors
+load(here::here("experiments/brsem/simu_res_serobust_twofac.RData"))
+load(here::here("experiments/brsem/simu_res_serobust_growth.RData"))
+simu_res_serobust <- c(simu_res_serobust_twofac, simu_res_serobust_growth)
+
+simu_res <-
+  map2(simu_res, simu_res_serobust, function(X, Y) {
+    left_join(
+      X,
+      select(Y, seed, sim, dist, model, rel, n, method, serob = se)
+    ) |>
+      select(seed:se, serob, everything())
+  })
+
 ## ----- Convergence statistics ------------------------------------------------
 res_ours_nested <-
   simu_res |>
@@ -73,7 +109,7 @@ res_ours_nested <-
         } else {
          return(TRUE)
         }
-      }, se, model)
+      }, serob, model)
   )
 
 res_conv <-
@@ -118,7 +154,7 @@ res <-
       grepl("[xy][0-9]~1", param) ~ "nu",
       TRUE ~ NA
     ),
-    across(c(est, truth, se), ~if_else(model == "growth" & type != "alpha", .x * 100, .x)),  # rescale back
+    across(c(est, truth, se, serob), ~if_else(model == "growth" & type != "alpha", .x * 100, .x)),  # rescale back
     dist = factor(dist, levels = c("Normal", "Kurtosis", "Non-normal")),
     rel = factor(rel, levels = c("0.8", "0.5"), labels = c("Rel = 0.8", "Rel = 0.5")),
     method = factor(
@@ -128,7 +164,8 @@ res <-
     ),
     bias = est - truth,
     relbias = bias / truth,
-    covered = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
+    covered = truth <= est + qnorm(0.975) * serob & truth >= est - qnorm(0.975) * serob,
+    covrdse = truth <= est + qnorm(0.975) * se & truth >= est - qnorm(0.975) * se
   )
 
 # Load D&R two factor sims
@@ -139,7 +176,9 @@ if (!file.exists(dr_data_file)) {
   load(dr_data_file)
 }
 
-# For two-factor model BB & JB, get from res_dr
+# For two-factor model BB & JB, get from res_dr (more stable and "nicer" results
+# compared to ours -- but the BB & JB for growth models were rerun by us, and
+# results similar to D&R 2022)
 res <-
   res |>
   filter(!(method %in% c("Bootstrap", "Jackknife") & model == "twofac")) |>
@@ -153,7 +192,8 @@ res <-
 plot_df <-
   res |>
   filter(method %in% c("ML", "eRBM", "iRBM")) |>
-  filter( converged, !is.na(se)) |>
+  filter(converged, !is.na(se)) |>
+  filter(param %in% c(twofacpars, growthpars)) |>
   # for each kind of model, filter bad standard errors
   filter(!(model == "twofac" & abs(se) > 5)) |>
   filter(!(model == "growth" & abs(se) > 500)) |>
@@ -167,7 +207,8 @@ plot_df <-
 plot_df50 <-
   res |>
   filter(method %in% c("ML", "eRBM", "iRBM")) |>
-  filter( converged, !is.na(se)) |>
+  filter(converged, !is.na(se)) |>
+  filter(param %in% c(twofacpars, growthpars)) |>
   # for each kind of model, filter bad standard errors
   filter(!(model == "twofac" & abs(se) > 5)) |>
   filter(!(model == "growth" & abs(se) > 500)) |>
@@ -244,12 +285,18 @@ create_summdf <- function(model, rel) {
 
 create_covrdf <- function(model) {
   i <- res$model == model
-  if (model == "growth") i <- i & res$method != "REML"
+  if (model == "twofac") i <- i & res$method != "REML"
 
   res |>
-    filter(dist != "Kurtosis", param %in% c(twofacpars, growthpars), i) |>
+    filter(i) |>
+    filter(dist != "Kurtosis", param %in% c(twofacpars, growthpars)) |>
     filter(!(model == "twofac" & abs(se) > 5)) |>
     filter(!(model == "growth" & abs(se) > 500)) |>
+    filter(method != "lav") |>
+    mutate(covered = case_when(
+      is.na(covered) ~ covrdse,  # plug in the JB and BB standard errors
+      TRUE ~ covered
+    )) |>
     summarise(
       covr = mean(covered, na.rm = TRUE),
       .by = c(dist:method, param)
@@ -412,3 +459,5 @@ save(twofacpars, growthpars, mycols, simu_id,
      bias_growth_80_df, bias_growth_50_df, covr_growth_df,
      tab_bias, tab_covr,
      file = here::here("experiments/brsem/results.RData"))
+
+save(twofacpars, growthpars, mycols, simu_id, res, file = here::here("experiments/brsem/full_res.RData"))

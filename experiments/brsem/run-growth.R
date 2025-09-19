@@ -24,7 +24,7 @@ for (i in seq_len(nrow(simu_id))) {
     seeds = seeds
   )
   cat("\n")
-  save(simu_res_growth, file = here::here("experiments/simu_res_growth.RData"))
+  save(simu_res_growth, file = here::here("experiments/brsem/simu_res_growth.RData"))
 }
 #
 # bind_rows(simu_res_growth) |>

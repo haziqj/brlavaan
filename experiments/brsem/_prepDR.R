@@ -1,3 +1,7 @@
+# Purpose of this script is to prepare the raw simulation results from Dhaene &
+# Rosseel (2022) for the two factor model only (the growth model was re-run by
+# us). Need only run this script once.
+
 truth <-
   expand_grid(
     model = c("twofac", "growth"),
@@ -11,7 +15,6 @@ truth <-
   unnest_wider(out) |>
   unnest(c(param, truth))
 
-# Others
 # dr_file1 <- here::here("experiments/GCM_est_combined_final.RData")
 dr_file2 <- here::here("experiments/brsem/2FSEM_est_combined_final.RData")
 # if (!file.exists(dr_file1))

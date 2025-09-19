@@ -4,7 +4,6 @@ here::i_am("experiments/obtain_seeds.R")
 simu_id <-
   expand_grid(
     dist = c("Normal", "Kurtosis", "Non-normal"),
-    # model = "twofac",
     rel = c(0.8, 0.5),
     n = c(15, 20, 50, 100, 1000)
   ) |>

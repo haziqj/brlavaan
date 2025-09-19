@@ -26,8 +26,8 @@ library(gt)
 library(glue)
 library(semPlot)
 library(semptools)
-here::i_am("experiments/results/results.qmd")
-load(here::here("experiments/results.RData"))
+here::i_am("experiments/brsem/results.qmd")
+load(here::here("experiments/brsem/results.RData"))
 ```
 
 ## Write-up
