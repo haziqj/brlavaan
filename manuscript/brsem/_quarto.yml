@@ -30,6 +30,7 @@ format:
         </style>
 
   tandf-pdf:
+    wrap: preserve
     link-citations: true
     keep-tex: true
     linenumbers: true
@@ -41,6 +42,7 @@ format:
       - \usepackage{setspace}
       - \onehalfspacing
     output-file: jamil2025bias
+    cite-method: biblatex
 
 execute:
   freeze: auto
