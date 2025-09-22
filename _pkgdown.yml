@@ -25,6 +25,6 @@ navbar:
       text: Manuscript
       menu:
         - text: BR Estimation of SEM
-          href: manuscript/brsem/index.html
-        - text: Plugin Penalties
-          href: manuscript/plugin/index.html
+        #   href: manuscript/brsem/index.html
+        # - text: Plugin Penalties
+        #   href: manuscript/plugin/index.html
