@@ -65,15 +65,15 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Render brsem manuscript
-        uses: quarto-dev/quarto-actions/render@v2
-        with:
-          path: manuscript/brsem/
+      # - name: Render brsem manuscript
+      #   uses: quarto-dev/quarto-actions/render@v2
+      #   with:
+      #     path: manuscript/brsem/
 
-      - name: Render plugin manuscript
-        uses: quarto-dev/quarto-actions/render@v2
-        with:
-          path: manuscript/plugin          
+      # - name: Render plugin manuscript
+      #   uses: quarto-dev/quarto-actions/render@v2
+      #   with:
+      #     path: manuscript/plugin          
 
       - name: Deploy to GitHub pages 🚀
         if: github.event_name != 'pull_request'
