@@ -8,9 +8,9 @@ fit_growth(model, data, rbm = c("none", "explicit", "implicit"), start = NULL)
 }
 \arguments{
 \item{model}{A description of the user-specified model. Typically, the model
-is described using the lavaan model syntax. See \link{model.syntax} for more
+is described using the lavaan model syntax. See \link[lavaan:model.syntax]{lavaan::model.syntax} for more
 information. Alternatively, a parameter table (eg. the output of the
-\code{\link[=lavaanify]{lavaanify()}} function) is also accepted.}
+\code{\link[lavaan:model.syntax]{lavaan::lavaanify()}} function) is also accepted.}
 
 \item{data}{An optional data frame containing the observed variables used in
 the model. If some variables are declared as ordered factors, lavaan will

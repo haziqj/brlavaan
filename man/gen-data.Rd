@@ -36,7 +36,7 @@ truth(x)
 \item{dist}{Distribution of the manifest variables. Either "Normal",
 "Kurtosis" or "Non-normal".}
 
-\item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link{simulateData}
+\item{lavsim}{Logical. If TRUE, simulate data using lavaan's \link[lavaan:simulateData]{lavaan::simulateData}
 function.}
 
 \item{scale}{Scaling factor for the data. Default is 1, but for the growth

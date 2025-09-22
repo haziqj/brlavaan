@@ -5,6 +5,8 @@
 #' @param ub The upper bounds for components of `x`.
 #' @param call Logical. If `TRUE`, return the name of the penalty function.
 #' @param thres The threshold for the Huber penalty.
+#' @param target The target values for components of `x` in the ridge penalty.
+#'   Default is a vector of zeros.
 #' @param ... Additional arguments which may be called. See Details.
 #'
 #' @return A single numeric value, which is the penalty value.

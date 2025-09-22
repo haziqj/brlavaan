@@ -7,7 +7,7 @@
 \alias{pen_huber}
 \title{Functions for plugin penalty}
 \usage{
-pen_ridge(x, call = FALSE, ...)
+pen_ridge(x, target = rep(0, length(x)), call = FALSE, ...)
 
 pen_ridge_bound(x, lb, ub, call = FALSE, ...)
 
@@ -15,6 +15,9 @@ pen_huber(x, lb, ub, thres = 1, call = FALSE, ...)
 }
 \arguments{
 \item{x}{A numeric vector.}
+
+\item{target}{The target values for components of \code{x} in the ridge penalty.
+Default is a vector of zeros.}
 
 \item{call}{Logical. If \code{TRUE}, return the name of the penalty function.}
 
