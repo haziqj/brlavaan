@@ -4,7 +4,7 @@
 \alias{growth-curve}
 \alias{txt_mod_growth_pop}
 \alias{txt_mod_growth}
-\title{Model specification for growth curve models}
+\title{Model specification for latent growth curve models}
 \usage{
 txt_mod_growth_pop(rel)
 
@@ -18,7 +18,7 @@ A character string with the model specification, used for either
 fitting lavaan models or simulating data.
 }
 \description{
-Model specification for growth curve models
+Model specification for latent growth curve models
 }
 \examples{
 txt_mod_growth_pop(0.8)

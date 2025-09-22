@@ -1,4 +1,4 @@
-url: https://haziqj.ml/sem-bias/
+url: https://haziqj.ml/brlavaan/
 template:
   bootstrap: 5
 
@@ -28,3 +28,34 @@ navbar:
         #   href: manuscript/brsem/index.html
         # - text: Plugin Penalties
         #   href: manuscript/plugin/index.html
+
+reference:
+  - title: "Bias-reduced estimation"
+    desc: >
+      Main lavaan-style functions for bias-reduced estimation in SEM.
+    contents:
+      - brcfa
+      - brsem
+      - brgrowth
+      - brlavaan
+      - brlavaan-class
+  - title: "Penalty functions"
+    desc: >
+      Penalty functions for iRBM [*For future implementation*].
+    contents:
+      - starts_with("pen")
+  - title: "Manual eBR and iBR fit functions"
+    desc: >
+      For internal testing purposes.
+    contents:
+      - fit_sem
+      # - fit_twofac
+      - fit_growth
+  - title: "Helper functions for simulation studies"
+    desc: >
+      Functions to facilitate simulation study in our paper.
+    contents:
+      - starts_with("gen")
+      - starts_with("truth")
+      - starts_with("txt")
+      - starts_with("is")
