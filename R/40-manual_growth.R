@@ -74,7 +74,8 @@ EMAT <- function(x, model, data) {
 }
 
 JMAT <- function(x, model, data) {
-  -numDeriv::hessian(LOGLIK, x, model = model, data = data)
+  # -numDeriv::hessian(LOGLIK, x, model = model, data = data)
+  -numDeriv::jacobian(GRAD, x, model = model, data = data)
 }
 
 PENALTY <- function(x, model, data) {
