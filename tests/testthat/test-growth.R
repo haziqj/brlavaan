@@ -1,155 +1,207 @@
-skip()  # see test-growth2.R
-## IK + OK, 29 Oct 2024
-set.seed(111224)
-dat <- gen_data_growth(n = 15, rel = 0.8, dist = "Normal", scale = 1 / 10)
-mod <- txt_mod_growth(0.8)
+set.seed(123)
+n <- 15
+rel <- 0.5
+dist <- "Non-normal"
+dat <- gen_data_growth(n = n, rel = rel, dist = dist, scale = 1 / 10)
+mod <- txt_mod_growth(rel)
 tru <- truth(dat)
 
-fit_lav    <- growth(mod, dat, start = tru)
-fit_ML     <- fit_sem(mod, dat, start = tru, rbm = "none")
-fit_eRBM   <- fit_sem(mod, dat, start = tru, rbm = "explicit")
-fit_iRBM   <- fit_sem(mod, dat, start = tru, rbm = "implicit")
-# fit_iRBM$converged
+fit_lav   <- lavaan::growth(mod, dat, ceq.simple = TRUE)
+fit_ML    <- fit_sem(mod, dat, rbm = "none")
+fit_eBR <- fit_sem(mod, dat, rbm = "explicit", start = tru)
+fit_iBR <- fit_sem(mod, dat, rbm = "implicit", start = tru)
 
-# fit_iRBMp  <- fit_sem(mod, dat, plugin_pen = pen_ridge)
-# fit_iRBMpb <- fit_sem(mod, dat, plugin_pen = pen_ridge_bound)
-# fit_huber  <- fit_sem(mod, dat, plugin_pen = pen_huber)
+# list(fit_ML = fit_ML, fit_eBR = fit_eBR, fit_iBR = fit_iBR, fit_lav = fit_lav) |>
+#   map_dbl(\(x) (coef(x)["i~~s"] - tru["i~~s"]) / tru["i~~s"])
 
-test_that("ML estimator matches lavaan", {
-  expect_equal(
-    as.numeric(coef(fit_lav)),
-    coef(fit_ML),
-    ignore_attr = TRUE,
-    tolerance = 1e-4
-  )
+# Check log-likelihood
+test_that("Log-likelihood value matches lavaan::logLik()", {
+  with(get_lav_stuff(fit_lav), {
+    x <<- lavaan::lav_model_get_parameters(lavmodel)
+    loglik_val <<- brlavaan:::loglik(
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      bias_reduction = FALSE,
+      plugin_pen = NULL,
+      verbose = FALSE
+    )
+  })
+  loglik_val2 <- brlavaan:::LOGLIK(x, mod, dat)
+
+  expect_equal(loglik_val, as.numeric(logLik(fit_lav)), tolerance = 1e-4)
+  expect_equal(loglik_val, loglik_val2, tolerance = 1e-4)
 })
 
-# tibble::tibble(
-#   param = names(coef(fit_lav)),
-#   truth = truth(dat),
-#   ML = coef(fit_ML),
-#   eRBM = coef(fit_eRBM),
-#   iRBM = coef(fit_iRBM),
-#   iRBMp_ridge = coef(fit_iRBMp),
-#   iRBMp_ridgeb = coef(fit_iRBMpb),
-#   iRBMp_huber = coef(fit_huber)
-# )
+# Check scores are zero at optima
+test_that("Gradient is zero at the true values", {
 
-N <- nrow(dat)
-p <- ncol(dat)
-Lambda <- matrix(c(rep(1, p), 1:p - 1), nrow = p, ncol = 2)
+  # brlavaan internals
+  with (get_lav_stuff(fit_lav), {
+    x <<- lav_model_get_parameters(lavmodel)
+    grad_lav <<- brlavaan:::grad_loglik(  # uses lav_model_gradient()
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+    grad_num <<- numDeriv::grad(
+      func = brlavaan:::loglik,
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      bias_reduction = FALSE,
+      plugin_pen = NULL,
+      verbose = FALSE
+    )
+  })
 
-Loglik <- function(pars, dat, L, i = NULL) {
-  q <- ncol(L)
-  p <- nrow(L)
-  N <- nrow(dat)
-  alpha <- pars[1:q]
-  theta <- pars[q + 1]
-  psi <- pars[-(1:(q + 1))]
-  sigma <- L %*% matrix(c(psi[1], psi[2], psi[2], psi[3]), q, q) %*% t(L) + diag(rep(theta, 10))
-  ll_contr <- mvtnorm::dmvnorm(dat, mean = Lambda %*% alpha, sigma = sigma, log = TRUE)
-  if (is.null(i)) {
-    sum(ll_contr)
-  } else {
-    ll_contr[i]
-  }
-}
+  # manual calculations
+  grad_lav2 <- brlavaan:::GRAD(x, mod, dat)
+  grad_num2 <- numDeriv::grad(brlavaan:::LOGLIK, x, model = mod, data = dat)
 
-grad_Loglik <- function(pars, dat, L, i = NULL) {
-  if (is.null(i)) {
-    numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda, i = NULL)
-  } else {
-    numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda, i = i)
-  }
-}
+  expect_equal(grad_lav, rep(0, length(grad_lav)), tolerance = 1e-4)
+  expect_equal(grad_lav, grad_num, tolerance = 1e-4)
 
-emat <- function(pars, dat, L) {
-  N <- nrow(dat)
-  gr_contr <- sapply(1:N, function(i) grad_Loglik(pars, dat, L, i))
-  tcrossprod(gr_contr)
-}
+  expect_equal(grad_lav, grad_lav2, tolerance = 1e-4)
+  expect_equal(grad_lav, grad_num2, tolerance = 1e-4)
 
-jmat <- function(pars, dat, L) {
-  -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda, i = NULL)
-}
-
-pen_Loglik <- function(pars, dat, L) {
-  ll <- Loglik(pars, dat, L, i = NULL)
-  e <- emat(pars, dat, L)
-  jinv <- jmat(pars, dat, L) |> solve()
-  ll - 0.5 * sum(diag(jinv %*% e))
-}
-
-# Getting the parameters in the correct order for the manual likelihood functions
-ord_names <- c("i~1", "s~1", "v", "i~~i", "i~~s", "s~~s")
-lav_c <- coef(fit_lav)[ord_names]
-
-## ----- Start tests -----------------------------------------------------------
-
-test_that("Check log-likelihood function against lavaan", {
-  expect_equal(
-    Loglik(lav_c, dat, Lambda),
-    c(logLik(fit_lav))[1],
-    ignore_attr = TRUE
-  )
+  expect_equal(sign(grad_lav), sign(grad_num))
 })
 
-test_that("Check gradients against lavaan", {
-  expect_equal(
-    numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda),
-    fit_lav@optim$dx,
-    tolerance = 1e-05
-  )
-  expect_equal(
-    numDeriv::grad(Loglik, x = lav_c, dat = dat, L = Lambda),
-    grad_Loglik(lav_c, dat = dat, L = Lambda),
-    tolerance = 1e-05
-  )
+test_that("Gradient function agrees", {
+
+  x_lavmodel <- lavaan::lav_model_set_parameters(fit_lav@Model, x = tru)
+  x <- lavaan::lav_model_get_parameters(x_lavmodel)
+
+  # brlavaan internals
+  with (get_lav_stuff(fit_lav), {
+    grad_lav <<- brlavaan:::grad_loglik(  # uses lav_model_gradient()
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+    grad_num <<- numDeriv::grad(
+      func = brlavaan:::loglik,
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      bias_reduction = FALSE,
+      plugin_pen = NULL,
+      verbose = FALSE
+    )
+  })
+
+  # manual calculations
+  grad_lav2 <- brlavaan:::GRAD(x, mod, dat)
+  grad_num2 <- numDeriv::grad(brlavaan:::LOGLIK, x, model = mod, data = dat)
+
+  expect_equal(grad_lav, grad_num, tolerance = 1e-5)
+  expect_equal(grad_lav, grad_lav2, tolerance = 1e-5)
+  expect_equal(grad_lav, grad_num2, tolerance = 1e-5)
+
+  expect_equal(grad_lav2, grad_num2, tolerance = 1e-5)
+  expect_equal(grad_lav2, grad_num, tolerance = 1e-5)
+
+  expect_equal(grad_num, grad_num2, tolerance = 1e-5)
+
 })
 
-test_that("Check Hessian against lavaan", {
-  expect_equal(
-    -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda),
-    lavInspect(fit_lav, "hessian")[ord_names, ord_names] * lavaan::nobs(fit_lav),
-    ignore_attr = TRUE,
-    tolerance = 1e-01
-  )
-  expect_equal(
-    -numDeriv::hessian(Loglik, x = lav_c, dat = dat, L = Lambda),
-    jmat(lav_c, dat = dat, L = Lambda),
-    ignore_attr = TRUE,
-    tolerance = 1e-01
-  )
+# Check E matrix
+test_that("E matrices agree", {
+
+  x_lavmodel <- lavaan::lav_model_set_parameters(fit_lav@Model, x = tru)
+  x <- lavaan::lav_model_get_parameters(x_lavmodel)
+
+  e1 <- with(get_lav_stuff(fit_lav), {
+    K <- lavmodel@ceq.simple.K
+    e <- brlavaan:::information_matrix(  # uses lav_model_information_firstorder()
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      kind = "first.order"
+    )
+    t(K) %*% e %*% K
+  })
+
+  e2 <- brlavaan:::EMAT(x, mod, dat)
+
+  expect_equal(e1, e2, tolerance = 1e-5)
 })
 
-# 15/2/2025: The following will not work... because brlavaan now uses
-# Matrix::nearestPD() to fix the Hinv.
+# Check J matrix
+test_that("J matrices agree", {
 
-# test_that("Checking penalty", {
-#   expect_equal(
-#     brlavaan:::penalty(lav_c, fit_lav@Model, fit_lav@SampleStats, fit_lav@Data, fit_lav@Options, kind = "observed"),
-#     pen_Loglik(lav_c, dat, Lambda) - Loglik(lav_c, dat, Lambda),
-#     tolerance = 1e-4
-#   )
-# })
+  x_lavmodel <- lavaan::lav_model_set_parameters(fit_lav@Model, x = tru)
+  x <- lavaan::lav_model_get_parameters(x_lavmodel)
 
-# neg_pen_Loglik <- function(pars, dat, L) -pen_Loglik(pars, dat, L)
-# res1 <- nlminb(coef(fit_lav), neg_pen_Loglik, dat = dat, L = Lambda)
-#
-# test_that("Checking iRBM fit", {
-#   expect_equal(res1$par, as.numeric(res2$par), ignore_attr = TRUE)
-#   expect_equal(
-#     res1$par,
-#     coef(fit_iRBM),
-#     ignore_attr = TRUE,
-#     tolerance = 1e-02
-#   )
-# })
+  j1 <- with(get_lav_stuff(fit_lav), {
+    K <- lavmodel@ceq.simple.K
+    j <- brlavaan:::information_matrix(  # uses lav_model_information_observed()
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions,
+      kind = "observed"
+    )
+    t(K) %*% j %*% K
+  })
 
-# test_that("Check iRBM fit", {
-#   coef_pos <- c(2, 4, 6, 1, 5, 3)
-#   expect_equal(
-#     numDeriv::grad(pen_Loglik, coef(fit_iRBM)[coef_pos], dat = dat, L = Lambda),
-#     rep(0, 6),
-#     tolerance = 1e-02)
-# })
+  j2 <- brlavaan:::JMAT(x, mod, dat)
+
+  expect_equal(j1, j2, tolerance = 1e-4)
+})
+
+# Check penalty term
+test_that("Penalty term correct", {
+
+  pen1 <- with(get_lav_stuff(fit_lav), {
+    x <<- lavaan::lav_model_get_parameters(lavmodel)
+
+    brlavaan:::penalty(
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+  })
+
+  pen2 <- brlavaan:::PENALTY(x, mod, dat)
+
+  expect_equal(pen1, pen2, tolerance = 1e-5)
+
+})
+
+# Check explicit bias correction
+test_that("eBR bias correction is correct", {
+
+  xx <- coef(fit_lav)
+  x_lavmodel <- lavaan::lav_model_set_parameters(fit_lav@Model, x = xx)
+  x <- lavaan::lav_model_get_parameters(x_lavmodel)
+
+  bias1 <- with(get_lav_stuff(fit_lav), {
+    brlavaan:::bias(
+      x = x,
+      lavmodel = lavmodel,
+      lavsamplestats = lavsamplestats,
+      lavdata = lavdata,
+      lavoptions = lavoptions
+    )
+  })
+  bias2 <- brlavaan:::BIAS(x, mod, dat)
+
+  expect_equal(bias1, bias2, tolerance = 1e-2)
+})
