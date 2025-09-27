@@ -56,14 +56,13 @@ GRAD <- function(x, model, data) {
 
     # mean components for gradient
     grad_mu <- n * Sigma_inv %*% (Ybar - mu)
-    grad_alpha <- t(lambda) %*% grad_mu
+    grad_alpha <- t(grad_mu) %*% lambda
 
     # variance components for gradient
-    E <- (n / 2) * Sigma_inv %*% (S - Sigma) %*% Sigma_inv
-    grad_Psi <- t(lambda) %*% E %*% lambda
-    grad_v <- sum(diag(E))
+    L <- Sigma_inv %*% (S - Sigma) %*% Sigma_inv
+    grad_Psi <- (n / 2) * t(lambda) %*% L %*% lambda
+    grad_v <- (n / 2) * sum(diag(L))
 
-    # FIXME: numerical gradient says this should be multipled by 2. WHY?
     c(grad_Psi[1, 1], grad_alpha[1], grad_Psi[2, 2], grad_alpha[2],
       2 * grad_Psi[1, 2], grad_v)
   })
