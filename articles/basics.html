@@ -700,33 +700,33 @@ functions (via <code><a href="../reference/fit_growth.html">fit_growth()</a></co
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"ML: lavaan"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">lav</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/lavaan/man/growth.html" class="external-link">growth</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ML: lavaan: 0.214 sec elapsed</span></span>
+<span><span class="co">#&gt; ML: lavaan: 0.151 sec elapsed</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"ML: brlavaan"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">ML</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"none"</span>, lavfun <span class="op">=</span> <span class="st">"growth"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ML: brlavaan: 0.029 sec elapsed</span></span>
+<span><span class="co">#&gt; ML: brlavaan: 0.024 sec elapsed</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"eBR: brlavaan"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">eBR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"explicit"</span>, lavfun <span class="op">=</span> <span class="st">"growth"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; eBR: brlavaan: 0.469 sec elapsed</span></span>
+<span><span class="co">#&gt; eBR: brlavaan: 0.332 sec elapsed</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"iBR: brlavaan"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">iBR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sem.html">fit_sem</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"implicit"</span>, lavfun <span class="op">=</span> <span class="st">"growth"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; iBR: brlavaan: 1.789 sec elapsed</span></span>
+<span><span class="co">#&gt; iBR: brlavaan: 1.307 sec elapsed</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"ML: manual"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">MLman</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_growth.html">fit_growth</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"none"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ML: manual: 0.032 sec elapsed</span></span>
+<span><span class="co">#&gt; ML: manual: 0.01 sec elapsed</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"eBR: manual"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">eBRman</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_growth.html">fit_growth</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"explicit"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; eBR: manual: 1.944 sec elapsed</span></span>
+<span><span class="co">#&gt; eBR: manual: 0.521 sec elapsed</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">tic</a></span><span class="op">(</span><span class="st">"iBR: manual"</span><span class="op">)</span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">iBRman</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_growth.html">fit_growth</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">dat</span>, <span class="st">"implicit"</span>, start <span class="op">=</span> <span class="va">tru</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/tictoc/man/tic.html" class="external-link">toc</a></span><span class="op">(</span>log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; iBR: manual: 7.752 sec elapsed</span></span>
+<span><span class="co">#&gt; iBR: manual: 1.469 sec elapsed</span></span>
 <span></span>
 <span><span class="co"># Compare</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>truth <span class="op">=</span> <span class="va">tru</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">fit</span>, \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -756,14 +756,14 @@ functions (via <code><a href="../reference/fit_growth.html">fit_growth()</a></co
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $eBRman</span></span>
 <span><span class="co">#&gt;     i~~i      i~1     s~~s      s~1     i~~s        v </span></span>
-<span><span class="co">#&gt;  4.39129  0.18472  0.84293 -0.13016 -0.60957 12.75895 </span></span>
+<span><span class="co">#&gt;  4.39159  0.18154  0.84279 -0.12988 -0.60903 12.75906 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $iBRman</span></span>
 <span><span class="co">#&gt;     i~~i      i~1     s~~s      s~1     i~~s        v </span></span>
-<span><span class="co">#&gt;  2.79306 -0.02384  0.77537 -0.05984 -0.07414 13.09462</span></span>
+<span><span class="co">#&gt;  4.28353  0.18157  0.82939 -0.12988 -0.59459 12.75893</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">fit</span>, \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">x</span>, <span class="st">"lavaan"</span><span class="op">)</span><span class="op">)</span> <span class="va">x</span><span class="op">@</span><span class="va">optim</span><span class="op">$</span><span class="va">converged</span> <span class="kw">else</span> <span class="va">x</span><span class="op">$</span><span class="va">converged</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    lav     ML    eBR    iBR  MLman eBRman iBRman </span></span>
-<span><span class="co">#&gt;   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE  FALSE</span></span></code></pre></div>
+<span><span class="co">#&gt;   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="two-factor-model">Two factor model<a class="anchor" aria-label="anchor" href="#two-factor-model"></a>
