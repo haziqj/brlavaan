@@ -49,7 +49,7 @@ reference:
       For internal testing purposes.
     contents:
       - fit_sem
-      # - fit_twofac
+      - fit_twofac
       - fit_growth
   - title: "Helper functions for simulation studies"
     desc: >
