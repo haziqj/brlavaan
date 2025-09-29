@@ -63,3 +63,4 @@ vignettes/articles/*_files/*
 # large RData files from experiments
 experiments/*.RData
 experiments/*/*.RData
+/inst/testdata
