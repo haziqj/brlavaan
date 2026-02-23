@@ -8,7 +8,9 @@ check_mat <- function(mat) {
 validate_rbm <- function(x) {
   valid_rbm <- c("none", "explicit", "implicit")
 
-  if (length(x) == 0) x <- "none"
+  if (length(x) == 0) {
+    x <- "none"
+  }
   x[is.na(x)] <- "none"
   x[isFALSE(as.logical(x))] <- "none"
 
@@ -21,10 +23,10 @@ validate_rbm <- function(x) {
 get_lav_stuff <- function(fit) {
   # Utility function to extract lavaan stuff
   list(
-    lavmodel       = fit@Model,
+    lavmodel = fit@Model,
     lavsamplestats = fit@SampleStats,
-    lavdata        = fit@Data,
-    lavoptions     = fit@Options
+    lavdata = fit@Data,
+    lavoptions = fit@Options
   )
 }
 
@@ -86,8 +88,9 @@ is_iRBMp <- function(x, quietly = FALSE) {
   )
   plugin_pen <- plugin_pen(call = TRUE)
 
-  if (isFALSE(quietly))
+  if (isFALSE(quietly)) {
     cli::cli_alert_info("is_iRBMp: RBM = {rbm}, Plugin penalty = {plugin_pen}")
+  }
 
   attr(out, "plugin_pen") <- plugin_pen
   out
@@ -122,7 +125,7 @@ get_Sigma <- function(x, lavobject) {
 #
 # # Expected information
 # information_expected <- function(
-    #     theta,
+#     theta,
 #     lavmodel,
 #     lavsamplestats,
 #     lavdata,
@@ -140,7 +143,7 @@ get_Sigma <- function(x, lavobject) {
 #
 # # Outer product of casewise scores
 # information_firstorder <- function(
-    #     theta,
+#     theta,
 #     lavmodel,
 #     lavsamplestats,
 #     lavdata,
@@ -158,10 +161,10 @@ get_Sigma <- function(x, lavobject) {
 
 # Unexported lavaan functions
 lavaan___.internal_get_IB.inv <-
-  utils::getFromNamespace(".internal_get_IB.inv", "lavaan")
+  utils::getFromNamespace("lav_lisrel_ibinv", "lavaan")
 lavaan___computeDelta <-
-  utils::getFromNamespace("computeDelta", "lavaan")
+  utils::getFromNamespace("lav_model_delta", "lavaan")
 lavaan___derivative.mu.LISREL <-
-  utils::getFromNamespace("derivative.mu.LISREL", "lavaan")
+  utils::getFromNamespace("lav_lisrel_dmu_dx", "lavaan")
 lavaan___lav_model_vcov <-
   utils::getFromNamespace("lav_model_vcov", "lavaan")
